@@ -1,0 +1,3210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="litools - 单文件开发者工具箱。JSON格式化、HTTP请求、搜索、编解码、Diff、文本处理等12大功能，零依赖，双击即用。">
+<meta property="og:title" content="litools - 单文件开发者工具箱">
+<meta property="og:description" content="一个HTML文件，零依赖，12大功能模块覆盖日常开发高频场景。">
+<meta property="og:type" content="website">
+<title>litools</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
+<style>
+:root {
+  --bg: #f5f5f5;
+  --surface: #ffffff;
+  --surface2: #e8e8e8;
+  --border: #d0d0d0;
+  --text: #1a1a1a;
+  --text-dim: #888888;
+  --accent: #0078d4;
+  --accent-dim: #005a9e;
+  --red: #d32f2f;
+  --orange: #e65100;
+  --radius: 8px;
+  --jt-str: #2e7d32;
+  --jt-num: #1565c0;
+  --jt-bool: #d32f2f;
+  --jt-null: #9c27b0;
+}
+[data-theme="dark"] {
+  --bg: #1a1a2e;
+  --surface: #16213e;
+  --surface2: #0f3460;
+  --border: #2a2a4a;
+  --text: #e0e0e0;
+  --text-dim: #8888aa;
+  --accent: #4fc3f7;
+  --accent-dim: #0288d1;
+  --red: #ef5350;
+  --orange: #ff9800;
+  --jt-str: #81c784;
+  --jt-num: #64b5f6;
+  --jt-bool: #ef5350;
+  --jt-null: #ce93d8;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', -apple-system, sans-serif;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 8px 16px;
+}
+.container { max-width: 1400px; width: 100%; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+/* Tabs */
+.tabs {
+  display: flex; gap: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text-dim);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  user-select: none;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+.tab-pane {
+  display: block;
+  opacity: 0;
+  animation: fadeIn 0.15s ease forwards;
+}
+.tab-pane:not(.active) { display: none; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Form */
+input, textarea, select {
+  font-family: inherit;
+  font-size: 13px;
+}
+input[type="text"], input[type="number"], textarea {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,120,212,0.12);
+}
+[data-theme="dark"] input:focus, [data-theme="dark"] textarea:focus {
+  box-shadow: 0 0 0 3px rgba(79,195,247,0.12);
+}
+textarea {
+  resize: vertical;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  min-height: 200px;
+}
+
+.input-row { display: flex; gap: 6px; margin-bottom: 10px; }
+.input-row > *:first-child { flex: 1; }
+
+.mono { font-family:'Cascadia Code','Fira Code','Consolas',monospace; font-size:13px; }
+.btn-orange { color: var(--orange); }
+.btn-orange:hover { border-color: var(--orange); }
+.btn {
+  padding: 7px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface2); border-color: var(--accent-dim); }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 500; }
+.btn-primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); }
+.btn-primary:active { background: var(--accent-dim); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+
+textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; }
+#jsonInput, #jsonResult, #sqlInput, #sqlResult,
+#diffLeft, #diffRight,
+#srchEditor, .diff-editor { min-height: calc(100vh - 200px) !important; }
+.result-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  word-break: break-all;
+  position: relative;
+  white-space: pre-wrap;
+  max-height: calc(100vh - 200px);
+  overflow: auto;
+}
+.jt-toggle { cursor: pointer; }
+.jt-toggle:hover > .jt-brace { color: var(--accent); }
+.jt-badge { font-size:11px; color:var(--text-dim); margin-left:4px; font-weight:400; }
+#srchEditor:empty:before, #rexEditor:empty:before { content:attr(data-lk-pl); color:var(--text-dim); pointer-events:none; }
+/* Sub-tabs */
+.sub-tabs {
+  display: flex; gap: 0; margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+.sub-tab {
+  padding: 4px 12px; font-size: 12px; cursor: pointer;
+  color: var(--text-dim); border-bottom: 2px solid transparent;
+  transition: all 0.15s; user-select: none; white-space: nowrap;
+}
+.sub-tab:hover { color: var(--text); }
+.sub-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.sub-pane { display: block; }
+.sub-pane:not(.active) { display: none !important; }
+
+.tab-pane.dragover { outline: 2px dashed var(--accent); outline-offset:-2px; border-radius:var(--radius); }
+.stat-line { font-size:11px; color:var(--text-dim); padding:2px 4px; min-height:18px; }
+.jt-body { padding-left:0; }
+.result-box .copy-btn {
+  position: sticky; top: 0; float: right;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 4px; color: var(--text-dim); cursor: pointer;
+  padding: 2px 8px; font-size: 11px;
+  opacity: 0.7; transition: opacity 0.15s;
+  margin-left: 8px;
+}
+.result-box:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { color: var(--accent); border-color: var(--accent-dim); }
+
+.result-item {
+  display: flex; align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  gap: 10px;
+}
+.result-item:last-child { border-bottom: none; }
+.result-item .label { color: var(--text-dim); min-width: 60px; flex-shrink: 0; font-size: 12px; }
+.result-item .value { flex: 1; font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; word-break: break-all; }
+.result-item .copy-btn-sm {
+  background: none; border: none; color: var(--text-dim);
+  cursor: pointer; font-size: 13px; padding: 2px 4px;
+  opacity: 0; transition: opacity 0.15s, color 0.15s;
+  border-radius: 4px;
+}
+.result-item:hover .copy-btn-sm { opacity: 1; }
+.copy-btn-sm:hover { color: var(--accent); background: var(--surface2); }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.diff-editor {
+  min-height: 280px;
+  padding: 10px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  outline: none;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.diff-editor:focus { border-color: var(--accent-dim); }
+.diff-editor:empty:before {
+  content: attr(data-lk-pl);
+  color: var(--text-dim);
+  padding: 0 10px;
+  pointer-events: none;
+}
+.diff-editor .dl { background: #ffeef0; }
+.diff-editor .da { background: #e6ffed; }
+.diff-editor .dp { background: #f6f8fa; color: #ccc; }
+
+/* Timezone picker */
+.tz-picker { position: relative; }
+.tz-picker input {
+  width:100%; padding:6px 8px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); color:var(--text); font-size:12px; cursor:pointer;
+}
+.tz-picker input:focus { border-color:var(--accent-dim); }
+.tz-list {
+  position:absolute; top:100%; left:0; right:0; z-index:50;
+  max-height:200px; overflow-y:auto;
+  background:var(--surface); border:1px solid var(--border); border-top:none;
+  border-radius:0 0 var(--radius) var(--radius);
+  display:none;
+}
+.tz-list.open { display:block; }
+.tz-list .tz-item {
+  padding:4px 8px; font-size:12px; cursor:pointer;
+  border-bottom:1px solid var(--border);
+}
+.tz-list .tz-item:last-child { border-bottom:none; }
+.tz-list .tz-item:hover { background:var(--surface2); }
+.tz-list .tz-item.active { color:var(--accent); font-weight:500; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(8px);
+  background: var(--accent); color: #fff; padding: 10px 22px;
+  border-radius: 8px; font-size: 13px; font-weight: 500;
+  opacity: 0; transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none; z-index: 200;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.err { background: var(--red); }
+
+/* HTTP method colors */
+#httpMethod option[value="GET"] { color: #2e7d32; }
+#httpMethod option[value="POST"] { color: #1565c0; }
+#httpMethod option[value="PUT"] { color: #e65100; }
+#httpMethod option[value="PATCH"] { color: #7b1fa2; }
+#httpMethod option[value="DELETE"] { color: #c62828; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+/* Collapsible sections */
+.collapsible-header {
+  display: flex; align-items: center; gap: 6px; cursor: pointer;
+  padding: 4px 0; font-size: 12px; color: var(--text-dim); user-select: none;
+  border-bottom: 1px solid var(--border); margin-bottom: 6px;
+}
+.collapsible-header:hover { color: var(--text); }
+.collapsible-header .arrow { transition: transform 0.15s; font-size: 10px; }
+.collapsible-header.collapsed .arrow { transform: rotate(-90deg); }
+.collapsible-body { overflow: hidden; transition: max-height 0.2s ease; }
+.collapsible-body.collapsed { max-height: 0 !important; padding: 0; margin: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;position:sticky;top:0;z-index:10;background:var(--bg);padding:4px 0;">
+    <h1 style="font-size:18px;font-weight:700;white-space:nowrap;flex-shrink:0;">🧰 litools</h1>
+    <div class="tabs" id="tabs" style="flex:1;border:none;margin:0;min-width:0;">
+    <div class="tab active" data-tab="json" data-lk="tab_json">{ } JSON</div>
+    <div class="tab" data-tab="http" data-lk="tab_http">🌐 HTTP</div>
+    <div class="tab" data-tab="search" data-lk="tab_search">🔍 搜索</div>
+    <div class="tab" data-tab="sql" data-lk="tab_sql">🗄️ SQL</div>
+    <div class="tab" data-tab="encode" data-lk="tab_encode">🔐 编解码</div>
+    <div class="tab" data-tab="gen" data-lk="tab_gen">🎲 生成</div>
+    <div class="tab" data-tab="text" data-lk="tab_text">📝 文本</div>
+    <div class="tab" data-tab="ts" data-lk="tab_ts">⏱ 时间</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <span id="themeToggle" style="cursor:pointer;font-size:16px;" title="切换主题" data-lk-tl="tl_themeToggle">🌙</span>
+      <span id="historyToggle" style="cursor:pointer;font-size:16px;" title="操作历史">📋</span>
+      <div id="tabSearchWrap" style="position:relative;">
+        <span id="tabSearchIcon" style="cursor:pointer;font-size:14px;" title="搜索页签 (Ctrl+K)" data-lk-tl="tl_tabSearch">🔍</span>
+        <input type="text" id="tabSearchInput" placeholder="搜索页签…" spellcheck="false" style="display:none;width:130px;padding:3px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);position:absolute;right:0;top:-2px;" data-lk-pl="pl_tabSearch">
+        <div id="tabSearchResults" style="position:absolute;top:100%;right:0;left:auto;min-width:220px;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:300px;overflow-y:auto;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
+      </div>
+      <span id="langToggle" style="cursor:pointer;font-size:14px;" title="切换语言" data-lk-tl="tl_langToggle">🌐</span>
+    </div>
+  </div>
+
+  <!-- ⏱ 时间 -->
+  <div class="tab-pane" id="p-ts">
+    <div class="sub-tabs">
+      <div class="sub-tab active" data-sub="ts-convert" data-lk="sub_ts_convert">⏱ 时间戳</div>
+      <div class="sub-tab" data-sub="ts-calc" data-lk="sub_ts_calc">🔢 日期计算</div>
+      <div class="sub-tab" data-sub="ts-timer" data-lk="sub_ts_timer">⏱ 计时器</div>
+    </div>
+    <!-- 时间戳转换 -->
+    <div class="sub-pane active" data-sub="ts-convert">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+        <div style="padding-right:12px;border-right:2px solid var(--border);">
+          <div class="input-row">
+            <input type="text" id="tsInput" placeholder="粘贴时间戳，自动识别秒/毫秒/微秒" spellcheck="false" data-lk-pl="pl_tsInput">
+            <button class="btn btn-primary" id="tsNowBtn" data-lk="tsNowBtn">当前</button>
+            <button class="btn" id="tsClearBtn" data-lk="tsClearBtn">清空</button>
+          </div>
+          <div id="tsDetect" style="font-size:12px;color:var(--text-dim);min-height:20px;"></div>
+          <div class="result-box" id="tsResult" style="font-size:16px;text-align:center;padding:16px;max-height:none;overflow:visible;" data-lk="tsResult">等待输入</div>
+          <div class="btn-group">
+            <button class="btn btn-primary" id="tsCopySec" data-lk="tsCopySec">复制秒</button>
+            <button class="btn" id="tsCopyMs" data-lk="tsCopyMs">复制毫秒</button>
+          </div>
+          <div class="input-row" style="margin-top:8px;">
+            <div class="tz-picker" id="tzPicker" style="flex:1;">
+              <input type="text" id="tzSearch" placeholder="搜索时区..." autocomplete="off" data-lk-pl="pl_tzSearch">
+              <div class="tz-list" id="tzList"></div>
+            </div>
+          </div>
+          <div>
+            <div class="result-item"><span class="label">UTC</span><span class="value" id="tsUtc">—</span><button class="copy-btn-sm" data-target="tsUtc">📋</button></div>
+            <div class="result-item"><span class="label">RFC 2822</span><span class="value" id="tsRfc">—</span><button class="copy-btn-sm" data-target="tsRfc">📋</button></div>
+            <div class="result-item"><span class="label">相对</span><span class="value" id="tsRel">—</span></div>
+            <div class="result-item"><span class="label">毫秒</span><span class="value" id="tsMs">—</span><button class="copy-btn-sm" data-target="tsMs">📋</button></div>
+            <div class="result-item"><span class="label" id="tzLabel" data-lk="tzLabel">时区</span><span class="value" id="tsTz">—</span><button class="copy-btn-sm" data-target="tsTz">📋</button></div>
+          </div>
+        </div>
+        <div style="padding-left:12px;">
+          <div class="input-row">
+            <input type="text" id="tsRevInput" placeholder="日期字符串，如 2026-07-25 16:30:00" spellcheck="false" data-lk-pl="pl_tsRevInput">
+            <button class="btn" id="tsRevNowBtn" data-lk="tsRevNowBtn">当前</button>
+            <button class="btn" id="tsRevClearBtn" data-lk="tsRevClearBtn">清空</button>
+          </div>
+          <div class="result-item"><span class="label">秒</span><span class="value" id="tsRevSec" data-lk="tsRevSec">—</span><button class="copy-btn-sm" data-target="tsRevSec">📋</button></div>
+          <div class="result-item"><span class="label">毫秒</span><span class="value" id="tsRevMs" data-lk="tsRevMs">—</span><button class="copy-btn-sm" data-target="tsRevMs">📋</button></div>
+        </div>
+      </div>
+    </div>
+    <!-- 日期计算 -->
+    <div class="sub-pane" data-sub="ts-calc">
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:start;">
+        <div>
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">起始日期</div>
+          <input type="datetime-local" id="tsCalcFrom" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;">
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:20px;">
+          <button class="btn btn-sm" id="tsCalcSwap">⇄</button>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">结束日期</div>
+          <input type="datetime-local" id="tsCalcTo" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;">
+        </div>
+      </div>
+      <div class="btn-group" style="margin-top:8px;">
+        <button class="btn btn-primary" id="tsCalcBtn">计算差值</button>
+        <button class="btn" id="tsCalcAddBtn">+ 加减天数</button>
+        <input type="number" id="tsCalcDays" value="1" style="width:60px;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;text-align:center;">
+        <span style="font-size:12px;color:var(--text-dim);line-height:28px;">天</span>
+        <button class="btn" id="tsCalcClearBtn">清空</button>
+      </div>
+      <div id="tsCalcResult" style="margin-top:8px;"></div>
+    </div>
+    <!-- 计时器 -->
+    <div class="sub-pane" data-sub="ts-timer">
+      <div style="text-align:center;padding:20px 0;">
+        <div id="timerDisplay" style="font-size:48px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-weight:700;letter-spacing:2px;margin-bottom:20px;">00:00:00.0</div>
+        <div class="btn-group" style="justify-content:center;">
+          <button class="btn btn-primary" id="timerStartBtn" style="min-width:80px;">▶ 开始</button>
+          <button class="btn" id="timerLapBtn" style="min-width:80px;display:none;">📍 计次</button>
+          <button class="btn" id="timerResetBtn" style="min-width:80px;">↺ 重置</button>
+        </div>
+        <div id="timerLaps" style="margin-top:16px;max-height:300px;overflow-y:auto;text-align:left;font-size:12px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🗄️ SQL IN -->
+  <div class="tab-pane" id="p-sql">
+    <div class="sub-tabs">
+      <div class="sub-tab active" data-sub="sql-in" data-lk="sub_sql_in">🗄️ IN 生成</div>
+      <div class="sub-tab" data-sub="sql-insert" data-lk="sub_sql_insert">📋 INSERT 解析</div>
+    </div>
+    <!-- IN 生成 -->
+    <div class="sub-pane active" data-sub="sql-in">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <textarea id="sqlInput" rows="10" placeholder="粘贴值，可用逗号、换行、空格分隔&#10;例: abc, def, ghi&#10;或: abc(def(ghi" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_sqlInput"></textarea>
+        <div class="result-box" id="sqlResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;" data-lk="sqlResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+      </div>
+      <div class="btn-group" style="margin-top:8px;">
+        <button class="btn btn-primary" id="sqlGenBtn" data-lk="sqlGenBtn">生成 IN</button>
+        <button class="btn" id="sqlQuoteBtn" data-lk="sqlQuoteBtn">切换引号</button>
+        <button class="btn" id="sqlClearBtn" data-lk="sqlClearBtn">清空</button>
+        <span id="sqlStatOld" style="font-size:12px;color:var(--text-dim);line-height:28px;"></span>
+      </div>
+      <div class="stat-line" id="sqlStat"></div>
+    </div>
+    <!-- INSERT 解析 -->
+    <div class="sub-pane" data-sub="sql-insert">
+      <div class="collapsible-header" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed');">
+        <span class="arrow">▼</span> <span data-lk="sql_insert_title">INSERT 语句</span>
+      </div>
+      <div class="collapsible-body" style="max-height:40vh;">
+        <textarea id="sqlInsertInput" rows="4" placeholder="粘贴 INSERT 语句，自动解析列名与值的对应关系&#10;例: INSERT INTO t (a,b,c) VALUES (1,2,3)" spellcheck="false" style="min-height:80px;font-size:13px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="pl_sqlInsert"></textarea>
+      </div>
+      <div class="btn-group" style="margin-top:6px;">
+        <button class="btn btn-primary" id="sqlInsertParseBtn" data-lk="sqlInsertParseBtn">解析</button>
+        <button class="btn" id="sqlInsertClearBtn" data-lk="sqlClearBtn">清空</button>
+        <input type="text" id="sqlInsertSearch" placeholder="🔍 搜索值定位列名..." style="flex:1;min-width:200px;font-size:12px;" data-lk-pl="pl_sqlInsertSearch">
+      </div>
+      <div id="sqlInsertResult" style="margin-top:6px;max-height:60vh;overflow:auto;"></div>
+    </div>
+  </div>
+
+  <!-- { } JSON -->
+  <div class="tab-pane active" id="p-json">
+    <div id="jsonSplit" style="display:flex;gap:0;min-height:60vh;">
+      <div id="jsonLeft" style="display:flex;flex:1;min-width:200px;overflow:hidden;">
+        <div id="jsonLines" style="padding:9px 6px 9px 8px;background:var(--surface);border:1px solid var(--border);border-right:none;border-radius:var(--radius) 0 0 var(--radius);overflow:hidden;text-align:right;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.5;color:var(--text-dim);user-select:none;min-width:36px;"></div>
+        <textarea id="jsonInput" rows="16" placeholder="粘贴 JSON" spellcheck="false" style="flex:1;min-height:70vh;border-radius:0 var(--radius) var(--radius) 0;" data-lk-pl="pl_jsonInput"></textarea>
+      </div>
+      <div id="jsonDragBar" style="width:5px;cursor:col-resize;background:var(--border);transition:background 0.15s;flex-shrink:0;"></div>
+      <div class="result-box" id="jsonResult" style="flex:1;min-width:200px;min-height:70vh;margin:0;" data-lk="jsonResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+    </div>
+    <div class="stat-line" id="jsonStat"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap;">
+      <div class="btn-group" style="margin-bottom:0;">
+        <button class="btn btn-primary" id="jsonFormatBtn" data-lk="jsonFormatBtn">格式化 (Ctrl+Enter)</button>
+        <button class="btn" id="jsonCompressBtn" data-lk="jsonCompressBtn">压缩</button>
+        <button class="btn" id="jsonLooseBtn" data-lk="jsonLooseBtn">宽松解析</button>
+        <button class="btn" id="jsonClearBtn" data-lk="jsonClearBtn">清空</button>
+        <button class="btn" id="jsonFileBtn" data-lk="jsonFileBtn">📂 打开文件</button>
+      </div>
+      <div style="border-left:1px solid var(--border);height:24px;"></div>
+      <div class="input-row" style="flex:1;margin-bottom:0;">
+        <input type="text" id="jsonPathInput" placeholder='JSONPath 查询，如 $.store.book[*].title' spellcheck="false" style="flex:1;font-size:12px;" data-lk-pl="jsonPathInput">
+        <button class="btn btn-sm" id="jsonPathBtn" data-lk="jsonPathBtn">查询</button>
+        <span id="jsonPathInfo" style="font-size:11px;color:var(--text-dim);line-height:28px;"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔍 搜索 (合并搜索+正则) -->
+  <div class="tab-pane" id="p-search">
+    <div class="sub-tabs">
+      <div class="sub-tab active" data-sub="search" data-lk="sub_search">🔍 搜索</div>
+      <div class="sub-tab" data-sub="regex" data-lk="sub_regex">◎ 正则</div>
+    </div>
+    <!-- 搜索 -->
+    <div class="sub-pane active" data-sub="search">
+      <div class="result-box" id="srchEditor" contenteditable="true" spellcheck="false" style="height:calc(100vh - 280px);min-height:300px;padding:9px 12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;font-size:13px;overflow:auto;" data-lk-pl="pl_srchEditor"></div>
+      <div class="stat-line" id="srchStat" style="margin-top:4px;"></div>
+      <div class="input-row" style="margin-top:8px;flex-wrap:wrap;align-items:center;">
+        <input type="text" id="srchTerm" placeholder="搜索词" spellcheck="false" style="flex:2;min-width:120px;" data-lk-pl="srchTerm">
+        <input type="text" id="srchReplace" placeholder="替换为" spellcheck="false" style="flex:1;min-width:100px;" data-lk-pl="srchReplace">
+        <button class="btn btn-primary btn-sm" id="srchAddBtn" data-lk="srchAddBtn">添加</button>
+        <button class="btn btn-sm" id="srchReplaceBtn" data-lk="srchReplaceBtn">替换</button>
+        <button class="btn btn-sm" id="srchReplaceAllBtn" data-lk="srchReplaceAllBtn">全部替换</button>
+        <button class="btn btn-sm" id="srchClearHighBtn" data-lk="srchClearHighBtn">清除</button>
+        <button class="btn btn-sm btn-orange" id="srchFilterBtn" data-lk="srchFilterBtn">过滤</button>
+        <button class="btn btn-sm" id="srchRestoreBtn" style="display:none;">↩</button>
+        <button class="btn btn-sm" id="srchClearBtn" data-lk="srchClearBtn">清空</button>
+        <button class="btn btn-sm" id="srchFileBtn">📂</button>
+      </div>
+      <div id="srchTags" style="display:flex;gap:6px;flex-wrap:wrap;min-height:28px;margin-top:4px;"></div>
+      <div id="srchStreamBar" style="display:none;margin-top:6px;padding:8px 12px;background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);font-size:12px;line-height:1.6;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <span id="srchStreamFile" style="font-weight:bold;"></span>
+          <span id="srchStreamProgress" style="color:var(--text-dim);"></span>
+          <span id="srchStreamCount" style="color:var(--text-dim);"></span>
+          <button class="btn btn-sm" id="srchStreamStopBtn" style="margin-left:auto;" data-lk="srchStreamStopBtn">停止</button>
+        </div>
+        <div style="margin-top:4px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;">
+          <div id="srchStreamBarFill" style="height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width .3s;"></div>
+        </div>
+      </div>
+    </div>
+    <!-- 正则 -->
+    <div class="sub-pane" data-sub="regex">
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input type="text" id="rexPattern" placeholder="正则表达式" spellcheck="false" style="flex:1;" data-lk-pl="pl_rexPattern">
+        <select id="rexFlags" style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:12px;">
+          <option value="gi">gi</option><option value="g">g</option><option value="i">i</option><option value="m">m</option><option value="gm">gm</option>
+        </select>
+        <button class="btn btn-primary" id="rexTestBtn" data-lk="rexTestBtn">测试</button>
+        <button class="btn" id="rexClearBtn" data-lk="rexClearBtn">清空</button>
+      </div>
+      <div style="display:flex;gap:0;min-height:55vh;">
+        <div id="rexLines" style="padding:9px 6px 9px 8px;background:var(--surface);border:1px solid var(--border);border-right:none;border-radius:var(--radius) 0 0 var(--radius);overflow:hidden;text-align:right;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.7;color:var(--text-dim);user-select:none;min-width:36px;"></div>
+        <div class="result-box" id="rexEditor" contenteditable="true" spellcheck="false" style="flex:1;min-height:55vh;padding:9px 12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;font-size:13px;overflow:auto;border-radius:0 var(--radius) var(--radius) 0;" data-lk-pl="pl_rexEditor"></div>
+      </div>
+      <div class="stat-line" id="rexStat" style="margin-top:4px;"></div>
+      <div id="rexInfo" style="font-size:12px;color:var(--text-dim);margin-top:4px;"></div>
+    </div>
+  </div>
+
+  <!-- 🔐 编解码 (合并 Base64+URL+HTML+JWT) -->
+  <div class="tab-pane" id="p-encode">
+    <div class="sub-tabs">
+      <div class="sub-tab active" data-sub="b64" data-lk="sub_b64">Base64</div>
+      <div class="sub-tab" data-sub="url" data-lk="sub_url">URL</div>
+      <div class="sub-tab" data-sub="html" data-lk="sub_html">HTML</div>
+      <div class="sub-tab" data-sub="jwt" data-lk="sub_jwt">JWT</div>
+      <div class="sub-tab" data-sub="bc" data-lk="sub_bc">🔢 进制</div>
+    </div>
+    <!-- Base64 -->
+    <div class="sub-pane active" data-sub="b64">
+      <textarea id="b64Input" rows="8" placeholder="输入文本或 Base64" spellcheck="false" data-lk-pl="pl_b64Input"></textarea>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="b64EncodeBtn" data-lk="b64EncodeBtn">编码 →</button>
+        <button class="btn" id="b64DecodeBtn" data-lk="b64DecodeBtn">解码 ←</button>
+        <button class="btn" id="b64ClearBtn" data-lk="b64ClearBtn">清空</button>
+      </div>
+      <div class="result-box" id="b64Result" data-lk="b64Result">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+    </div>
+    <!-- URL -->
+    <div class="sub-pane" data-sub="url">
+      <textarea id="urlInput" rows="8" placeholder="输入 URL 或字符串" spellcheck="false" data-lk-pl="pl_urlInput"></textarea>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="urlEncodeBtn" data-lk="urlEncodeBtn">编码</button>
+        <button class="btn" id="urlDecodeBtn" data-lk="urlDecodeBtn">解码</button>
+        <button class="btn" id="urlClearBtn" data-lk="urlClearBtn">清空</button>
+      </div>
+      <div class="result-box" id="urlResult" data-lk="urlResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+    </div>
+    <!-- HTML -->
+    <div class="sub-pane" data-sub="html">
+      <textarea id="htmlInput" rows="6" placeholder="输入文本或 HTML 实体" spellcheck="false" style="min-height:30vh;" data-lk-pl="pl_htmlInput"></textarea>
+      <div class="btn-group">
+        <button class="btn btn-primary btn-sm" id="htmlEncodeBtn" data-lk="htmlEncodeBtn">编码 →</button>
+        <button class="btn btn-sm" id="htmlDecodeBtn" data-lk="htmlDecodeBtn">解码 ←</button>
+        <button class="btn btn-sm" id="htmlClearBtn" data-lk="htmlClearBtn">清空</button>
+      </div>
+      <div class="stat-line" id="htmlStat"></div>
+      <div class="result-box" id="htmlResult" style="font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;" data-lk="htmlResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+    </div>
+    <!-- JWT -->
+    <div class="sub-pane" data-sub="jwt">
+      <textarea id="jwtInput" rows="6" placeholder="粘贴 JWT token" spellcheck="false" style="min-height:20vh;font-size:13px;" data-lk-pl="pl_jwtInput"></textarea>
+      <div class="stat-line" id="jwtStat"></div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="jwtDecodeBtn" data-lk="jwtDecodeBtn">解码</button>
+        <button class="btn" id="jwtClearBtn" data-lk="jwtClearBtn">清空</button>
+      </div>
+      <div id="jwtResult">
+        <div class="result-item"><span class="label" data-lk="jwtHeader">Header</span><div class="value mono" id="jwtHeader" style="white-space:pre-wrap;font-size:12px;line-height:1.5;">—</div><button class="copy-btn-sm" data-target="jwtHeader">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="jwtPayload">Payload</span><div class="value mono" id="jwtPayload" style="white-space:pre-wrap;font-size:12px;line-height:1.5;">—</div><button class="copy-btn-sm" data-target="jwtPayload">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="jwtSignature">Signature</span><span class="value mono" id="jwtSig" style="font-size:11px;word-break:break-all;">—</span><button class="copy-btn-sm" data-target="jwtSig">📋</button></div>
+        <div class="result-item" id="jwtInfo" style="font-size:12px;color:var(--text-dim);margin-top:4px;"></div>
+      </div>
+    </div>
+    <!-- 进制转换 -->
+    <div class="sub-pane" data-sub="bc">
+      <div class="input-row">
+        <input type="text" id="bcInput" placeholder="输入数字，如 255 / 0xFF / 0b1111 / 0o377" spellcheck="false" data-lk-pl="pl_bcInput">
+        <button class="btn" id="bcClearBtn" data-lk="bcClearBtn">清空</button>
+      </div>
+      <div>
+        <div class="result-item"><span class="label" data-lk="bcDec">十进制</span><span class="value mono" id="bcDec">—</span><button class="copy-btn-sm" data-target="bcDec">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="bcHex">十六进制</span><span class="value mono" id="bcHex">—</span><button class="copy-btn-sm" data-target="bcHex">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="bcBin">二进制</span><span class="value mono" id="bcBin">—</span><button class="copy-btn-sm" data-target="bcBin">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="bcOct">八进制</span><span class="value mono" id="bcOct">—</span><button class="copy-btn-sm" data-target="bcOct">📋</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🎲 生成 (合并 UUID+Hash) -->
+  <div class="tab-pane" id="p-gen">
+    <div class="sub-tabs">
+      <div class="sub-tab active" data-sub="uuid" data-lk="sub_uuid">UUID</div>
+      <div class="sub-tab" data-sub="hash" data-lk="sub_hash">Hash</div>
+      <div class="sub-tab" data-sub="color" data-lk="sub_color">🎨 颜色</div>
+    </div>
+    <!-- UUID -->
+    <div class="sub-pane active" data-sub="uuid">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:13px;color:var(--text-dim);" data-lk="genTxt">生成</span>
+          <input type="number" id="uuidCount" value="1" min="1" max="100" style="width:60px;">
+          <span style="font-size:13px;color:var(--text-dim);" data-lk="genCount">个</span>
+        </div>
+        <label style="font-size:13px;color:var(--text-dim);cursor:pointer;" data-lk="uuidUpper"><input type="checkbox" id="uuidUpper" style="margin-right:3px;">大写</label>
+        <label style="font-size:13px;color:var(--text-dim);cursor:pointer;" data-lk="uuidNoDash"><input type="checkbox" id="uuidNoDash" style="margin-right:3px;">无连字符</label>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="uuidGenBtn" data-lk="uuidGenBtn">生成</button>
+        <button class="btn" id="uuidCopyAllBtn" data-lk="uuidCopyAllBtn">复制全部</button>
+      </div>
+      <div class="result-box" id="uuidResult" data-lk="res_uuid">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+    </div>
+    <!-- Hash -->
+    <div class="sub-pane" data-sub="hash">
+      <textarea id="hashInput" rows="6" placeholder="输入要计算 Hash 的文本" spellcheck="false" style="min-height:20vh;" data-lk-pl="pl_hashInput"></textarea>
+      <div class="btn-group">
+        <button class="btn btn-primary btn-sm" id="hashCalcBtn" data-lk="hashCalcBtn">计算</button>
+        <button class="btn btn-sm" id="hashClearBtn" data-lk="hashClearBtn">清空</button>
+      </div>
+      <div id="hashResult">
+        <div class="result-item"><span class="label">SHA-1</span><span class="value mono" id="hSha1">—</span><button class="copy-btn-sm" data-target="hSha1">📋</button></div>
+        <div class="result-item"><span class="label">SHA-256</span><span class="value mono" id="hSha256">—</span><button class="copy-btn-sm" data-target="hSha256">📋</button></div>
+        <div class="result-item"><span class="label">SHA-384</span><span class="value mono" id="hSha384">—</span><button class="copy-btn-sm" data-target="hSha384">📋</button></div>
+        <div class="result-item"><span class="label">SHA-512</span><span class="value mono" id="hSha512">—</span><button class="copy-btn-sm" data-target="hSha512">📋</button></div>
+      </div>
+    </div>
+    <!-- 颜色 -->
+    <div class="sub-pane" data-sub="color">
+      <div class="input-row">
+        <input type="color" id="colorPicker" style="width:44px;height:36px;padding:2px;cursor:pointer;flex:none;">
+        <input type="text" id="colorInput" placeholder="#FF6600 / rgb(255,102,0) / hsl(24,100%,50%)" spellcheck="false" data-lk-pl="pl_colorInput">
+      </div>
+      <div class="grid-2">
+        <div class="result-item"><span class="label" data-lk="colorHex">HEX</span><span class="value" id="cHex">—</span><button class="copy-btn-sm" data-target="cHex">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="colorRgb">RGB</span><span class="value" id="cRgb">—</span><button class="copy-btn-sm" data-target="cRgb">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="colorHsl">HSL</span><span class="value" id="cHsl">—</span><button class="copy-btn-sm" data-target="cHsl">📋</button></div>
+      </div>
+      <div id="colorPreview" style="height:48px;border-radius:var(--radius);border:1px solid var(--border);margin-top:8px;transition:background 0.2s;"></div>
+    </div>
+  </div>
+
+  <!-- 📝 文本 (合并文本处理+统计+简繁) -->
+  <div class="tab-pane" id="p-text">
+    <div class="sub-tabs">
+      <div class="sub-tab active" data-sub="proc" data-lk="sub_proc">📝 处理</div>
+      <div class="sub-tab" data-sub="stats" data-lk="sub_stats">📊 统计</div>
+      <div class="sub-tab" data-sub="cc" data-lk="sub_cc">🀄 简繁</div>
+      <div class="sub-tab" data-sub="trans" data-lk="sub_trans">🌐 翻译</div>
+      <div class="sub-tab" data-sub="csv" data-lk="sub_csv">📋 CSV</div>
+      <div class="sub-tab" data-sub="diff" data-lk="sub_diff">📑 Diff</div>
+    </div>
+    <!-- 文本处理 -->
+    <div class="sub-pane active" data-sub="proc">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
+        <textarea id="tpInput" placeholder="输入文本" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_tpInput"></textarea>
+        <div class="result-box" id="tpResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="tpResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+      </div>
+      <div class="btn-group" style="margin-top:8px;">
+        <button class="btn btn-primary btn-sm" id="tpSortAsc" data-lk="tpSortAsc">排序 A→Z</button>
+        <button class="btn btn-sm" id="tpSortDesc" data-lk="tpSortDesc">排序 Z→A</button>
+        <button class="btn btn-sm" id="tpUnique" data-lk="tpUnique">去重</button>
+        <button class="btn btn-sm" id="tpReverse" data-lk="tpReverse">反转行</button>
+        <button class="btn btn-sm" id="tpShuffle" data-lk="tpShuffle">打乱</button>
+        <button class="btn btn-sm" id="tpUpper" data-lk="tpUpper">大写</button>
+        <button class="btn btn-sm" id="tpLower" data-lk="tpLower">小写</button>
+        <button class="btn btn-sm" id="tpTrim" data-lk="tpTrim">去首尾空格</button>
+        <button class="btn btn-sm" id="tpClearEmpty" data-lk="tpClearEmpty">删空行</button>
+        <button class="btn btn-sm" id="tpFileBtn" data-lk="tpFileBtn">📂 打开文件</button>
+      </div>
+      <div class="stat-line" id="tpStat"></div>
+    </div>
+    <!-- 统计 -->
+    <div class="sub-pane" data-sub="stats">
+      <textarea id="statsInput" rows="10" placeholder="粘贴文本" spellcheck="false" data-lk-pl="pl_statsInput"></textarea>
+      <div class="stat-line" id="statsStat"></div>
+      <div class="btn-group">
+        <button class="btn btn-sm" id="statsClearBtn" data-lk="statsClearBtn">清空</button>
+      </div>
+      <div>
+        <div class="result-item"><span class="label" data-lk="statsChars">字数</span><span class="value" id="stChars">0</span></div>
+        <div class="result-item"><span class="label" data-lk="statsCharsWS">字符（含空格）</span><span class="value" id="stCharsAll">0</span></div>
+        <div class="result-item"><span class="label" data-lk="statsLines">行数</span><span class="value" id="stLines">0</span></div>
+        <div class="result-item"><span class="label" data-lk="statsWords">单词</span><span class="value" id="stWords">0</span></div>
+        <div class="result-item"><span class="label" data-lk="statsParas">段落</span><span class="value" id="stParas">0</span></div>
+        <div class="result-item"><span class="label" data-lk="statsBytes">字节</span><span class="value" id="stBytes">0</span></div>
+      </div>
+    </div>
+    <!-- 简繁 -->
+    <div class="sub-pane" data-sub="cc">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
+        <textarea id="ccInput" placeholder="粘贴要转换的文本" spellcheck="false" style="min-height:55vh;font-size:14px;" data-lk-pl="pl_ccInput"></textarea>
+        <div class="result-box" id="ccResult" style="min-height:55vh;margin:0;font-size:14px;line-height:1.8;white-space:pre-wrap;overflow:auto;" data-lk="ccResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+      </div>
+      <div class="stat-line" id="ccStat"></div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="ccToSimpBtn" data-lk="ccToSimpBtn">繁→简</button>
+        <button class="btn" id="ccToTradBtn" data-lk="ccToTradBtn">简→繁</button>
+        <button class="btn" id="ccClearBtn" data-lk="ccClearBtn">清空</button>
+      </div>
+    </div>
+    <!-- 翻译 -->
+    <div class="sub-pane" data-sub="trans">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
+        <textarea id="transInput" placeholder="输入要翻译的文本" spellcheck="false" style="min-height:55vh;font-size:14px;" data-lk-pl="pl_transInput"></textarea>
+        <div class="result-box" id="transResult" style="min-height:55vh;margin:0;font-size:14px;line-height:1.8;white-space:pre-wrap;overflow:auto;" data-lk="transResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+      </div>
+      <div class="stat-line" id="transStat"></div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="transToEn" data-lk="transToEn">中 → 英</button>
+        <button class="btn" id="transToZh" data-lk="transToZh">英 → 中</button>
+        <button class="btn" id="transClearBtn" data-lk="transClearBtn">清空</button>
+      </div>
+    </div>
+    <!-- CSV -->
+    <div class="sub-pane" data-sub="csv">
+      <textarea id="csvInput" rows="8" placeholder="粘贴 CSV 文本，或拖入 .csv 文件&#10;自动检测分隔符（逗号/制表符）" spellcheck="false" style="min-height:30vh;font-size:13px;" data-lk-pl="pl_csvInput"></textarea>
+      <div class="stat-line" id="csvStat"></div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="csvParseBtn" data-lk="csvParseBtn">解析</button>
+        <button class="btn" id="csvDelimBtn" data-delim="," data-lk="csvDelimBtn">分隔符: ,</button>
+        <button class="btn" id="csvClearBtn" data-lk="csvClearBtn">清空</button>
+        <span id="csvStatOld" style="font-size:12px;color:var(--text-dim);line-height:28px;"></span>
+      </div>
+      <div id="csvResult" style="overflow:auto;max-height:60vh;font-size:13px;"></div>
+    </div>
+    <!-- Diff -->
+    <div class="sub-pane" data-sub="diff">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div id="diffLeft" class="diff-editor" contenteditable="true" spellcheck="false" data-lk-pl="pl_diffLeft"></div>
+        <div id="diffRight" class="diff-editor" contenteditable="true" spellcheck="false" data-lk-pl="pl_diffRight"></div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="diffBtn" data-lk="diffBtn">比较</button>
+        <button class="btn" id="diffSwapBtn" data-lk="diffSwapBtn">⇄ 交换</button>
+        <button class="btn" id="diffClearBtn" data-lk="diffClearBtn">清空</button>
+        <span id="diffStat" style="font-size:12px;color:var(--text-dim);line-height:28px;margin-left:auto;"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🌐 HTTP -->
+  <div class="tab-pane" id="p-http">
+    <div class="input-row" style="align-items:stretch;">
+      <select id="httpMethod" style="width:70px;padding:6px 4px;flex:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;font-weight:600;">
+        <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>HEAD</option><option>OPTIONS</option>
+      </select>
+      <input type="text" id="httpUrl" placeholder="请求 URL 或粘贴 curl 命令" spellcheck="false" style="flex:1;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;" data-lk-pl="pl_httpUrl">
+      <button class="btn" id="httpCurlBtn" title="从 curl 解析" style="font-size:12px;padding:6px 10px;" data-lk-tl="tl_httpCurl">📋 curl</button>
+      <button class="btn btn-primary" id="httpSendBtn" style="padding:6px 16px;font-weight:600;min-width:80px;" data-lk="httpSendBtn">发送</button>
+      <button class="btn" id="httpClearBtn" style="padding:6px 10px;" data-lk="httpClearBtn">清空</button>
+    </div>
+    <div id="httpCurlWrap" style="display:none;margin-bottom:6px;">
+      <textarea id="httpCurlInput" rows="4" placeholder="粘贴 curl 命令" spellcheck="false" style="width:100%;font-size:12px;" data-lk-pl="pl_httpCurl"></textarea>
+      <button class="btn btn-sm btn-primary" id="httpCurlParseBtn" style="margin-top:4px;" data-lk="httpCurlParseBtn">解析</button>
+    </div>
+    <div class="collapsible-header" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed');">
+      <span class="arrow">▼</span> 请求配置
+    </div>
+    <div class="collapsible-body" style="max-height:50vh;">
+    <div class="sub-tabs" style="margin-top:0;">
+      <div class="sub-tab active" data-sub="headers" data-lk="sub_headers">请求头</div>
+      <div class="sub-tab" data-sub="body" data-lk="sub_body">请求体</div>
+      <div class="sub-tab" data-sub="params" data-lk="sub_params">查询参数</div>
+      <div class="sub-tab" data-sub="cookies" data-lk="sub_cookies">Cookie</div>
+    </div>
+    <div class="sub-pane active" data-sub="headers">
+      <div style="display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap;">
+        <button class="btn btn-sm http-hdr-ins" data-val="Content-Type: application/json">JSON</button>
+        <button class="btn btn-sm http-hdr-ins" data-val="Content-Type: application/x-www-form-urlencoded">Form</button>
+        <button class="btn btn-sm http-hdr-ins" data-val="Authorization: Bearer ">Auth</button>
+        <button class="btn btn-sm http-hdr-ins" data-val="Accept: application/json">Accept JSON</button>
+      </div>
+      <textarea id="httpHeaders" rows="3" placeholder="Content-Type: application/json&#10;Authorization: Bearer token" spellcheck="false" style="width:100%;font-size:12px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="httpHeaders"></textarea>
+    </div>
+    <div class="sub-pane" data-sub="body">
+      <div style="display:flex;gap:4px;margin-bottom:4px;align-items:center;">
+        <button class="btn btn-sm" id="httpBodyFmtBtn" title="格式化 JSON (Ctrl+Shift+J)">🔧 格式化</button>
+        <button class="btn btn-sm" id="httpBodyMinBtn" title="压缩 JSON">📦 压缩</button>
+        <span style="font-size:11px;color:var(--text-dim);margin-left:auto;" id="httpBodyInfo"></span>
+      </div>
+      <textarea id="httpBody" rows="3" placeholder='{"key": "value"}' spellcheck="false" style="width:100%;font-size:12px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="pl_httpBody"></textarea>
+    </div>
+    <div class="sub-pane" data-sub="params">
+      <textarea id="httpParams" rows="3" placeholder="每行一个 Key: Value&#10;page: 1&#10;limit: 20" spellcheck="false" style="width:100%;font-size:12px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="httpParams"></textarea>
+    </div>
+    <div class="sub-pane" data-sub="cookies">
+      <textarea id="httpCookies" rows="3" placeholder="每行一个 Key: Value&#10;sessionId: abc123" spellcheck="false" style="width:100%;font-size:12px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="httpCookies"></textarea>
+    </div>
+    </div>
+    <!-- 响应区 -->
+    <div style="margin-top:8px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">
+        <span style="font-size:12px;color:var(--text-dim);font-weight:500;" data-lk="httpTitle">响应</span>
+        <span id="httpStatus" style="font-size:12px;font-weight:600;"></span>
+        <span id="httpMeta" style="font-size:11px;color:var(--text-dim);"></span>
+        <div id="httpResActions" style="margin-left:auto;display:flex;gap:4px;"></div>
+      </div>
+      <div class="sub-tabs" style="margin-bottom:0;border-bottom-width:1px;">
+        <div class="sub-tab active" data-sub="resp-body" style="font-size:11px;padding:3px 10px;" data-lk="resp_body">响应体</div>
+        <div class="sub-tab" data-sub="resp-headers" style="font-size:11px;padding:3px 10px;" data-lk="resp_headers">响应头</div>
+      </div>
+      <div class="sub-pane active" data-sub="resp-body">
+        <div class="result-box" id="httpResult" style="min-height:25vh;max-height:50vh;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-all;overflow:auto;" data-lk="httpResult">等待请求<button class="copy-btn" data-lk="copy">复制</button></div>
+      </div>
+      <div class="sub-pane" data-sub="resp-headers">
+        <div id="httpRespHeaders" style="font-size:12px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;line-height:1.8;max-height:30vh;overflow:auto;padding:8px 0;"></div>
+      </div>
+      <div class="stat-line" id="httpStat"></div>
+    </div>
+  </div>
+
+  <!-- 📋 CSV → 移入文本 tab -->
+
+  <div style="text-align:center;padding:8px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:12px;line-height:1.8;">
+    <a href="https://github.com/lzg14/litools" target="_blank" style="color:var(--text-dim);text-decoration:none;">litools</a> · Single-file Dev Toolkit · MIT License
+    <span style="margin-left:12px;opacity:0.6;">
+      <kbd style="padding:1px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-size:10px;">Ctrl+K</kbd> 搜索页签 ·
+      <kbd style="padding:1px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-size:10px;">Ctrl+Enter</kbd> 格式化JSON ·
+      <kbd style="padding:1px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-size:10px;">Esc</kbd> 关闭
+    </span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="historyPanel" style="display:none;position:fixed;top:44px;right:16px;width:320px;max-height:70vh;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 32px rgba(0,0,0,0.2);z-index:150;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;">
+    <span>📋 操作历史</span>
+    <div style="display:flex;gap:8px;">
+      <span id="historyClearAll" style="cursor:pointer;color:var(--text-dim);font-size:11px;font-weight:normal;">清空</span>
+      <span id="historyClose" style="cursor:pointer;color:var(--text-dim);font-size:16px;line-height:1;">✕</span>
+    </div>
+  </div>
+  <div id="historyList" style="overflow-y:auto;max-height:calc(70vh - 44px);"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+let _lang = localStorage.getItem('lang') || 'zh';
+const _L = {
+  tab_search:{zh:'🔍 搜索',en:'🔍 Search'}, tab_ts:{zh:'⏱ 时间',en:'⏱ Time'}, sub_ts_convert:{zh:'⏱ 时间戳',en:'⏱ Timestamp'}, sub_ts_calc:{zh:'🔢 日期计算',en:'🔢 Date Calc'}, sub_ts_timer:{zh:'⏱ 计时器',en:'⏱ Timer'},
+  tab_encode:{zh:'🔐 编解码',en:'🔐 Encode/Decode'}, tab_gen:{zh:'🎲 生成',en:'🎲 Generate'},
+  tab_text:{zh:'📝 文本',en:'📝 Text'}, tab_color:{zh:'🎨 颜色',en:'🎨 Color'},
+  tab_json:{zh:'{ } JSON',en:'{ } JSON'}, tab_http:{zh:'🌐 HTTP',en:'🌐 HTTP'},
+  tab_sql:{zh:'🗄️ SQL',en:'🗄️ SQL'}, tab_diff:{zh:'📑 Diff',en:'📑 Diff'},
+  sub_sql_in:{zh:'🗄️ IN 生成',en:'🗄️ IN Generator'}, sub_sql_insert:{zh:'📋 INSERT 解析',en:'📋 INSERT Parser'},
+  sub_bc:{zh:'🔢 进制',en:'🔢 Base Conv'}, sub_csv:{zh:'📋 CSV',en:'📋 CSV'}, sub_diff:{zh:'📑 Diff',en:'📑 Diff'}, sub_color:{zh:'🎨 颜色',en:'🎨 Color'},
+  sub_search:{zh:'🔍 搜索',en:'🔍 Search'}, sub_regex:{zh:'◎ 正则',en:'◎ Regex'},
+  sub_b64:{zh:'Base64',en:'Base64'}, sub_url:{zh:'URL',en:'URL'},
+  sub_html:{zh:'HTML',en:'HTML'}, sub_jwt:{zh:'JWT',en:'JWT'},
+  sub_uuid:{zh:'UUID',en:'UUID'}, sub_hash:{zh:'Hash',en:'Hash'},
+  sub_proc:{zh:'📝 处理',en:'📝 Process'}, sub_stats:{zh:'📊 统计',en:'📊 Stats'},
+  sub_cc:{zh:'🀄 简繁',en:'🀄 Chinese'}, sub_headers:{zh:'请求头',en:'Headers'},
+  sub_body:{zh:'请求体',en:'Body'}, sub_params:{zh:'查询参数',en:'Params'},
+  sub_cookies:{zh:'Cookie',en:'Cookie'},
+  tsNowBtn:{zh:'当前',en:'Now'}, tsClearBtn:{zh:'清空',en:'Clear'},
+  tsRevNowBtn:{zh:'当前',en:'Now'}, tsRevClearBtn:{zh:'清空',en:'Clear'},
+  tsResult:{zh:'等待输入',en:'Waiting'}, tsCopySec:{zh:'复制秒',en:'Copy sec'},
+  tsCopyMs:{zh:'复制毫秒',en:'Copy ms'}, tzLabel:{zh:'时区',en:'Timezone'},
+  tsRevSec:{zh:'秒',en:'Sec'}, tsRevMs:{zh:'毫秒',en:'ms'},
+  jsonResult:{zh:'结果',en:'Result'}, jsonFormatBtn:{zh:'格式化 (Ctrl+Enter)',en:'Format (Ctrl+Enter)'},
+  jsonCompressBtn:{zh:'压缩',en:'Compact'}, jsonLooseBtn:{zh:'宽松解析',en:'Loose'},
+  jsonClearBtn:{zh:'清空',en:'Clear'}, jsonFileBtn:{zh:'📂 打开文件',en:'📂 Open File'},
+  jsonPathBtn:{zh:'查询',en:'Query'}, jsonPathInput:{zh:'JSONPath 查询，如 $.store.book[*].title',en:'JSONPath e.g. $.store.book[*].title'},
+  sqlResult:{zh:'结果',en:'Result'}, sqlGenBtn:{zh:'生成 IN',en:'Generate IN'}, sqlInsertParseBtn:{zh:'解析',en:'Parse'}, sql_insert_title:{zh:'INSERT 语句',en:'INSERT Statement'},
+  sqlQuoteBtn:{zh:'切换引号',en:'Toggle Quote'}, sqlClearBtn:{zh:'清空',en:'Clear'},
+  srchTerm:{zh:'搜索词',en:'Search'}, srchReplace:{zh:'替换为',en:'Replace with'},
+  srchAddBtn:{zh:'添加',en:'Add'}, srchReplaceBtn:{zh:'替换',en:'Replace'},
+  srchReplaceAllBtn:{zh:'全部替换',en:'Replace All'}, srchClearHighBtn:{zh:'清除',en:'Clear'},
+  srchFilterBtn:{zh:'过滤',en:'Filter'}, srchClearBtn:{zh:'清空',en:'Clear'},
+  srchStreamStopBtn:{zh:'停止',en:'Stop'},
+  rexTestBtn:{zh:'测试',en:'Test'}, rexClearBtn:{zh:'清空',en:'Clear'},
+  diffBtn:{zh:'比较',en:'Compare'}, diffSwapBtn:{zh:'⇄ 交换',en:'⇄ Swap'},
+  diffClearBtn:{zh:'清空',en:'Clear'},
+  httpSendBtn:{zh:'发送',en:'Send'}, httpClearBtn:{zh:'清空',en:'Clear'},
+  httpCurlParseBtn:{zh:'解析',en:'Parse'}, httpHeaders:{zh:'Content-Type: application/json',en:'Content-Type: application/json'},
+  httpParams:{zh:'每行一个, Key: Value\\npage: 1\\nlimit: 20',en:'One per line, Key: Value\\npage: 1\\nlimit: 20'},
+  httpCookies:{zh:'每行一个, Key: Value\\nsessionId: abc123',en:'One per line, Key: Value\\nsessionId: abc123'},
+  httpTitle:{zh:'响应',en:'Response'}, httpResult:{zh:'等待请求',en:'Waiting'},
+  copy:{zh:'复制',en:'Copy'}, download:{zh:'下载',en:'Download'},
+  copy_val:{zh:'复制值',en:'Copy value'}, copy_path:{zh:'复制路径',en:'Copy path'},
+  genTxt:{zh:'生成',en:'Create'}, genCount:{zh:'个',en:''},
+  uuidUpper:{zh:'大写',en:'Uppercase'}, uuidNoDash:{zh:'无连字符',en:'No Dashes'},
+  uuidGenBtn:{zh:'生成',en:'Generate'}, uuidCopyAllBtn:{zh:'复制全部',en:'Copy All'},
+  hashCalcBtn:{zh:'计算',en:'Calc'}, hashClearBtn:{zh:'清空',en:'Clear'},
+  tpSortAsc:{zh:'排序 A→Z',en:'Sort A→Z'}, tpSortDesc:{zh:'排序 Z→A',en:'Sort Z→A'},
+  tpUnique:{zh:'去重',en:'Unique'}, tpReverse:{zh:'反转行',en:'Reverse'},
+  tpShuffle:{zh:'打乱',en:'Shuffle'}, tpUpper:{zh:'大写',en:'UPPER'},
+  tpLower:{zh:'小写',en:'lower'}, tpTrim:{zh:'去首尾空格',en:'Trim'},
+  tpClearEmpty:{zh:'删空行',en:'Rm Empty'}, tpFileBtn:{zh:'📂 打开文件',en:'📂 Open File'},
+  tpResult:{zh:'结果',en:'Result'}, statsClearBtn:{zh:'清空',en:'Clear'},
+  statsChars:{zh:'字数',en:'Chars'}, statsCharsWS:{zh:'字符（含空格）',en:'Chars (w/ space)'},
+  statsLines:{zh:'行数',en:'Lines'}, statsWords:{zh:'单词',en:'Words'},
+  statsParas:{zh:'段落',en:'Paras'}, statsBytes:{zh:'字节',en:'Bytes'},
+  ccResult:{zh:'结果',en:'Result'}, ccToSimpBtn:{zh:'繁→简',en:'Trad→Simp'},
+  ccToTradBtn:{zh:'简→繁',en:'Simp→Trad'}, ccClearBtn:{zh:'清空',en:'Clear'},
+  sub_trans:{zh:'🌐 翻译',en:'🌐 Translate'}, transResult:{zh:'结果',en:'Result'},
+  resp_body:{zh:'响应体',en:'Body'}, resp_headers:{zh:'响应头',en:'Headers'},
+  transToEn:{zh:'中 → 英',en:'ZH → EN'}, transToZh:{zh:'英 → 中',en:'EN → ZH'},
+  transClearBtn:{zh:'清空',en:'Clear'}, pl_transInput:{zh:'输入要翻译的文本',en:'Enter text to translate'},
+  pl_tabSearch:{zh:'搜索页签…',en:'Search tabs…'}, pl_tzSearch:{zh:'搜索时区...',en:'Search timezone...'},
+  pl_sqlInsert:{zh:'粘贴 INSERT 语句，自动解析列名与值的对应关系',en:'Paste INSERT statement to parse column-value mapping'},
+  pl_sqlInsertSearch:{zh:'🔍 搜索值定位列名...',en:'🔍 Search value to locate column...'},
+  pl_b64Input:{zh:'输入文本或 Base64',en:'Enter text or Base64'},
+  colorHex:{zh:'HEX',en:'HEX'}, colorRgb:{zh:'RGB',en:'RGB'}, colorHsl:{zh:'HSL',en:'HSL'},
+  bcClearBtn:{zh:'清空',en:'Clear'}, bcDec:{zh:'十进制',en:'Decimal'},
+  bcHex:{zh:'十六进制',en:'Hexadecimal'}, bcBin:{zh:'二进制',en:'Binary'},
+  bcOct:{zh:'八进制',en:'Octal'},
+  csvParseBtn:{zh:'解析',en:'Parse'}, csvDelimBtn:{zh:'分隔符: ,',en:'Delimiter:'},
+  csvClearBtn:{zh:'清空',en:'Clear'}, b64EncodeBtn:{zh:'编码 →',en:'Encode →'},
+  b64DecodeBtn:{zh:'解码 ←',en:'Decode ←'}, b64ClearBtn:{zh:'清空',en:'Clear'},
+  b64Result:{zh:'结果',en:'Result'}, urlEncodeBtn:{zh:'编码',en:'Encode'},
+  urlDecodeBtn:{zh:'解码',en:'Decode'}, urlClearBtn:{zh:'清空',en:'Clear'},
+  urlResult:{zh:'结果',en:'Result'}, htmlEncodeBtn:{zh:'编码 →',en:'Encode →'},
+  htmlDecodeBtn:{zh:'解码 ←',en:'Decode ←'}, htmlClearBtn:{zh:'清空',en:'Clear'},
+  htmlResult:{zh:'结果',en:'Result'}, jwtDecodeBtn:{zh:'解码',en:'Decode'},
+  jwtClearBtn:{zh:'清空',en:'Clear'}, jwtHeader:{zh:'Header',en:'Header'},
+  jwtPayload:{zh:'Payload',en:'Payload'}, jwtSignature:{zh:'Signature',en:'Signature'},
+  // placeholders
+  pl_tsInput:{zh:'粘贴时间戳，自动识别秒/毫秒/微秒',en:'Paste timestamp'},
+  pl_tsRevInput:{zh:'日期字符串，如 2026-07-25 16:30:00',en:'Date string e.g. 2026-07-25 16:30:00'},
+  pl_jsonInput:{zh:'粘贴 JSON',en:'Paste JSON'},
+  pl_sqlInput:{zh:'粘贴值，可用逗号、换行、空格分隔\\n例: abc, def, ghi',en:'Paste values (comma/newline/space sep)'},
+  pl_srchEditor:{zh:'粘贴要搜索的文本',en:'Paste text to search'},
+  pl_rexEditor:{zh:'粘贴测试文本',en:'Paste test text'},
+  pl_rexPattern:{zh:'正则表达式',en:'Regex pattern'},
+  pl_urlInput:{zh:'输入 URL 或字符串',en:'Enter URL or string'},
+  pl_htmlInput:{zh:'输入文本或 HTML 实体',en:'Enter text or HTML entities'},
+  pl_jwtInput:{zh:'粘贴 JWT token',en:'Paste JWT token'},
+  pl_hashInput:{zh:'输入要计算 Hash 的文本',en:'Enter text to hash'},
+  pl_tpInput:{zh:'输入文本',en:'Enter text'},
+  pl_statsInput:{zh:'粘贴文本',en:'Paste text'},
+  pl_ccInput:{zh:'粘贴要转换的文本',en:'Paste text to convert'},
+  pl_colorInput:{zh:'#FF6600 / rgb(255,102,0) / hsl(24,100%,50%)',en:'#FF6600 / rgb(255,102,0) / hsl(24,100%,50%)'},
+  pl_bcInput:{zh:'输入数字，如 255 / 0xFF / 0b1111 / 0o377',en:'Enter number: 255 / 0xFF / 0b1111 / 0o377'},
+  pl_diffLeft:{zh:'原文本',en:'Original text'},
+  pl_diffRight:{zh:'新文本',en:'New text'},
+  pl_httpUrl:{zh:'请求 URL 或粘贴 curl 命令',en:'URL or paste curl command'},
+  pl_httpCurl:{zh:'粘贴 curl 命令',en:'Paste curl command'},
+  pl_httpBody:{zh:'{"key": "value"}',en:'{"key": "value"}'},
+  pl_csvInput:{zh:'粘贴 CSV 文本，或拖入 .csv 文件\\n自动检测分隔符（逗号/制表符）',en:'Paste CSV text or drop .csv file'},
+  // titles
+  tl_themeToggle:{zh:'切换主题',en:'Toggle theme'},
+  tl_langToggle:{zh:'切换语言',en:'Toggle language'},
+  tl_tabSearch:{zh:'搜索页签 (Ctrl+K)',en:'Search tabs (Ctrl+K)'},
+  tl_httpCurl:{zh:'从 curl 解析',en:'Parse from curl'},
+  tl_httpSearch:{zh:'🔍 搜索',en:'🔍 Search'},
+  tl_httpJson:{zh:'{ } JSON',en:'{ } JSON'},
+  // result defaults (for static fallback)
+  res_json:{zh:'结果',en:'Result'},
+  res_uuid:{zh:'结果',en:'Result'},
+  // stat labels
+  stat_file:{zh:'${n} 字符 · ${w} 词 · ${l} 行',en:'${n} chars · ${w} words · ${l} lines'},
+  copied:{zh:'已复制',en:'Copied'}, downloaded:{zh:'已下载',en:'Downloaded'}, no_content:{zh:'没有内容',en:'No content'},
+  no_input:{zh:'请输入内容',en:'Enter content'}, no_match:{zh:'无匹配',en:'No match'},
+  sent_search:{zh:'已发送到搜索',en:'Sent to Search'},
+  sent_json:{zh:'已发送到 JSON',en:'Sent to JSON'},
+  waiting_result:{zh:'等待输入',en:'Waiting'}, waiting_http:{zh:'等待请求',en:'Waiting'},
+  parse_ok:{zh:'已解析: ',en:'Parsed: '}, input_url:{zh:'请输入 URL',en:'Enter URL'},
+  sending:{zh:'发送中…',en:'Sending…'}, req_failed:{zh:'请求失败',en:'Request Failed'},
+  invalid_curl:{zh:'无法解析 curl 命令',en:'Invalid curl command'},
+  no_text:{zh:'没有文本',en:'No text'}, no_term:{zh:'没有搜索词',en:'No search term'},
+  replaced:{zh:'已替换',en:'Replaced'}, replaced_all:{zh:'已全部替换',en:'All replaced'},
+  restored:{zh:'已恢复',en:'Restored'}, stopped:{zh:'已停止',en:'Stopped'},
+  filtered:{zh:'已过滤',en:'Filtered'},
+  // toast messages
+  err_input_json:{zh:'请输入 JSON',en:'Enter JSON'}, err_input_url:{zh:'请输入 URL',en:'Enter URL'},
+  err_input_text:{zh:'请输入文本',en:'Enter text'}, err_input_jwt:{zh:'请输入 JWT token',en:'Enter JWT token'},
+  err_input_insert:{zh:'请输入 INSERT 语句',en:'Enter INSERT statement'},
+  err_no_result:{zh:'没有结果',en:'No result'}, err_no_match:{zh:'无匹配',en:'No match'},
+  err_no_rows:{zh:'没有匹配的行',en:'No matching rows'},
+  err_invalid_json:{zh:'JSON 格式无效',en:'Invalid JSON'},
+  err_timeout:{zh:'请求超时',en:'Request timeout'}, err_timeout_30:{zh:'请求超时（30秒）',en:'Timeout (30s)'},
+  err_request_failed:{zh:'请求失败',en:'Request failed'},
+  err_encode_fail:{zh:'编码失败',en:'Encode failed'}, err_decode_fail:{zh:'解码失败',en:'Decode failed'},
+  err_invalid_b64:{zh:'无效的 Base64',en:'Invalid Base64'}, err_invalid_url:{zh:'无效的 URL 编码',en:'Invalid URL encoding'},
+  err_curl_parse:{zh:'无法解析 curl 命令',en:'Cannot parse curl command'},
+  err_jwt_format:{zh:'JWT 格式无效，需要三部分',en:'Invalid JWT, expected 3 parts'},
+  err_jwt_decode:{zh:'JWT 解码失败，请检查 token 格式',en:'JWT decode failed, check token format'},
+  err_no_data:{zh:'无数据',en:'No data'},
+  err_formatting:{zh:'已格式化',en:'Formatted'}, err_compacted:{zh:'已压缩',en:'Compacted'},
+  err_send_failed:{zh:'发送失败',en:'Send failed'},
+  // status
+  status_200:{zh:'请求成功',en:'OK'}, status_timeout:{zh:'请求超时',en:'Timeout'},
+  status_failed:{zh:'请求失败',en:'Failed'}, status_sending:{zh:'发送中…',en:'Sending…'},
+  sent_to_search:{zh:'已发送到搜索',en:'Sent to Search'}, sent_to_json:{zh:'已发送到 JSON',en:'Sent to JSON'},
+  parsed:{zh:'已解析',en:'Parsed'}, formatted:{zh:'已格式化',en:'Formatted'},
+  compacted:{zh:'已压缩',en:'Compacted'}, copied_toast:{zh:'已复制',en:'Copied'},
+  restore:{zh:'已恢复',en:'Restored'}, stopped_toast:{zh:'已停止',en:'Stopped'},
+  // timestamp
+  ts_ago:{zh:'前',en:'ago'}, ts_later:{zh:'后',en:'later'}, ts_just:{zh:'刚刚',en:'just now'},
+  ts_year:{zh:'年',en:'y'}, ts_month:{zh:'个月',en:'mo'}, ts_week:{zh:'周',en:'w'},
+  ts_day:{zh:'天',en:'d'}, ts_hour:{zh:'小时',en:'h'}, ts_min:{zh:'分',en:'m'}, ts_sec:{zh:'秒',en:'s'},
+  ts_micro:{zh:'微秒',en:'μs'}, ts_milli:{zh:'毫秒',en:'ms'}, ts_second:{zh:'秒',en:'s'},
+  ts_invalid:{zh:'无效数字',en:'Invalid number'}, ts_too_large:{zh:'数值过大',en:'Number too large'},
+  ts_invalid_date:{zh:'无效日期',en:'Invalid date'}, ts_parse_err:{zh:'无法解析',en:'Cannot parse'},
+  // JSON
+  json_items:{zh:'项',en:'items'}, json_keys:{zh:'个',en:'keys'},
+  json_cancelled:{zh:'已取消',en:'Cancelled'}, json_line_err:{zh:'第 ${line} 行第 ${col} 列',en:'Line ${line}, Col ${col}'},
+  json_enter_path:{zh:'请输入 JSONPath',en:'Enter JSONPath'}, json_parse_first:{zh:'请先解析 JSON',en:'Parse JSON first'},
+  json_match:{zh:'匹配 ${n} 处',en:'Matched ${n}'},
+  // hash
+  hash_need_https:{zh:'需要 HTTPS',en:'Requires HTTPS'},
+  // search
+  search_too_large:{zh:'文本过大，跳过高亮',en:'Text too large, skipping highlight'},
+  search_matches:{zh:'匹配 ${n} 处',en:'Matched ${n}'}, search_match:{zh:'匹配 ${n} 处',en:'Matched ${n}'},
+  search_added:{zh:'已添加搜索词',en:'Added search term'}, search_added_tag:{zh:'已添加',en:'Added'},
+  search_replace_stream:{zh:'流式模式下不可替换',en:'Cannot replace in stream mode'},
+  search_no_replace:{zh:'无匹配可替换',en:'No match to replace'}, search_replaced:{zh:'已替换',en:'Replaced'},
+  search_replaced_all:{zh:'已全部替换',en:'All replaced'}, search_replaced_one:{zh:'已替换首处',en:'Replaced first'},
+  search_enter_term:{zh:'请输入搜索词',en:'Enter search term'},
+  search_reopen_file:{zh:'重新打开文件以应用新搜索词',en:'Reopen file to apply new terms'},
+  search_clear:{zh:'搜索词已清空',en:'Terms cleared'}, search_filter_stream:{zh:'流式模式下不可用',en:'Not available in stream mode'},
+  search_no_rows:{zh:'没有匹配的行',en:'No matching rows'}, search_kept:{zh:'保留了 ${n} / ${total} 行',en:'Kept ${n} / ${total} rows'},
+  search_restored:{zh:'已恢复',en:'Restored'}, search_stopped:{zh:'已停止',en:'Stopped'},
+  // file
+  file_too_large:{zh:'文件 ${mb}MB 超过 500MB，确定吗？',en:'File ${mb}MB exceeds 500MB, continue?'},
+  file_reading:{zh:'正在读取 ${name} (${mb}MB)...',en:'Reading ${name} (${mb}MB)...'},
+  file_read_done:{zh:'${name} (${mb}MB, ${chars} 字符)',en:'${name} (${mb}MB, ${chars} chars)'},
+  file_read_err:{zh:'读取失败',en:'Read failed'}, file_stream:{zh:'流式搜索 ${name}...',en:'Streaming ${name}...'},
+  file_stream_done:{zh:'完成: ${n} 条匹配',en:'Done: ${n} matches'}, file_stream_err:{zh:'流式搜索出错',en:'Stream error'},
+  // HTTP
+  http_timeout:{zh:'请求超时（30秒）',en:'Timeout (30s)'}, http_timeout_short:{zh:'请求超时',en:'Timeout'},
+  http_failed:{zh:'请求失败',en:'Failed'}, http_send_err:{zh:'发送失败',en:'Send failed'},
+  http_curl_parsed:{zh:'已解析 curl',en:'Parsed curl'}, http_curl_detected:{zh:'检测到 curl',en:'Curl detected'},
+  // diff
+  diff_large:{zh:'文本较大 (${la}×${lb} 行)，计算可能很慢，确定继续吗？',en:'Large text (${la}×${lb} lines), may be slow. Continue?'},
+  diff_need_both:{zh:'请在两侧输入文本',en:'Enter text on both sides'},
+  // CSV
+  csv_rows_cols:{zh:'${rows} 行 × ${cols} 列',en:'${rows} rows × ${cols} cols'},
+  // SQL
+  sql_toggle_quote:{zh:'切换引号 (当前: ',en:'Toggle quote (current: '},
+  sql_parsed_cols:{zh:'已解析 ${n} 列',en:'Parsed ${n} columns'},
+  // misc
+  clipboard_err:{zh:'复制出错',en:'Copy error'}, session_full:{zh:'会话保存失败（存储空间不足）',en:'Session save failed (storage full)'},
+  no_content:{zh:'没有内容',en:'No content'}, copy_err:{zh:'复制出错',en:'Copy error'},
+};
+const _ = k => _L[k]?.[_lang] || k;
+
+// Theme
+function setTheme(dark) {
+  document.documentElement.dataset.theme = dark ? 'dark' : '';
+  $('themeToggle').textContent = dark ? '☀️' : '🌙';
+  try { localStorage.setItem('devtools-dark', dark ? '1' : ''); } catch {}
+}
+$('themeToggle').addEventListener('click', () => {
+  const dark = !document.documentElement.dataset.theme;
+  setTheme(dark);
+});
+if (localStorage.getItem('devtools-dark') === '1') setTheme(true);
+
+// Toast
+const toastEl = $('toast');
+let tmr = null;
+function toast(msg, isErr) {
+  toastEl.textContent = (isErr ? '✕ ' : '✓ ') + msg;
+  toastEl.classList.toggle('err', !!isErr);
+  toastEl.classList.add('show');
+  clearTimeout(tmr);
+  tmr = setTimeout(() => toastEl.classList.remove('show'), 1800);
+}
+function downloadText(text, filename) {
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 100);
+  toast(_('downloaded'));
+}
+function copy(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    toast(_('copied'));
+  }).catch(() => {
+    // Fallback: execCommand
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      toast(_('copied'));
+    } catch { toast(_('clipboard_err'), 1); }
+  });
+}
+
+// ═══════════════════════════════════════
+//  Tab / Sub-tab 切换
+// ═══════════════════════════════════════
+// 结果持久化：保存/恢复各 tab 的结果
+const _resultBoxes = {
+  json: 'jsonResult', http: 'httpResult', encode: 'b64Result',
+  gen: 'uuidResult', text: 'tpResult', sql: 'sqlResult', 'sql-insert': 'sqlInsertResult'
+};
+let _activeTab = 'json';
+function saveTabResult(tabId) {
+  const boxId = _resultBoxes[tabId];
+  if (!boxId) return;
+  const el = $(boxId);
+  if (!el) return;
+  // 跳过默认占位文本
+  const txt = el.textContent.trim();
+  if (!txt || txt === '结果' || txt === 'Result' || txt === '等待请求' || txt === 'Waiting') return;
+  try { sessionStorage.setItem('litools_' + boxId, el.innerHTML); } catch {}
+}
+function restoreTabResult(tabId) {
+  const boxId = _resultBoxes[tabId];
+  if (!boxId) return;
+  const el = $(boxId);
+  if (!el) return;
+  try {
+    const saved = sessionStorage.getItem('litools_' + boxId);
+    if (saved && el.textContent.trim() === (el.dataset.lk ? _L[el.dataset.lk]?.[_lang] || '结果' : '结果')) {
+      el.innerHTML = saved;
+    }
+  } catch {}
+}
+function switchTab(id) {
+  saveTabResult(_activeTab);
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  const tab = document.querySelector(`.tab[data-tab="${id}"]`);
+  if (tab) tab.classList.add('active');
+  const pane = $(`p-${id}`);
+  if (pane) pane.classList.add('active');
+  _activeTab = id;
+  restoreTabResult(id);
+}
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    switchTab(tab.dataset.tab);
+  });
+});
+
+
+// ═══════════════════════════════════════
+//  Sub-tabs
+// ═══════════════════════════════════════
+document.querySelectorAll('.sub-tab').forEach(stab => {
+  stab.addEventListener('click', () => {
+    const parent = stab.closest('.tab-pane');
+    parent.querySelectorAll('.sub-tab').forEach(s => s.classList.remove('active'));
+    parent.querySelectorAll('.sub-pane').forEach(p => p.classList.remove('active'));
+    stab.classList.add('active');
+    const sub = parent.querySelector(`.sub-pane[data-sub="${stab.dataset.sub}"]`);
+    if (sub) sub.classList.add('active');
+  });
+});
+
+// ═══════════════════════════════════════
+//  ⏱ 时间戳
+// ═══════════════════════════════════════
+function pad(n) { return String(n).padStart(2, '0'); }
+function fmtUTC(d) { return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`; }
+function fmtLocal(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+function fmtInTz(d, tz) {
+  try {
+    const s = d.toLocaleString('zh-CN', { timeZone: tz, hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const off = tzOffset(tz);
+    const sign = off >= 0 ? '+' : '-';
+    const absH = Math.floor(Math.abs(off) / 60);
+    return s.replace(/\//g, '-') + ` (UTC${sign}${absH})`;
+  } catch { return '—'; }
+}
+function fmtRfc(d) {
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const o = -d.getTimezoneOffset();
+  const s = o >= 0 ? '+' : '-';
+  const tz = `${s}${pad(Math.floor(Math.abs(o)/60))}${pad(Math.abs(o)%60)}`;
+  return `${days[d.getDay()]}, ${pad(d.getDate())} ${months[d.getMonth()]} ${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} ${tz}`;
+}
+function relTime(d) {
+  const diff = Date.now() - d.getTime();
+  const abs = Math.abs(diff);
+  const dir = diff < 0 ? _('ts_later') : _('ts_ago');
+  if (abs < 5000) return _('ts_just');
+  const u = [[31536e6,_('ts_year')],[2592e6,_('ts_month')],[6048e5,_('ts_week')],[864e5,_('ts_day')],[36e5,_('ts_hour')],[6e4,_('ts_min')],[1e3,_('ts_sec')]];
+  for (const [ms, l] of u) { if (abs >= ms) return `${Math.floor(abs/ms)} ${l}${dir}`; }
+  return _('ts_just');
+}
+function parseTs(input) {
+  input = input.trim();
+  if (!input) return null;
+  const raw = input.replace(/[_,\s]/g, '');
+  const n = Number(raw);
+  if (!isFinite(n) || n < 0) return { err: _('ts_invalid') };
+  let ms, label;
+  if (n > 1e16) return { err: _('ts_too_large') };
+  if (n > 1e13) { ms = n / 1000; label = _('ts_micro'); }
+  else if (n > 2000000000) { ms = n; label = _('ts_milli'); }
+  else if (n > 0) { ms = n * 1000; label = _('ts_second'); }
+  else return { err: _('ts_invalid') };
+  const d = new Date(ms);
+  if (isNaN(d.getTime())) return { err: _('ts_invalid_date') };
+  return { d, ms, label, sec: Math.floor(ms / 1000), utc: fmtUTC(d), local: fmtLocal(d), rfc: fmtRfc(d), rel: relTime(d) };
+}
+function renderTs(r) {
+  $('tsDetect').textContent = r ? (r.err ? `⚠ ${r.err}` : `${r.label} · ${r.sec}`) : '';
+  $('tsResult').innerHTML = r && !r.err
+    ? `<div style="font-size:20px;font-weight:500;">${r.local}</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;">${Intl.DateTimeFormat().resolvedOptions().timeZone}</div>`
+    : (r ? `<span style="color:var(--red)">⚠ ${r.err}</span>` : _('waiting_result'));
+  ['tsUtc','tsRfc','tsRel','tsMs','tsTz'].forEach((id, i) => {
+    const el = $(id);
+    if (r && !r.err) {
+      const vals = [r.utc, r.rfc, r.rel, String(r.ms)];
+      if (id === 'tsTz') {
+        vals.push(tzSelected ? fmtInTz(r.d, tzSelected) : '—');
+      }
+      el.textContent = vals[i];
+    } else el.textContent = '—';
+  });
+  $('tzLabel').textContent = tzSelected ? tzSelected.split('/').pop().replace(/_/g, ' ') : _('tzLabel');
+}
+$('tsInput').addEventListener('input', () => renderTs(parseTs($('tsInput').value)));
+$('tsInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { const r = parseTs($('tsInput').value); if (r && !r.err) copy(String(r.sec)); }
+});
+$('tsNowBtn').addEventListener('click', () => {
+  $('tsInput').value = Math.floor(Date.now() / 1000);
+  renderTs(parseTs($('tsInput').value));
+  $('tsInput').focus();
+});
+$('tsClearBtn').addEventListener('click', () => { $('tsInput').value = ''; renderTs(null); $('tsInput').focus(); });
+
+// Reverse: date → timestamp
+function renderTsRev() {
+  const v = $('tsRevInput').value.trim();
+  if (!v) { $('tsRevSec').textContent = '—'; $('tsRevMs').textContent = '—'; return; }
+  const d = new Date(v);
+  if (isNaN(d.getTime())) { $('tsRevSec').textContent = '⚠ ' + _('ts_parse_err'); $('tsRevMs').textContent = '—'; return; }
+  const ms = d.getTime();
+  $('tsRevSec').textContent = Math.floor(ms / 1000);
+  $('tsRevMs').textContent = ms;
+}
+$('tsRevInput').addEventListener('input', renderTsRev);
+$('tsRevNowBtn').addEventListener('click', () => {
+  const n = new Date();
+  $('tsRevInput').value = `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())} ${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+  renderTsRev();
+});
+$('tsRevClearBtn').addEventListener('click', () => { $('tsRevInput').value = ''; renderTsRev(); });
+$('tsCopySec').addEventListener('click', () => { const r = parseTs($('tsInput').value); if (r && !r.err) copy(String(r.sec)); else toast(_('err_no_result'), 1); });
+$('tsCopyMs').addEventListener('click', () => { const r = parseTs($('tsInput').value); if (r && !r.err) copy(String(r.ms)); else toast(_('err_no_result'), 1); });
+
+// 日期计算
+$('tsCalcBtn').addEventListener('click', () => {
+  const from = new Date($('tsCalcFrom').value);
+  const to = new Date($('tsCalcTo').value);
+  if (isNaN(from) || isNaN(to)) { toast('请选择两个日期', 1); return; }
+  const diff = Math.abs(to - from);
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  const secs = Math.floor((diff % 60000) / 1000);
+  // 工作日计算
+  let workdays = 0, d = new Date(Math.min(from, to)), end = new Date(Math.max(from, to));
+  while (d <= end) { if (d.getDay() !== 0 && d.getDay() !== 6) workdays++; d.setDate(d.getDate() + 1); }
+  $('tsCalcResult').innerHTML = `
+    <div class="result-item"><span class="label">总天数</span><span class="value">${days} 天</span></div>
+    <div class="result-item"><span class="label">工作日</span><span class="value">${workdays} 天</span></div>
+    <div class="result-item"><span class="label">时分秒</span><span class="value">${hours}h ${mins}m ${secs}s</span></div>
+    <div class="result-item"><span class="label">总秒数</span><span class="value">${Math.floor(diff / 1000).toLocaleString()} s</span></div>
+    <div class="result-item"><span class="label">总毫秒</span><span class="value">${diff.toLocaleString()} ms</span></div>`;
+});
+$('tsCalcAddBtn').addEventListener('click', () => {
+  const from = new Date($('tsCalcFrom').value);
+  if (isNaN(from)) { toast('请先选择起始日期', 1); return; }
+  const days = parseInt($('tsCalcDays').value) || 0;
+  const result = new Date(from.getTime() + days * 86400000);
+  $('tsCalcTo').value = result.toISOString().slice(0, 16);
+  $('tsCalcBtn').click();
+});
+$('tsCalcSwap').addEventListener('click', () => {
+  const tmp = $('tsCalcFrom').value;
+  $('tsCalcFrom').value = $('tsCalcTo').value;
+  $('tsCalcTo').value = tmp;
+});
+$('tsCalcClearBtn').addEventListener('click', () => {
+  $('tsCalcFrom').value = '';
+  $('tsCalcTo').value = '';
+  $('tsCalcResult').innerHTML = '';
+  $('tsCalcDays').value = '1';
+});
+// 默认填入当前时间
+$('tsCalcFrom').value = new Date().toISOString().slice(0, 16);
+
+// 计时器
+let timerRunning = false, timerStart = 0, timerElapsed = 0, timerLaps = [], timerRAF = null;
+function formatTimer(ms) {
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  const d = Math.floor((ms % 1000) / 100);
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${d}`;
+}
+function updateTimer() {
+  if (!timerRunning) return;
+  const elapsed = timerElapsed + (Date.now() - timerStart);
+  $('timerDisplay').textContent = formatTimer(elapsed);
+  timerRAF = requestAnimationFrame(updateTimer);
+}
+$('timerStartBtn').addEventListener('click', () => {
+  if (!timerRunning) {
+    timerRunning = true;
+    timerStart = Date.now();
+    $('timerStartBtn').textContent = '⏸ 暂停';
+    $('timerLapBtn').style.display = '';
+    updateTimer();
+  } else {
+    timerRunning = false;
+    timerElapsed += Date.now() - timerStart;
+    $('timerStartBtn').textContent = '▶ 继续';
+    if (timerRAF) cancelAnimationFrame(timerRAF);
+  }
+});
+$('timerLapBtn').addEventListener('click', () => {
+  if (!timerRunning) return;
+  const elapsed = timerElapsed + (Date.now() - timerStart);
+  const lapTime = timerLaps.length ? elapsed - timerLaps[timerLaps.length - 1].total : elapsed;
+  timerLaps.push({ total: elapsed, lap: lapTime });
+  const div = document.createElement('div');
+  div.style.cssText = 'padding:4px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;';
+  div.innerHTML = `<span>#${timerLaps.length}</span><span>${formatTimer(lapTime)}</span><span style="color:var(--text-dim);">${formatTimer(elapsed)}</span>`;
+  $('timerLaps').prepend(div);
+});
+$('timerResetBtn').addEventListener('click', () => {
+  timerRunning = false;
+  timerElapsed = 0;
+  timerLaps = [];
+  if (timerRAF) cancelAnimationFrame(timerRAF);
+  $('timerDisplay').textContent = '00:00:00.0';
+  $('timerStartBtn').textContent = '▶ 开始';
+  $('timerLapBtn').style.display = 'none';
+  $('timerLaps').innerHTML = '';
+});
+
+// ═══════════════════════════════════════
+//  通用工具：文件打开 / 统计栏 / 拖拽
+// ═══════════════════════════════════════
+function setupFileInput(opts) {
+  const btn = $(opts.btnId);
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = opts.accept || '.json,.txt,.log,.md,.csv,.xml,.yaml,.yml,.js,.ts,.css,.html';
+    inp.onchange = () => {
+      const file = inp.files[0];
+      if (!file) return;
+      const mb = (file.size / 1024 / 1024).toFixed(1);
+      if (file.size > 500 * 1024 * 1024 && !confirm(`文件 ${mb}MB 超过 500MB，读取可能耗尽内存，确定吗？`)) return;
+      toast(`正在读取 ${file.name} (${mb}MB)...`);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = reader.result;
+        if (opts.isContentEditable) {
+          opts.targetEl.textContent = text;
+          opts.targetEl.dataset.lkPl = '';
+        } else {
+          opts.targetEl.value = text;
+        }
+        toast(`${file.name} (${mb}MB, ${text.length.toLocaleString()} 字符)`);
+        if (opts.onLoad) setTimeout(() => opts.onLoad(text), 0);
+      };
+      reader.onerror = () => toast(`读取失败`, 1);
+      reader.readAsText(file);
+    };
+    inp.click();
+  });
+}
+
+// ═══════════════════════════════════════
+//  内联统计栏
+// ═══════════════════════════════════════
+function bindStats(src, statId) {
+  const stat = $(statId);
+  if (!stat) return;
+  const update = () => {
+    const text = src.value !== undefined ? src.value : src.textContent;
+    if (!text) { stat.textContent = ''; return; }
+    const lines = text.split('\n').length;
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const tmpl = _L.stat_file ? _L.stat_file[_lang] : '${n} chars · ${w} words · ${l} lines';
+    stat.textContent = tmpl.replace('${n}', text.length.toLocaleString()).replace('${w}', words.toLocaleString()).replace('${l}', lines.toLocaleString());
+  };
+  src.addEventListener('input', update);
+  setTimeout(update, 0);
+}
+
+// ═══════════════════════════════════════
+//  拖拽文件支持
+// ═══════════════════════════════════════
+async function readDroppedFile(file) {
+  const mb = (file.size / 1024 / 1024).toFixed(1);
+  if (file.size > 500 * 1024 * 1024 && !confirm(`文件 ${mb}MB 超过 500MB，确定吗？`)) return null;
+  toast(`正在读取 ${file.name} (${mb}MB)...`);
+  try { return await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsText(file); }); }
+  catch { toast(_('file_read_err'), 1); return null; }
+}
+
+function handleFileDrop(file) {
+  const active = document.querySelector('.tab-pane.active');
+  if (!active) return;
+  const id = active.id;
+  const sub = active.querySelector('.sub-pane.active');
+  const subId = sub ? sub.dataset.sub : '';
+  if (id === 'p-json') {
+    readDroppedFile(file).then(text => { if (text) { $('jsonInput').value = text; renderJSONResult(text, true); } });
+  } else if (id === 'p-search') {
+    if (subId === 'regex') {
+      readDroppedFile(file).then(text => { if (text) { rexEditor.textContent = text; rexHighlight(); } });
+    } else {
+      if (file.size > SRCH_STREAM_THRESHOLD) {
+        toast(`流式搜索 ${file.name}...`);
+        srchExitStream(true);
+        srchStreamScan(file).then(() => toast(`完成: ${_srchStreamMatches.length} 条匹配`)).catch(e => { srchExitStream(true); toast(`出错: ${e.message}`, 1); });
+      } else {
+        readDroppedFile(file).then(text => { if (text) { srchEditor.textContent = text; srchEditor.dataset.lkPl = ''; applyHighlights(); updateSrchLines(); } });
+      }
+    }
+  } else if (id === 'p-encode' && subId === 'jwt') {
+    readDroppedFile(file).then(text => { if (text) { $('jwtInput').value = text; $('jwtDecodeBtn').click(); } });
+  } else if (id === 'p-gen' && subId === 'hash') {
+    readDroppedFile(file).then(text => { if (text) { $('hashInput').value = text; $('hashCalcBtn').click(); } });
+  } else if (id === 'p-text') {
+    if (subId === 'proc') {
+      readDroppedFile(file).then(text => { if (text) { $('tpInput').value = text; } });
+    } else if (subId === 'stats') {
+      readDroppedFile(file).then(text => { if (text) { $('statsInput').value = text; updateStats(); } });
+    } else if (subId === 'cc') {
+      readDroppedFile(file).then(text => { if (text) { $('ccInput').value = text; } });
+    } else if (subId === 'csv') {
+      readDroppedFile(file).then(text => { if (text) { $('csvInput').value = text; renderCSV(text); } });
+    } else { toast(`当前子页签不支持拖拽`, 1); }
+  } else if (id === 'p-http') {
+    readDroppedFile(file).then(text => { if (text) { $('httpBody').value = text; } });
+  } else {
+    toast(`当前 tab 不支持拖拽`, 1);
+  }
+}
+
+document.addEventListener('dragenter', e => {
+  e.preventDefault();
+  const pane = e.target.closest('.tab-pane');
+  if (!pane) return;
+  pane.dataset.dragCount = ((pane.dataset.dragCount | 0)) + 1;
+  pane.classList.add('dragover');
+});
+document.addEventListener('dragleave', e => {
+  const pane = e.target.closest('.tab-pane');
+  if (!pane) return;
+  const cnt = ((pane.dataset.dragCount | 0)) - 1;
+  pane.dataset.dragCount = cnt < 0 ? 0 : cnt;
+  if (cnt <= 0) pane.classList.remove('dragover');
+});
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  document.querySelectorAll('.tab-pane').forEach(p => { p.classList.remove('dragover'); p.dataset.dragCount = '0'; });
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  handleFileDrop(file);
+});
+
+// ═══════════════════════════════════════
+//  { } JSON
+// ═══════════════════════════════════════
+const JSON_TREE_LIMIT = 10485760; // 10MB: beyond this, skip tree view, use plain text (tree render would be too many DOM nodes)
+const jsonInput = $('jsonInput');
+const jsonLines = $('jsonLines');
+
+function updateJsonLines(errLine) {
+  const text = jsonInput.value;
+  if (text.length > JSON_TREE_LIMIT) { jsonLines.innerHTML = ''; return; }
+  const lines = text.split('\n');
+  jsonLines.innerHTML = lines.map((_, i) => `<div style="${i + 1 === errLine ? 'color:var(--red);font-weight:bold;' : ''}">${i + 1}</div>`).join('');
+}
+jsonInput.addEventListener('input', () => updateJsonLines());
+jsonInput.addEventListener('scroll', () => { jsonLines.scrollTop = jsonInput.scrollTop; });
+
+function looseTransform(v) {
+  return v.replace(/\/\/.*/g,'').replace(/\/\*[\s\S]*?\*\//g,'').replace(/,\s*}/g,'}').replace(/,\s*\]/g,']').replace(/([{,]\s*)'([^']*?)'(\s*[,:}\]])/g,'$1"$2"$3').replace(/([{,]\s*)(\w+)(\s*:)/g,'$1"$2"$3').replace(/:\s*'([^']*?)'(\s*[,:}\]])/g,': "$1"$2').replace(/(\w+)"([,}])/g,'$1$2').replace(/:\s*(\w+)\s*([,}])/g,(m,v,s)=>v==='true'||v==='false'||v==='null'||isFinite(Number(v))?m:`:"${v}"${s}`);
+}
+function fmtJSONError(text, e) {
+  if (!e) return '<div style="font-size:12px;color:var(--text-dim);">' + _('json_cancelled') + '</div>';
+  if (text.length > JSON_TREE_LIMIT) return `<div style="font-size:12px;color:var(--red);">⚠ ${escHtml(e.message)}</div>`;
+  let lo = 0, hi = text.length;
+  while (lo < hi) { const mid = (lo + hi + 1) >>> 1; try { JSON.parse(text.slice(0, mid)); lo = mid; } catch { hi = mid - 1; } }
+  const pos = lo < text.length ? lo : null;
+  if (pos == null) { updateJsonLines(); return `<div style="font-size:12px;color:var(--red);">⚠ ${escHtml(e.message)}</div>`; }
+  const lines = text.split('\n');
+  let charIdx = 0;
+  for (let li = 0; li < lines.length; li++) {
+    const lineEnd = charIdx + lines[li].length;
+    if (pos <= lineEnd) {
+      const col = pos - charIdx;
+      updateJsonLines(li + 1);
+      return `<div style="font-size:12px;color:var(--red);margin-bottom:6px;">⚠ 第 ${li+1} 行第 ${col+1} 列</div>
+<div style="background:#fff5f5;border:1px solid #ffc0c0;border-radius:4px;padding:8px 10px;font-size:13px;line-height:1.5;font-family:monospace;white-space:pre-wrap;word-break:break-all;">${escHtml(lines[li])}</div>
+<div style="font-family:monospace;font-size:13px;line-height:1;white-space:pre;padding:0 10px;color:var(--red);font-weight:bold;">${' '.repeat(col)}↑</div>`;
+    }
+    charIdx = lineEnd + 1;
+  }
+  updateJsonLines();
+  return `<div style="font-size:12px;color:var(--red);">⚠ ${escHtml(e.message)}</div>`;
+}
+
+let _jsonData = null;
+function getByPath(obj, path) { let c = obj; for (const s of path) { if (c == null) return; c = c[s]; } return c; }
+function encPath(p) { return encodeURIComponent(JSON.stringify(p)); }
+function decPath(s) { return JSON.parse(decodeURIComponent(s)); }
+
+function jsonTree(val, path) {
+  if (val === null) return `<span data-jpath="${encPath(path)}" style="color:var(--jt-null,#9c27b0);">null</span>`;
+  if (typeof val === 'boolean') return `<span data-jpath="${encPath(path)}" style="color:var(--jt-bool,#d32f2f);">${val}</span>`;
+  if (typeof val === 'number') return `<span data-jpath="${encPath(path)}" style="color:var(--jt-num,#1565c0);">${val}</span>`;
+  if (typeof val === 'string') return `<span data-jpath="${encPath(path)}" style="color:var(--jt-str,#2e7d32);">"${escHtml(val)}"</span>`;
+  if (!val || typeof val !== 'object') return escHtml(String(val));
+  const isArr = Array.isArray(val);
+  const keys = Object.keys(val);
+  if (keys.length === 0) return isArr ? '<span style="color:#888;">[]</span>' : '<span style="color:#888;">{}</span>';
+  const badge = `<span class="jt-badge">${isArr ? val.length + _('json_items') : keys.length + _('json_keys')}</span>`;
+  return `<span class="jt-toggle" data-jpath="${encPath(path)}"><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="display:none;color:#888;">…</span><span class="jt-body">${isArr
+    ? val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('')
+    : keys.map((k,i) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<keys.length-1?',':''}</div>`).join('')
+  }</span><span class="jt-brace">${isArr?']':'}'}</span></span>`;
+}
+
+function renderJSONResult(v, loose) {
+  if (!v.trim()) { $('jsonResult').innerHTML = _('jsonResult'); _jsonData = null; return; }
+  try {
+    if (v.length > JSON_TREE_LIMIT) { const d = JSON.parse(v); $('jsonResult').textContent = JSON.stringify(d, null, 2); _jsonData = null; return; }
+    const r = JSON.parse(loose ? looseTransform(v) : v);
+    _jsonData = r;
+    $('jsonResult').innerHTML = `<div class="jt-root">${jsonTree(r, [])}</div>`;
+  } catch (e) {
+    if (v.length > JSON_TREE_LIMIT) $('jsonResult').textContent = `⚠ ${e.message}`;
+    else $('jsonResult').innerHTML = fmtJSONError(v, e);
+    _jsonData = null;
+  }
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('.jt-toggle');
+  if (!t) return;
+  const b = t.querySelector('.jt-body'), el = t.querySelector('.jt-ellipsis');
+  const hide = b.style.display !== 'none';
+  b.style.display = hide ? 'none' : '';
+  el.style.display = hide ? '' : 'none';
+});
+
+const ctxMenu = document.createElement('div');
+ctxMenu.id='ctxMenu'; ctxMenu.style.cssText='display:none;position:fixed;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 0;box-shadow:0 4px 12px rgba(0,0,0,0.15);min-width:160px;';
+document.body.appendChild(ctxMenu);
+const ctxS = document.createElement('style');
+ctxS.textContent='.ctx-item{padding:6px 14px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;}.ctx-item:hover{background:var(--surface2);color:var(--accent);}';
+document.body.appendChild(ctxS);
+
+// 搜索页右键：选中文字直接添加为搜索词
+$('srchEditor').addEventListener('contextmenu', e => {
+  const sel = window.getSelection().toString().trim();
+  if (!sel) return;
+  e.preventDefault();
+  if (!srchTerms.includes(sel)) srchTerms.push(sel);
+  $('srchTerm').value = sel;
+  applyHighlights();
+  updateSrchTags();
+  toast(_('search_added') + ': ' + sel.slice(0, 30));
+});
+
+// JSON 结果区右键菜单
+$('jsonResult').addEventListener('contextmenu', e => {
+  const t = e.target.closest('[data-jpath]');
+  if (!t || !_jsonData) return;
+  e.preventDefault();
+  ctxMenu.dataset.path = JSON.stringify(decPath(t.dataset.jpath));
+  ctxMenu.innerHTML = `<div class="ctx-item" data-action="copy-val">📋 ${_L.copy_val?.[_lang] || 'Copy value'}</div><div class="ctx-item" data-action="copy-path">📋 ${_L.copy_path?.[_lang] || 'Copy path'}</div>`;
+  ctxMenu.style.left = Math.min(e.clientX, innerWidth - 180) + 'px';
+  ctxMenu.style.top = Math.min(e.clientY, innerHeight - 100) + 'px';
+  ctxMenu.style.display = 'block';
+});
+
+document.addEventListener('click', e => { if (!ctxMenu.contains(e.target)) ctxMenu.style.display = 'none'; });
+ctxMenu.addEventListener('click', e => {
+  const item = e.target.closest('.ctx-item'); if (!item) return;
+  e.stopPropagation();
+  const action = item.dataset.action;
+  if (action === 'copy-val' || action === 'copy-path') {
+    try {
+      const path = JSON.parse(ctxMenu.dataset.path);
+      const val = getByPath(_jsonData, path);
+      copy(action === 'copy-val' ? (typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val)) : path.map(p => typeof p === 'number' ? `[${p}]` : `.${p}`).join('').replace(/^\./, ''));
+    } catch(e2) { console.error('ctxmenu error:', e2); toast(_('clipboard_err'), 1); }
+  }
+  ctxMenu.style.display = 'none';
+});
+// JSON 分栏拖拽
+(function() {
+  const bar = $('jsonDragBar'), left = $('jsonLeft'), right = $('jsonResult'), wrap = $('jsonSplit');
+  let dragging = false;
+  bar.addEventListener('mousedown', e => { dragging = true; e.preventDefault(); bar.style.background = 'var(--accent)'; });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const rect = wrap.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const pct = Math.max(15, Math.min(85, (x / rect.width) * 100));
+    left.style.flex = 'none';
+    left.style.width = pct + '%';
+    right.style.flex = 'none';
+    right.style.width = (100 - pct) + '%';
+  });
+  document.addEventListener('mouseup', () => { if (dragging) { dragging = false; bar.style.background = ''; } });
+})();
+$('jsonFormatBtn').addEventListener('click', () => renderJSONResult($('jsonInput').value, false));
+$('jsonCompressBtn').addEventListener('click', () => {
+  const v = $('jsonInput').value.trim();
+  if (!v) { toast(_('err_input_json'), 1); return; }
+  try { $('jsonResult').textContent = JSON.stringify(JSON.parse(v)); } catch(e) { $('jsonResult').innerHTML = fmtJSONError(v, e); }
+});
+$('jsonLooseBtn').addEventListener('click', () => renderJSONResult($('jsonInput').value, true));
+$('jsonClearBtn').addEventListener('click', () => { $('jsonInput').value = ''; $('jsonResult').innerHTML = (_L.res_json ? _L.res_json[_lang] : 'Result') + '<button class=\"copy-btn\" data-lk=\"copy\">' + (_L.copy?_L.copy[_lang]:'Copy') + '</button>'; _jsonData = null; updateJsonLines(); });
+$('jsonInput').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) renderJSONResult($('jsonInput').value, true); });
+setupFileInput({ btnId: 'jsonFileBtn', targetEl: $('jsonInput'), accept: '.json,.txt', onLoad: text => renderJSONResult(text, true) });
+
+// JSONPath query
+function resolveJsonPath(obj, path) {
+  if (!path || !obj) return [];
+  let expr = path.replace(/^[$]\.?/, '');
+  const results = [];
+  function walk(cur, segs) {
+    if (!segs.length) { results.push(cur); return; }
+    const seg = segs[0];
+    const rest = segs.slice(1);
+    if (cur == null || typeof cur !== 'object') return;
+    if (seg === '*') {
+      if (Array.isArray(cur)) cur.forEach(v => walk(v, rest));
+      else Object.values(cur).forEach(v => walk(v, rest));
+    } else if (Array.isArray(cur)) {
+      const idx = parseInt(seg); if (!isNaN(idx) && idx >= 0 && idx < cur.length) walk(cur[idx], rest);
+    } else if (seg in cur) { walk(cur[seg], rest); }
+  }
+  const segs = expr.match(/(\w+|'[^']*'|"[^"]*"|\*)/g);
+  if (segs) walk(obj, segs.map(s => s.replace(/['"]/g, '')));
+  return results;
+}
+$('jsonPathBtn').addEventListener('click', () => {
+  if (!_jsonData) { toast(_('json_parse_first'), 1); return; }
+  const path = $('jsonPathInput').value.trim();
+  if (!path) { toast(_('json_enter_path'), 1); return; }
+  const r = resolveJsonPath(_jsonData, path);
+  if (!r.length) { toast(_('no_match'), 1); $('jsonPathInfo').textContent = _('no_match'); return; }
+  const txt = r.map(v => typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v)).join('\n---\n');
+  $('jsonResult').textContent = txt;
+  $('jsonPathInfo').textContent = `匹配 ${r.length} 处`;
+});
+$('jsonPathInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('jsonPathBtn').click(); });
+
+// ═══════════════════════════════════════
+//  🔐 Base64
+// ═══════════════════════════════════════
+$('b64EncodeBtn').addEventListener('click', () => {
+  const v = $('b64Input').value;
+  if (!v) { toast(_('no_input'), 1); return; }
+  try { $('b64Result').textContent = btoa(unescape(encodeURIComponent(v))); }
+  catch (e) { $('b64Result').textContent = `⚠ 编码失败: ${e.message}`; }
+});
+$('b64DecodeBtn').addEventListener('click', () => {
+  const v = $('b64Input').value.trim();
+  if (!v) { toast(_('no_input'), 1); return; }
+  try { $('b64Result').textContent = decodeURIComponent(escape(atob(v))); }
+  catch (e) { $('b64Result').textContent = '⚠ ' + _('err_decode_fail') + ': ' + _('err_invalid_b64'); }
+});
+$('b64ClearBtn').addEventListener('click', () => { $('b64Input').value = ''; $('b64Result').textContent = _('res_json'); });
+
+// ═══════════════════════════════════════
+//  🔐 URL 编解码
+// ═══════════════════════════════════════
+$('urlEncodeBtn').addEventListener('click', () => {
+  const v = $('urlInput').value;
+  if (!v) { toast(_('no_input'), 1); return; }
+  $('urlResult').textContent = encodeURIComponent(v);
+});
+$('urlDecodeBtn').addEventListener('click', () => {
+  const v = $('urlInput').value.trim();
+  if (!v) { toast(_('no_input'), 1); return; }
+  try { $('urlResult').textContent = decodeURIComponent(v); }
+  catch (e) { $('urlResult').textContent = '⚠ ' + _('err_invalid_url'); }
+});
+$('urlClearBtn').addEventListener('click', () => { $('urlInput').value = ''; $('urlResult').textContent = _('res_json'); });
+
+// ═══════════════════════════════════════
+//  🎲 UUID
+// ═══════════════════════════════════════
+function uuidV4(upper, noDash) {
+  const hex = '0123456789abcdef';
+  let s = '';
+  for (let i = 0; i < 36; i++) {
+    if (i === 8 || i === 13 || i === 18 || i === 23) { s += noDash ? '' : '-'; continue; }
+    if (i === 14) s += '4';
+    else if (i === 19) s += hex[(Math.random() * 4 | 0) + 8];
+    else s += hex[Math.random() * 16 | 0];
+  }
+  return upper ? s.toUpperCase() : s;
+}
+// UUID count wheel support (focus on wheel so scrolling adjusts value)
+$('uuidCount').addEventListener('wheel', () => { $('uuidCount').focus(); }, { passive: true });
+
+$('uuidGenBtn').addEventListener('click', () => {
+  const count = Math.min(Math.max(parseInt($('uuidCount').value) || 1, 1), 100);
+  const uuids = Array.from({ length: count }, () => uuidV4($('uuidUpper').checked, $('uuidNoDash').checked));
+  $('uuidResult').innerHTML = uuids.join('<br>');
+});
+$('uuidCopyAllBtn').addEventListener('click', () => {
+  const text = $('uuidResult').textContent;
+  if (text && text !== _('res_json')) copy(text);
+  else toast(_('no_content'), 1);
+});
+
+// ═══════════════════════════════════════
+//  🎨 颜色
+// ═══════════════════════════════════════
+function parseColor(input) {
+  input = input.trim();
+  let r, g, b, a = 1;
+  let m = input.match(/^#?([0-9a-f]{3,8})$/i);
+  if (m) {
+    let h = m[1];
+    if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    if (h.length === 4) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2]+h[3]+h[3];
+    if (h.length === 6) { r = parseInt(h.slice(0,2),16); g = parseInt(h.slice(2,4),16); b = parseInt(h.slice(4,6),16); }
+    else if (h.length === 8) { r = parseInt(h.slice(0,2),16); g = parseInt(h.slice(2,4),16); b = parseInt(h.slice(4,6),16); a = parseInt(h.slice(6,8),16)/255; }
+  }
+  m = input.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)/i);
+  if (m) { r = +m[1]; g = +m[2]; b = +m[3]; if (m[4] !== undefined) a = +m[4]; }
+  m = input.match(/hsla?\(\s*([\d.]+)\s*,\s*([\d.]+)%?\s*,\s*([\d.]+)%?\s*(?:,\s*([\d.]+)\s*)?\)/i);
+  if (m) {
+    const h = +m[1] / 360, s = +m[2] / 100, l = +m[3] / 100;
+    if (m[4] !== undefined) a = +m[4];
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs((h * 6) % 2 - 1));
+    const m2 = l - c / 2;
+    let r1, g1, b1;
+    if (h < 1/6) { r1 = c; g1 = x; b1 = 0; }
+    else if (h < 2/6) { r1 = x; g1 = c; b1 = 0; }
+    else if (h < 3/6) { r1 = 0; g1 = c; b1 = x; }
+    else if (h < 4/6) { r1 = 0; g1 = x; b1 = c; }
+    else if (h < 5/6) { r1 = x; g1 = 0; b1 = c; }
+    else { r1 = c; g1 = 0; b1 = x; }
+    r = Math.round((r1 + m2) * 255);
+    g = Math.round((g1 + m2) * 255);
+    b = Math.round((b1 + m2) * 255);
+  }
+  if (r === undefined || isNaN(r)) return null;
+  return { r, g, b, a };
+}
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (mx + mn) / 2;
+  if (mx !== mn) {
+    const d = mx - mn;
+    s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+    if (mx === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (mx === g) h = ((b - r) / d + 2) / 6;
+    else h = ((r - g) / d + 4) / 6;
+  }
+  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+function renderColor(input) {
+  const c = parseColor(input);
+  if (!c) { ['cHex','cRgb','cHsl'].forEach(id => $(id).textContent = '—'); $('colorPreview').style.background = 'transparent'; return; }
+  const hsl = rgbToHsl(c.r, c.g, c.b);
+  const hex = '#' + [c.r, c.g, c.b].map(v => pad(v.toString(16))).join('').toUpperCase();
+  $('cHex').textContent = hex;
+  $('cRgb').textContent = `rgb(${c.r}, ${c.g}, ${c.b})`;
+  $('cHsl').textContent = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+  $('colorPreview').style.background = hex;
+}
+$('colorPicker').addEventListener('input', () => {
+  $('colorInput').value = $('colorPicker').value;
+  renderColor($('colorInput').value);
+});
+$('colorInput').addEventListener('input', () => {
+  renderColor($('colorInput').value);
+  // sync picker if valid hex
+  const c = parseColor($('colorInput').value);
+  if (c) {
+    const hex = '#' + [c.r, c.g, c.b].map(v => pad(v.toString(16))).join('').toUpperCase();
+    $('colorPicker').value = hex;
+  }
+});
+
+// ═══════════════════════════════════════
+//  🔍 搜索
+// ═══════════════════════════════════════
+const srchTerms = [];
+const srchColors = ['#ffe066','#69db7c','#74c0fc','#ffa8a8','#da77f2','#ffc078','#66d9e8','#fcc2d7'];
+const srchEditor = $('srchEditor');
+const SRCH_CHUNK = 5000000;
+const SRCH_STREAM_CHUNK = 1048576; // 1MB per chunk
+const SRCH_STREAM_THRESHOLD = 52428800; // 50MB → streaming mode
+const SRCH_DISPLAY_MAX = 50000; // max match lines to render
+let _srchBackup = '';
+let _srchStreamFile = null;
+let _srchStreamAbort = false;
+
+let _srchStreamMatches = [];
+let _srchStreamLineOff = 0;
+
+async function srchReadChunk(file, offset) {
+  const end = Math.min(offset + SRCH_STREAM_CHUNK, file.size);
+  const blob = file.slice(offset, end);
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+    r.readAsText(blob);
+  });
+}
+
+function srchPushMatches(lines, baseLine) {
+  if (srchTerms.length === 0) return;
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < lines.length; i++) {
+    if (_srchStreamMatches.length >= SRCH_DISPLAY_MAX) { _srchStreamAbort = true; break; }
+    const lineNum = baseLine + i + 1;
+    const line = lines[i];
+    const match = srchTerms.some(t => { try { return new RegExp(t, 'i').test(line); } catch { return line.includes(t); } });
+    if (!match) continue;
+    _srchStreamMatches.push({ lineNum, text: line });
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;padding:0 6px;font-family:monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-all;';
+    div.innerHTML = `<span style="color:var(--text-dim);min-width:60px;text-align:right;user-select:none;padding-right:12px;">${lineNum}</span><span style="flex:1;">${escHtml(line)}</span>`;
+    frag.appendChild(div);
+  }
+  if (frag.childNodes.length) srchEditor.appendChild(frag);
+}
+
+async function srchStreamScan(file) {
+  _srchStreamFile = file;
+  _srchStreamAbort = false;
+  _srchStreamMatches = [];
+  _srchStreamLineOff = 0;
+  let remainder = '';
+  const total = file.size;
+  $('srchStreamBar').style.display = '';
+  $('srchStreamFile').textContent = `📄 ${file.name} (${(total/1024/1024).toFixed(1)}MB)`;
+  srchEditor.innerHTML = '';
+  srchEditor.contentEditable = 'false';
+  let scannedBytes = 0;
+  for (let off = 0; off < total; off += SRCH_STREAM_CHUNK) {
+    if (_srchStreamAbort) { srchExitStream(true); return; }
+    let text;
+    try { text = await srchReadChunk(file, off); } catch (e) { srchExitStream(true); toast(`读取错误: ${e.message}`, 1); return; }
+    scannedBytes = Math.min(off + text.length, total);
+    const pct = Math.min(100, (scannedBytes / total * 100) | 0);
+    $('srchStreamBarFill').style.width = pct + '%';
+    $('srchStreamProgress').textContent = `${pct}%`;
+    const lines = (remainder + text).split('\n');
+    remainder = lines.pop() || '';
+    const isLast = off + SRCH_STREAM_CHUNK >= total;
+    if (isLast && remainder) lines.push(remainder);
+    srchPushMatches(lines, _srchStreamLineOff);
+    _srchStreamLineOff += lines.length;
+    $('srchStreamCount').textContent = `匹配: ${_srchStreamMatches.length.toLocaleString()} 行 / 扫描: ${_srchStreamLineOff.toLocaleString()} 行`;
+    await new Promise(r => setTimeout(r, 0));
+  }
+  if (_srchStreamMatches.length >= SRCH_DISPLAY_MAX) {
+    const more = document.createElement('div');
+    more.style.cssText = 'padding:8px 12px;font-size:12px;color:var(--text-dim);text-align:center;';
+    more.textContent = `⚠ 仅显示前 ${SRCH_DISPLAY_MAX.toLocaleString()} 条匹配`;
+    srchEditor.appendChild(more);
+  }
+  $('srchStreamProgress').textContent = '100% ✓';
+  $('srchStreamBarFill').style.width = '100%';
+}
+
+function srchExitStream(restoreEditor) {
+  _srchStreamAbort = true;
+  _srchStreamFile = null;
+  $('srchStreamBar').style.display = 'none';
+  if (restoreEditor) {
+    srchEditor.innerHTML = '';
+    srchEditor.contentEditable = 'true';
+    _srchStreamMatches = [];
+  }
+}
+
+srchEditor.addEventListener('dblclick', () => {
+  if (_srchStreamFile) srchExitStream(true);
+});
+
+function getSrchText() {
+  const text = srchEditor.textContent;
+  return text === '' ? '' : text;
+}
+
+let _srchLastText = '', _srchLastTerms = '', _srchLastHtml = '';
+function applyHighlights() {
+  const text = getSrchText();
+  if (!text) {
+    srchEditor.innerHTML = '';
+    srchEditor.dataset.lkPl = 'pl_srchEditor';
+    _srchLastText = '';
+    return;
+  }
+  const liveTerm = $('srchTerm').value.trim();
+  const allTerms = liveTerm ? [...new Set([...srchTerms, liveTerm])] : srchTerms;
+  const termsKey = allTerms.join('\0');
+  // 跳过重复渲染
+  if (text === _srchLastText && termsKey === _srchLastTerms) return;
+  _srchLastText = text;
+  _srchLastTerms = termsKey;
+  if (allTerms.length === 0) {
+    srchEditor.textContent = text;
+    _srchLastHtml = '';
+    return;
+  }
+  if (text.length > SRCH_CHUNK) {
+    srchEditor.textContent = text;
+    _srchLastHtml = '';
+    $('srchStat').textContent = `文本过大，跳过高亮`;
+    return;
+  }
+  // 收集匹配区间
+  const ranges = [];
+  for (let i = 0; i < allTerms.length; i++) {
+    try {
+      const re = new RegExp(allTerms[i], 'gi');
+      let m;
+      while ((m = re.exec(text)) !== null) ranges.push({ s: m.index, e: m.index + m[0].length, c: srchColors[i % srchColors.length] });
+    } catch {}
+  }
+  if (ranges.length === 0) {
+    srchEditor.textContent = text;
+    _srchLastHtml = '';
+    $('srchStat').textContent = '';
+    return;
+  }
+  ranges.sort((a, b) => a.s - b.s);
+  // 合并重叠区间
+  const merged = [];
+  for (const r of ranges) {
+    if (merged.length && r.s <= merged[merged.length - 1].e) merged[merged.length - 1].e = Math.max(merged[merged.length - 1].e, r.e);
+    else merged.push({ ...r });
+  }
+  // 用数组拼接 HTML（比字符串拼接快）
+  const escRe = /[&<>]/g;
+  const escMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
+  const esc = s => s.replace(escRe, c => escMap[c]);
+  const parts = [];
+  let pos = 0;
+  for (const r of merged) {
+    if (pos < r.s) parts.push(esc(text.slice(pos, r.s)));
+    parts.push(`<span style="background:${r.c};border-radius:2px;padding:0 1px;">${esc(text.slice(r.s, r.e))}</span>`);
+    pos = r.e;
+  }
+  if (pos < text.length) parts.push(esc(text.slice(pos)));
+  const html = parts.join('');
+  if (html !== _srchLastHtml) {
+    srchEditor.innerHTML = html;
+    _srchLastHtml = html;
+  }
+  $('srchStat').textContent = `匹配 ${ranges.length} 处`;
+}
+
+function updateSrchTags() {
+  const text = getSrchText();
+  $('srchTags').innerHTML = srchTerms.map((t, i) => {
+    let count = 0;
+    if (text) {
+      try { const re = new RegExp(t, 'gi'); let m; while ((m = re.exec(text)) !== null) count++; } catch { count = (text.split(t).length - 1); }
+    }
+    return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:${srchColors[i % srchColors.length]};border-radius:4px;font-size:12px;">${escHtml(t)} <span style="font-size:10px;opacity:0.7;">${count}</span><span class="srch-del" data-idx="${i}" style="cursor:pointer;font-weight:bold;color:#888;margin-left:2px;">✕</span></span>`;
+  }).join('');
+}
+
+let srchTimer;
+function srchDelayed() {
+  clearTimeout(srchTimer);
+  const len = getSrchText().length;
+  const delay = len > 10000 ? 500 : len > 3000 ? 300 : 200;
+  srchTimer = setTimeout(() => { applyHighlights(); updateSrchTags(); }, delay);
+}
+srchEditor.addEventListener('input', srchDelayed);
+function srchReplaceText(getAll) {
+  if (_srchStreamFile) { toast(_('search_replace_stream'), 1); return; }
+  const text = getSrchText();
+  if (!text) { toast(_('no_text'), 1); return; }
+  if (srchTerms.length === 0) { toast(_('no_term'), 1); return; }
+  const repl = $('srchReplace').value;
+  let result = text;
+  for (const term of srchTerms) {
+    try {
+      if (getAll) result = result.replace(new RegExp(term, 'gi'), repl);
+      else { result = result.replace(new RegExp(term, 'i'), repl); break; }
+    } catch { result = getAll ? result.split(term).join(repl) : result.replace(term, repl); break; }
+  }
+  if (result === text) { toast(_('no_match'), 1); return; }
+  srchEditor.textContent = result;
+  applyHighlights();
+  updateSrchLines();
+  toast(getAll ? _('replaced_all') : _('replaced'));
+}
+
+$('srchAddBtn').addEventListener('click', () => {
+  const term = $('srchTerm').value.trim();
+  if (!term) { toast(_('search_enter_term'), 1); return; }
+  srchTerms.push(term);
+  $('srchTerm').value = '';
+  if (_srchStreamFile) { toast(_('search_reopen_file')); updateSrchTags(); return; }
+  applyHighlights();
+  updateSrchTags();
+});
+$('srchReplaceBtn').addEventListener('click', () => srchReplaceText(false));
+$('srchReplaceAllBtn').addEventListener('click', () => srchReplaceText(true));
+$('srchTerm').addEventListener('keydown', e => {
+  if (e.key === 'Enter') $('srchAddBtn').click();
+});
+$('srchClearHighBtn').addEventListener('click', () => {
+  srchTerms.length = 0;
+  if (_srchStreamFile) { updateSrchTags(); toast(_('search_clear')); return; }
+  applyHighlights();
+  updateSrchTags();
+});
+$('srchFilterBtn').addEventListener('click', () => {
+  if (_srchStreamFile) { toast(_('search_filter_stream'), 1); return; }
+  if (srchTerms.length === 0) { toast(_('no_term'), 1); return; }
+  const text = getSrchText();
+  if (!text) { toast(_('no_text'), 1); return; }
+  _srchBackup = text;
+  const lines = text.split('\n');
+  const keep = lines.filter(line => {
+    if (!line.trim()) return false;
+    return srchTerms.some(t => {
+      try { return new RegExp(t, 'i').test(line); }
+      catch { return line.includes(t); }
+    });
+  });
+  if (keep.length === 0) { toast(_('err_no_rows'), 1); return; }
+  srchEditor.textContent = keep.join('\n');
+  applyHighlights();
+  $('srchRestoreBtn').style.display = '';
+  toast(_('search_kept').replace('${n}', keep.length).replace('${total}', lines.length));
+});
+$('srchRestoreBtn').addEventListener('click', () => {
+  if (_srchStreamFile) return;
+  if (!_srchBackup) return;
+  srchEditor.textContent = _srchBackup;
+  _srchBackup = '';
+  applyHighlights();
+  $('srchRestoreBtn').style.display = 'none';
+  toast(_('restored'));
+});
+$('srchClearBtn').addEventListener('click', () => {
+  srchExitStream(true);
+  srchEditor.innerHTML = '';
+  srchEditor.dataset.lkPl = 'pl_srchEditor';
+  srchEditor.contentEditable = 'true';
+  srchTerms.length = 0;
+  updateSrchTags();
+  _srchStreamMatches = [];
+  _srchStreamFile = null;
+});
+$('srchTags').addEventListener('click', e => {
+  const del = e.target.closest('.srch-del');
+  if (!del) return;
+  srchTerms.splice(parseInt(del.dataset.idx), 1);
+  applyHighlights();
+  updateSrchTags();
+});
+$('srchFileBtn').addEventListener('click', () => {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.txt,.log,.md,.csv,.json,.xml,.yaml,.yml,.js,.ts,.css,.html';
+  inp.onchange = async () => {
+    const file = inp.files[0];
+    if (!file) return;
+    const mb = (file.size / 1024 / 1024).toFixed(1);
+    if (file.size > 500 * 1024 * 1024 && !confirm(`文件 ${mb}MB 超过 500MB，确定吗？`)) return;
+    if (file.size > SRCH_STREAM_THRESHOLD) {
+      toast(`流式搜索 ${file.name} (${mb}MB)...`);
+      srchExitStream(true);
+      try { await srchStreamScan(file); } catch (e) { srchExitStream(true); toast(`流式搜索出错: ${e.message}`, 1); return; }
+      toast(`完成: ${_srchStreamMatches.length} 条匹配`);
+    } else {
+      toast(`正在读取 ${file.name} (${mb}MB)...`);
+      try {
+        const text = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsText(file); });
+        srchEditor.textContent = text;
+        srchEditor.dataset.lkPl = '';
+        applyHighlights();
+        updateSrchLines();
+        toast(`${file.name} (${mb}MB, ${text.length.toLocaleString()} 字符)`);
+      } catch { toast(_('file_read_err'), 1); }
+    }
+  };
+  inp.click();
+});
+$('srchStreamStopBtn').addEventListener('click', () => { srchExitStream(true); toast(_('stopped')); });
+
+// ═══════════════════════════════════════
+//  ◎ 正则
+// ═══════════════════════════════════════
+const rexEditor = $('rexEditor');
+const REX_CHUNK_SIZE = 5000000;
+function rexUpdateLines() {
+  const lines = (rexEditor.textContent || '').split('\n');
+  $('rexLines').innerHTML = lines.map((_, i) => `<div>${i + 1}</div>`).join('');
+}
+function rexHighlight() {
+  const text = rexEditor.textContent || '';
+  if (!text) { rexEditor.innerHTML = ''; $('rexLines').innerHTML = ''; $('rexInfo').textContent = ''; return; }
+  const pattern = $('rexPattern').value;
+  const flags = $('rexFlags').value;
+  if (!pattern) { rexEditor.textContent = text; rexUpdateLines(); $('rexInfo').textContent = ''; return; }
+  let re;
+  try { re = new RegExp(pattern, flags); } catch { rexEditor.textContent = text; rexUpdateLines(); $('rexInfo').textContent = '⚠ Invalid regex'; return; }
+  let count = 0;
+  if (text.length > REX_CHUNK_SIZE) {
+    rexEditor.textContent = text;
+    rexUpdateLines();
+    $('rexInfo').textContent = `⚠ 文本过长 (${text.length} 字符), 未高亮显示`;
+    return;
+  }
+  let html = escHtml(text);
+  html = html.replace(re, m => { count++; return `<span style="background:#fff3cd;border-radius:2px;padding:0 1px;">${m}</span>`; });
+  rexEditor.innerHTML = html;
+  rexUpdateLines();
+  $('rexInfo').textContent = `匹配 ${count} 处`;
+}
+let rexTimer;
+function rexDelayed() { clearTimeout(rexTimer); rexTimer = setTimeout(rexHighlight, 200); }
+$('rexPattern').addEventListener('input', () => {
+  try { new RegExp($('rexPattern').value, $('rexFlags').value); $('rexPattern').style.borderColor = ''; } catch { $('rexPattern').style.borderColor = 'var(--red)'; }
+  rexDelayed();
+});
+$('rexFlags').addEventListener('change', rexHighlight);
+rexEditor.addEventListener('input', rexDelayed);
+rexEditor.addEventListener('scroll', () => { $('rexLines').scrollTop = rexEditor.scrollTop; });
+$('rexTestBtn').addEventListener('click', rexHighlight);
+$('rexClearBtn').addEventListener('click', () => { rexEditor.innerHTML = ''; $('rexPattern').value = ''; $('rexInfo').textContent = ''; $('rexLines').innerHTML = ''; });
+
+// ═══════════════════════════════════════
+//  🎲 Hash
+// ═══════════════════════════════════════
+function hex(buf) {
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function calcHash() {
+  const text = $('hashInput').value;
+  if (!text) { toast(_('err_input_text'), 1); return; }
+  const enc = new TextEncoder().encode(text);
+  const algos = ['SHA-1','SHA-256','SHA-384','SHA-512'];
+  const ids = ['hSha1','hSha256','hSha384','hSha512'];
+  for (let i = 0; i < algos.length; i++) {
+    try {
+      const buf = await crypto.subtle.digest(algos[i], enc);
+      $(ids[i]).textContent = hex(buf);
+    } catch {
+      $(ids[i]).textContent = '⚠ ' + _('hash_need_https');
+    }
+  }
+}
+$('hashCalcBtn').addEventListener('click', calcHash);
+$('hashClearBtn').addEventListener('click', () => {
+  $('hashInput').value = '';
+  ['hSha1','hSha256','hSha384','hSha512'].forEach(id => $(id).textContent = '—');
+});
+
+// ═══════════════════════════════════════
+//  📝 文本处理
+// ═══════════════════════════════════════
+function getTP() { return $('tpInput').value; }
+function setTP(text) { $('tpResult').textContent = text || _('res_json'); }
+function linesTP(fn) {
+  const text = getTP();
+  if (!text) { toast(_('err_input_text'), 1); return; }
+  setTP(fn(text.split('\n')).join('\n'));
+}
+$('tpSortAsc').addEventListener('click', () => linesTP(lines => lines.sort()));
+$('tpSortDesc').addEventListener('click', () => linesTP(lines => lines.sort().reverse()));
+$('tpUnique').addEventListener('click', () => linesTP(lines => [...new Set(lines)]));
+$('tpReverse').addEventListener('click', () => linesTP(lines => lines.reverse()));
+$('tpShuffle').addEventListener('click', () => linesTP(lines => { const a = [...lines]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }));
+$('tpUpper').addEventListener('click', () => { const t = getTP(); if (!t) { toast(_('err_input_text'), 1); return; } setTP(t.toUpperCase()); });
+$('tpLower').addEventListener('click', () => { const t = getTP(); if (!t) { toast(_('err_input_text'), 1); return; } setTP(t.toLowerCase()); });
+$('tpTrim').addEventListener('click', () => { const t = getTP(); if (!t) { toast(_('err_input_text'), 1); return; } setTP(t.split('\n').map(l => l.trim()).join('\n')); });
+$('tpClearEmpty').addEventListener('click', () => { const t = getTP(); if (!t) { toast(_('err_input_text'), 1); return; } setTP(t.split('\n').filter(l => l.trim()).join('\n')); });
+setupFileInput({ btnId: 'tpFileBtn', targetEl: $('tpInput') });
+
+// ═══════════════════════════════════════
+//  🔢 进制转换
+// ═══════════════════════════════════════
+function convertBase(input) {
+  input = input.trim();
+  if (!input) { ['bcDec','bcHex','bcBin','bcOct'].forEach(id => $(id).textContent = '—'); return; }
+  let num;
+  if (/^0x/i.test(input)) num = parseInt(input.slice(2), 16);
+  else if (/^0b/i.test(input)) num = parseInt(input.slice(2), 2);
+  else if (/^0o/i.test(input)) num = parseInt(input.slice(2), 8);
+  else num = parseInt(input, 10);
+  if (isNaN(num)) { ['bcDec','bcHex','bcBin','bcOct'].forEach(id => $(id).textContent = '⚠ Invalid'); return; }
+  $('bcDec').textContent = num.toString(10);
+  $('bcHex').textContent = '0x' + num.toString(16).toUpperCase();
+  $('bcBin').textContent = '0b' + num.toString(2);
+  $('bcOct').textContent = '0o' + num.toString(8);
+}
+$('bcInput').addEventListener('input', () => convertBase($('bcInput').value));
+$('bcClearBtn').addEventListener('click', () => { $('bcInput').value = ''; convertBase(''); });
+convertBase('FF');
+
+// ═══════════════════════════════════════
+//  🔐 HTML 实体
+// ═══════════════════════════════════════
+function escHtmlEnt(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function unescHtmlEnt(s) {
+  const ta = document.createElement('textarea');
+  ta.innerHTML = s;
+  return ta.value;
+}
+$('htmlEncodeBtn').addEventListener('click', () => {
+  const v = $('htmlInput').value;
+  if (!v) { toast(_('no_input'), 1); return; }
+  $('htmlResult').textContent = escHtmlEnt(v);
+});
+$('htmlDecodeBtn').addEventListener('click', () => {
+  const v = $('htmlInput').value.trim();
+  if (!v) { toast(_('no_input'), 1); return; }
+  $('htmlResult').textContent = unescHtmlEnt(v);
+});
+$('htmlClearBtn').addEventListener('click', () => { $('htmlInput').value = ''; $('htmlResult').textContent = _('res_json'); });
+
+// ═══════════════════════════════════════
+//  🗄️ SQL IN
+// ═══════════════════════════════════════
+let sqlOpts = { quote: true };
+
+function genSQL() {
+  const raw = $('sqlInput').value;
+  if (!raw.trim()) { toast(_('no_input'), 1); return; }
+  // Split by comma, newline, or both
+  let items = raw.split(/[,\n]+/).map(s => s.trim()).filter(s => s.length > 0);
+  // Deduplicate
+  items = [...new Set(items)];
+  const quoted = items.map(s => sqlOpts.quote ? `'${s.replace(/'/g, "''")}'` : s);
+  $('sqlResult').textContent = `in (${quoted.join(',')});`;
+  $('sqlStatOld').textContent = `共 ${items.length} 项，去重后 ${items.length} 项`;
+}
+
+$('sqlGenBtn').addEventListener('click', genSQL);
+$('sqlQuoteBtn').addEventListener('click', () => {
+  sqlOpts.quote = !sqlOpts.quote;
+  $('sqlQuoteBtn').textContent = sqlOpts.quote ? _('sql_toggle_quote') + '✓)' : _('sql_toggle_quote') + '✗)';
+  if ($('sqlResult').textContent !== _('res_json')) genSQL();
+});
+$('sqlClearBtn').addEventListener('click', () => { $('sqlInput').value = ''; $('sqlResult').textContent = _('res_json'); $('sqlStatOld').textContent = ''; });
+
+// INSERT 解析
+function parseInsertSQL(sql) {
+  sql = sql.trim().replace(/;$/, '');
+  // Match: INSERT INTO table (col1, col2, ...) VALUES (val1, val2, ...)
+  const m = sql.match(/INSERT\s+INTO\s+\S+\s*\(([^)]+)\)\s*VALUES\s*\((.+)\)/is);
+  if (!m) return null;
+  const cols = m[1].split(',').map(c => c.trim().replace(/^`|^"|^'|"$|'$|`$/g, ''));
+  // Parse values respecting quotes and nesting
+  const raw = m[2];
+  const vals = [];
+  let depth = 0, inStr = false, strCh = '', cur = '';
+  for (let i = 0; i < raw.length; i++) {
+    const c = raw[i];
+    if (inStr) { cur += c; if (c === strCh && raw[i-1] !== '\\') inStr = false; continue; }
+    if (c === "'" || c === '"') { inStr = true; strCh = c; cur += c; continue; }
+    if (c === '(') { depth++; cur += c; continue; }
+    if (c === ')') { depth--; cur += c; continue; }
+    if (c === ',' && depth === 0) { vals.push(cur.trim()); cur = ''; continue; }
+    cur += c;
+  }
+  if (cur.trim()) vals.push(cur.trim());
+  return cols.map((col, i) => ({ col, val: vals[i] || '—', idx: i }));
+}
+function renderInsertResult(pairs, filter) {
+  const el = $('sqlInsertResult');
+  if (!pairs || !pairs.length) { el.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:8px;">Cannot parse, check SQL format</div>'; return; }
+  const fl = (filter || '').toLowerCase();
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;font-family:\'Cascadia Code\',\'Fira Code\',Consolas,monospace;">';
+  html += '<tr style="border-bottom:2px solid var(--border);text-align:left;"><th style="padding:6px 10px;color:var(--text-dim);font-weight:500;width:40px;">#</th><th style="padding:6px 10px;color:var(--accent);">列名</th><th style="padding:6px 10px;color:var(--text-dim);">值</th></tr>';
+  for (const p of pairs) {
+    const match = fl && (p.col.toLowerCase().includes(fl) || p.val.toLowerCase().includes(fl));
+    const bg = match ? 'background:rgba(0,120,212,0.12);' : (p.idx % 2 === 0 ? '' : 'background:var(--surface2);');
+    const colHL = match ? `color:var(--accent);font-weight:600;` : '';
+    const valHL = match ? `color:var(--accent);font-weight:600;` : '';
+    html += `<tr style="border-bottom:1px solid var(--border);${bg}"><td style="padding:5px 10px;color:var(--text-dim);">${p.idx + 1}</td><td style="padding:5px 10px;${colHL}">${escHtml(p.col)}</td><td style="padding:5px 10px;${valHL}">${escHtml(p.val)}</td></tr>`;
+  }
+  html += '</table>';
+  el.innerHTML = html;
+}
+let _insertPairs = null;
+$('sqlInsertParseBtn').addEventListener('click', () => {
+  const sql = $('sqlInsertInput').value;
+  if (!sql.trim()) { toast(_('err_input_insert'), 1); return; }
+  _insertPairs = parseInsertSQL(sql);
+  renderInsertResult(_insertPairs, $('sqlInsertSearch').value);
+  if (_insertPairs) toast(`已解析 ${_insertPairs.length} 列`);
+});
+$('sqlInsertClearBtn').addEventListener('click', () => { $('sqlInsertInput').value = ''; $('sqlInsertResult').innerHTML = ''; $('sqlInsertSearch').value = ''; _insertPairs = null; });
+$('sqlInsertSearch').addEventListener('input', () => { if (_insertPairs) renderInsertResult(_insertPairs, $('sqlInsertSearch').value); });
+
+// ═══════════════════════════════════════
+//  📑 Diff
+// ═══════════════════════════════════════
+function getText(el) {
+  const lines = [];
+  for (const child of el.childNodes) {
+    if (child.nodeType === 3) {
+      const parts = child.textContent.split('\n');
+      if (parts.length > 1) { lines.push(parts[0]); for (let i = 1; i < parts.length; i++) lines.push(parts[i]); }
+      else lines.push(parts[0]);
+    } else if (child.nodeType === 1) {
+      const parts = child.textContent.split('\n');
+      if (parts.length > 1) { lines.push(parts[0]); for (let i = 1; i < parts.length; i++) lines.push(parts[i]); }
+      else lines.push(parts[0]);
+    }
+  }
+  return lines.join('\n');
+}
+
+function diffLines(a, b) {
+  const la = a.split('\n');
+  const lb = b.split('\n');
+  const na = la.length, nb = lb.length;
+
+  // Myers diff: O(ND) — find shortest edit script
+  const maxD = na + nb;
+  const v = new Int32Array(maxD * 2 + 2);
+  const paths = Array.from({ length: maxD + 1 }, () => null);
+  let sesEnd = 0;
+  outer: for (let d = 0; d <= maxD; d++) {
+    const p = [];
+    for (let k = -d; k <= d; k += 2) {
+      const idx = k + maxD;
+      const down = k === -d || (k !== d && v[idx - 1] < v[idx + 1]);
+      let x = down ? v[idx + 1] : v[idx - 1];
+      let y = x - (down ? k + 1 : k - 1);
+      if (down) x++; else y++;
+      while (x < na && y < nb && la[x] === lb[y]) { x++; y++; p.push('eq'); }
+      v[idx] = x;
+      if (x >= na && y >= nb) { sesEnd = d; break outer; }
+    }
+    paths[d + 1] = p;
+  }
+
+  // Reconstruct ops from SES path
+  const ops = [];
+  let x = na, y = nb;
+  for (let d = sesEnd; d > 0; d--) {
+    const p = paths[d + 1] || [];
+    const k = x - y;
+    const idx = k + maxD;
+    const down = k === -d || (k !== d && v[idx - 1] < v[idx + 1]);
+    const prevK = down ? k + 1 : k - 1;
+    if (down) { ops.push({ t: 'add', b: y - 1 }); y--; }
+    else { ops.push({ t: 'del', a: x - 1 }); x--; }
+    while (x > 0 && y > 0 && la[x - 1] === lb[y - 1]) { ops.push({ t: 'eq', a: x - 1, b: y - 1 }); x--; y--; }
+  }
+  ops.reverse();
+
+  const leftOps = [], rightOps = [];
+  let adds = 0, dels = 0;
+  for (const op of ops) {
+    if (op.t === 'eq') { leftOps.push('eq'); rightOps.push('eq'); }
+    else if (op.t === 'del') { leftOps.push('del'); rightOps.push('gap'); dels++; }
+    else { leftOps.push('gap'); rightOps.push('add'); adds++; }
+  }
+
+  function renderSide(sideOps, sourceLines) {
+    let si = 0;
+    return sideOps.map(t => {
+      if (t === 'gap') return '<div class="dp">&nbsp;</div>';
+      const text = escHtml(sourceLines[si++]);
+      const cls = t === 'del' ? 'dl' : t === 'add' ? 'da' : '';
+      const mark = t === 'del' ? '<span style="color:var(--red,#d32f2f);min-width:20px;display:inline-block;user-select:none;">−</span>'
+        : t === 'add' ? '<span style="color:var(--jt-str,#2e7d32);min-width:20px;display:inline-block;user-select:none;">+</span>'
+        : '<span style="color:var(--text-dim,#bbb);min-width:20px;display:inline-block;user-select:none;"> </span>';
+      return `<div class="${cls}" style="display:flex;padding:0 6px;">${mark}<span style="flex:1;white-space:pre-wrap;word-break:break-all;">${text}</span></div>`;
+    }).join('');
+  }
+
+  $('diffLeft').innerHTML = renderSide(leftOps, la);
+  $('diffRight').innerHTML = renderSide(rightOps, lb);
+  $('diffStat').textContent = `−${dels} 行  +${adds} 行`;
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Sync scroll
+let syncing = false;
+['diffLeft','diffRight'].forEach((id, _, arr) => {
+  const el = $(id);
+  el.addEventListener('scroll', () => {
+    if (syncing) return;
+    syncing = true;
+    const otherId = arr.find(x => x !== id);
+    const other = $(otherId);
+    other.scrollTop = el.scrollTop;
+    other.scrollLeft = el.scrollLeft;
+    syncing = false;
+  });
+});
+
+$('diffBtn').addEventListener('click', () => {
+  const left = getText($('diffLeft'));
+  const right = getText($('diffRight'));
+  if (!left && !right) { toast(_('diff_need_both'), 1); return; }
+  const la = left.split('\n').length, lb = right.split('\n').length;
+  if (la * lb > 16000000 && !confirm(_('diff_large').replace('${la}', la).replace('${lb}', lb))) return;
+  diffLines(left, right);
+});
+$('diffSwapBtn').addEventListener('click', () => {
+  const tmp = $('diffLeft').innerHTML;
+  $('diffLeft').innerHTML = $('diffRight').innerHTML;
+  $('diffRight').innerHTML = tmp;
+  $('diffStat').textContent = '';
+});
+$('diffClearBtn').addEventListener('click', () => {
+  $('diffLeft').innerHTML = '';
+  $('diffRight').innerHTML = '';
+  $('diffStat').textContent = '';
+});
+
+// ═══════════════════════════════════════
+//  📊 统计
+// ═══════════════════════════════════════
+function updateStats() {
+  const text = $('statsInput').value;
+  const ids = ['stChars','stCharsAll','stLines','stWords','stParas','stBytes'];
+  if (!text) { ids.forEach(id => $(id).textContent = '0'); return; }
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const paras = text.split(/\n\s*\n/).filter(p => p.trim()).length || 0;
+  const bytes = new Blob([text]).size;
+  const vals = [text.replace(/\s/g, '').length, text.length, text.split('\n').length, words, paras, bytes];
+  // 批量写入，减少回流
+  requestAnimationFrame(() => { ids.forEach((id, i) => $(id).textContent = vals[i]); });
+}
+$('statsInput').addEventListener('input', updateStats);
+$('statsClearBtn').addEventListener('click', () => { $('statsInput').value = ''; updateStats(); });
+
+// ═══════════════════════════════════════
+//  🀄 简繁转换
+// ═══════════════════════════════════════
+(function(){
+const _s = "与专业东丝两严个义乌乐书买卖乱争于亏云亚产亲什仅仆仇今介从仑仓仅们价众优伙会伛伞伟传伤伦伪体估计们伦伯佣低伶佝佞偶尔佩佰佳佴佶佸佻佼佽侑侔侃侄侈侪侬侭俭俗俘俚保俜俟侠俦俨侣侦侧侨侩侪侬俣俦俨俩俪俫俭修俯俱俳俵俶俸俺俾倌倏们值倭偈偎偲偻傥傧储催傩僎像僖僚僭僮儆儇儋儕償儻儲催傭僱優儲儂儐儗儘儔儕儖儗償儻儲";
+const _t = "與專業東絲兩嚴個義烏樂書買賣亂爭於虧雲亞產親什僅僕仇今介從艙倉僅們價眾優夥會傴傘偉傳傷倫偽體估計們倫伯傭低伶佝佞偶爾佩佰佳佴佶佸佻佼佽侑侔侃侄侈儕儂儐儉俗俘俚保俜俟俠儔儼侶偵側僑儈儕儂俁儔儼倆儷倈儉修俯俱俳俵俶俸俺俾倌倏們值倭偈偎偲僂儻儐儲催儺僎像僖僚僭僮儆儇儋儕償儻儲催傭僱優儲儂儐儗儘儔儕儖儗償儻儲";
+// Expanded mapping
+const _s2 = "丙丢临义乏乌乎乖乘乙乞乾亂了予二于互五些亡交产享京亮亿什仁仅仆仇今介仍从他的付仙代们以仪们价众优伙会伟传伤伦伪体估伯佣低伶佝佞住位伴佰佳佴佶佸佻佼佽侑侔侃侄侈侪侬侭俭俗俘俚保倜俟侠俦俨侣侦侧侨侩侪侬俣俦俨俩俪俫俭修俯俱俳俵俶俸俺俾倌倏们值倭偈偎偲偻傥傧储催傩僎像僖僚僭僮儆儇儋儕償儻儲催傭僱優儲儂儐儗儘儔儕儖儗償儻儲";
+const _t2 = "丙丟臨義乏烏乎乖乘乙乞乾亂了予二於互五些亡交產享京亮億什仁僅僕仇今介仍從他的付仙代們以儀們價眾優夥會偉傳傷倫偽體估伯傭低伶佝佞住位伴佰佳佴佶佸佻佼佽侑侔侃侄侈儕儂儐儉俗俘俚保倜俟俠儔儼侶偵側僑儈儕儂俁儔儼倆儷倈儉修俯俱俳俵俶俸俺俾倌倏們值倭偈偎偲僂儻儐儲催儺僎像僖僚僭僮儆儇儋儕償儻儲催傭僱優儲儂儐儗儘儔儕儖儗償儻儲";
+// Merge
+const _sAll = _s + _s2, _tAll = _t + _t2;
+const s2t = {}, t2s = {};
+for (let i = 0; i < _sAll.length; i++) { s2t[_sAll[i]] = _tAll[i]; t2s[_tAll[i]] = _sAll[i]; }
+function ccConvert(text, map) { return text.split('').map(c => map[c] || c).join(''); }
+$('ccToSimpBtn').addEventListener('click', () => {
+  const v = $('ccInput').value;
+  if (!v) { toast(_('err_input_text'), 1); return; }
+  $('ccResult').textContent = ccConvert(v, t2s);
+});
+$('ccToTradBtn').addEventListener('click', () => {
+  const v = $('ccInput').value;
+  if (!v) { toast(_('err_input_text'), 1); return; }
+  $('ccResult').textContent = ccConvert(v, s2t);
+});
+$('ccClearBtn').addEventListener('click', () => { $('ccInput').value = ''; $('ccResult').textContent = _('res_json'); });
+bindStats($('ccInput'), 'ccStat');
+})();
+
+// ═══════════════════════════════════════
+//  🌐 翻译
+// ═══════════════════════════════════════
+let _transAbort = null;
+async function translateText(text, from, to) {
+  if (!text.trim()) { toast(_('err_input_text'), 1); return; }
+  if (_transAbort) _transAbort.abort();
+  _transAbort = new AbortController();
+  if (text.length > 500) { toast('API limit 500 chars, truncated', 1); text = text.slice(0, 500); }
+  $('transResult').textContent = 'Translating…';
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}`;
+    const resp = await fetch(url, { signal: _transAbort.signal });
+    const data = await resp.json();
+    if (data.responseStatus === 200 && data.responseData?.translatedText) {
+      $('transResult').textContent = data.responseData.translatedText;
+    } else {
+      $('transResult').textContent = 'Translation failed: ' + (data.responseDetails || 'Unknown error');
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') $('transResult').textContent = 'Request failed: ' + e.message;
+  }
+}
+$('transToEn').addEventListener('click', () => translateText($('transInput').value, 'zh-CN', 'en'));
+$('transToZh').addEventListener('click', () => translateText($('transInput').value, 'en', 'zh-CN'));
+$('transClearBtn').addEventListener('click', () => { $('transInput').value = ''; $('transResult').textContent = _('res_json'); });
+bindStats($('transInput'), 'transStat');
+
+// ═══════════════════════════════════════
+//  🌐 HTTP
+// ═══════════════════════════════════════
+function parseCurl(curl) {
+  curl = curl.trim();
+  if (!/^curl\s/i.test(curl)) return null;
+  // Remove shell line continuations: backslash followed by optional whitespace + newline
+  curl = curl.replace(/\\[\t ]*(?:\r?\n|\r)/g, ' ').replace(/\s+/g, ' ');
+  let r = { method: 'GET', url: '', headers: [], body: '', cookies: [] };
+  const tokens = curl.match(/(?:'[^']*'|"[^"]*"|\S)+/g) || [];
+  let i = 1;
+  while (i < tokens.length) {
+    const t = tokens[i];
+    if (t === '\\') { i++; continue; }
+    if (/^-X|--request$/i.test(t)) { r.method = (tokens[++i] || '').replace(/['"]/g, '').toUpperCase(); i++; }
+    else if (/^-(H|header)$/i.test(t)) {
+      const h = (tokens[++i] || '').replace(/['"]/g, '');
+      r.headers.push(h);
+      i++;
+    }
+    else if (/^-(b|cookie)$/i.test(t)) {
+      const c = (tokens[++i] || '').replace(/^['"]|['"]$/g, '');
+      c.split(';').forEach(p => {
+        const eq = p.indexOf('=');
+        if (eq > 0) r.cookies.push(`${p.slice(0, eq).trim()}: ${p.slice(eq + 1).trim()}`);
+      });
+      i++;
+    }
+    else if (/^-(d|data|data-binary|data-raw)$|^--data(-binary|-raw)?$/i.test(t)) {
+      r.method = 'POST';
+      const v = (tokens[++i] || '').replace(/^['"]|['"]$/g, '');
+      if (r.body) r.body += '&';
+      r.body += v;
+      i++;
+    }
+    else if (/^--data-urlencode$/i.test(t)) { r.method = 'POST'; i += 2; }
+    else if (t.startsWith('-')) { i += 2; }
+    else {
+      r.url = t.replace(/['"]/g, '');
+      i++;
+    }
+  }
+  return r;
+}
+$('httpCurlBtn').addEventListener('click', () => {
+  const w = $('httpCurlWrap');
+  w.style.display = w.style.display === 'none' ? '' : 'none';
+  if (w.style.display !== 'none') $('httpCurlInput').focus();
+});
+function kvParse(text) {
+  const r = {};
+  text.split('\n').filter(l => l.trim()).forEach(l => {
+    const idx = l.indexOf(':');
+    if (idx > 0) r[l.slice(0, idx).trim()] = l.slice(idx + 1).trim();
+  });
+  return r;
+}
+function kvStringify(obj) { return Object.entries(obj).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&'); }
+$('httpCurlParseBtn').addEventListener('click', () => {
+  const r = parseCurl($('httpCurlInput').value);
+  if (!r) { toast(_('err_curl_parse'), 1); return; }
+  $('httpUrl').value = r.url;
+  $('httpMethod').value = r.method;
+  $('httpHeaders').value = r.headers.join('\n');
+  $('httpBody').value = r.body;
+  $('httpCookies').value = r.cookies.join('\n');
+  // Parse URL query params into params textarea
+  try {
+    const u = new URL(r.url, location.origin);
+    if (u.search) {
+      const params = [];
+      u.searchParams.forEach((v, k) => params.push(`${k}: ${v}`));
+      $('httpParams').value = params.join('\n');
+      $('httpUrl').value = u.origin + u.pathname;
+    }
+  } catch {}
+  $('httpCurlWrap').style.display = 'none';
+  toast(`已解析: ${r.method} ${r.url}`);
+});
+$('httpUrl').addEventListener('paste', e => {
+  const text = (e.clipboardData || window.clipboardData).getData('text');
+  if (/^curl\s/i.test(text.trim())) {
+    e.preventDefault();
+    const r = parseCurl(text);
+    if (r) {
+      $('httpUrl').value = r.url;
+      $('httpMethod').value = r.method;
+      $('httpHeaders').value = r.headers.join('\n');
+      $('httpBody').value = r.body;
+      $('httpCookies').value = r.cookies.join('\n');
+      try {
+        const u = new URL(r.url, location.origin);
+        if (u.search) {
+          const params = [];
+          u.searchParams.forEach((v, k) => params.push(`${k}: ${v}`));
+          $('httpParams').value = params.join('\n');
+          $('httpUrl').value = u.origin + u.pathname;
+        }
+      } catch {}
+      toast(`已解析 curl: ${r.method} ${r.url}`);
+    }
+  }
+});
+$('httpSendBtn').addEventListener('click', async () => {
+  let url = $('httpUrl').value.trim();
+  if (!url) { toast(_('input_url'), 1); return; }
+  const method = $('httpMethod').value;
+  const headers = kvParse($('httpHeaders').value);
+  const params = kvParse($('httpParams').value);
+  const paramsStr = kvStringify(params);
+  if (paramsStr) url += (url.includes('?') ? '&' : '?') + paramsStr;
+  const cookies = kvParse($('httpCookies').value);
+  const cookieStr = Object.entries(cookies).map(([k, v]) => `${k}=${v}`).join('; ');
+  if (cookieStr) headers['Cookie'] = cookieStr;
+  const body = ['POST','PUT','PATCH'].includes(method) ? ($('httpBody').value || undefined) : undefined;
+  $('httpSendBtn').innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite;">⏳</span> ' + _('sending');
+  $('httpSendBtn').disabled = true;
+  $('httpStatus').textContent = '';
+  $('httpMeta').textContent = '';
+  $('httpRespHeaders').innerHTML = '';
+  const httpAbort = new AbortController();
+  const httpTimer = setTimeout(() => httpAbort.abort(), 30000);
+  const t0 = performance.now();
+  try {
+    const res = await fetch(url, { method, headers, body, credentials: 'same-origin', signal: httpAbort.signal });
+    const elapsed = Math.round(performance.now() - t0);
+    const ct = res.headers.get('content-type') || '';
+    let bodyText;
+    try {
+      bodyText = ct.includes('json') ? JSON.stringify(await res.json(), null, 2) : await res.text();
+    } catch { bodyText = await res.text(); }
+    const size = new TextEncoder().encode(bodyText).length;
+    const sizeStr = size > 1024 ? (size / 1024).toFixed(1) + ' KB' : size + ' B';
+    // Status badge
+    const sc = res.status;
+    const scColor = sc < 300 ? 'var(--jt-str)' : sc < 400 ? 'var(--accent)' : sc < 500 ? 'var(--orange)' : 'var(--red)';
+    $('httpStatus').textContent = `${sc} ${res.statusText}`;
+    $('httpStatus').style.color = scColor;
+    $('httpMeta').textContent = `${elapsed}ms · ${sizeStr} · ${ct.split(';')[0] || 'unknown'}`;
+    // Response headers
+    const hdrHtml = [];
+    res.headers.forEach((v, k) => { hdrHtml.push(`<div style="padding:1px 0;"><span style="color:var(--accent);">${escHtml(k)}</span>: <span style="color:var(--text);">${escHtml(v)}</span></div>`); });
+    $('httpRespHeaders').innerHTML = hdrHtml.join('');
+    // Body
+    $('httpResult').textContent = bodyText;
+    const cb2 = document.createElement('button');
+    cb2.className = 'copy-btn'; cb2.textContent = _L.copy ? _L.copy[_lang] : 'Copy'; cb2.dataset.lk = 'copy';
+    cb2.addEventListener('click', () => copy(bodyText));
+    $('httpResult').appendChild(cb2);
+    // Download with smart filename
+    const extMap = { 'application/json': '.json', 'text/html': '.html', 'text/css': '.css', 'text/javascript': '.js', 'application/xml': '.xml', 'text/xml': '.xml', 'image/png': '.png', 'image/jpeg': '.jpg', 'image/gif': '.gif', 'image/svg+xml': '.svg', 'application/pdf': '.pdf' };
+    const ext = extMap[ct.split(';')[0].trim()] || (ct.includes('json') ? '.json' : '.txt');
+    let dlName = 'response' + ext;
+    try { const u = new URL(url); const path = u.pathname.split('/').filter(Boolean).pop(); if (path && path.includes('.')) dlName = path; } catch {}
+    const dl2 = document.createElement('button');
+    dl2.className = 'copy-btn download-btn'; dl2.textContent = '⬇';
+    dl2.title = `${_L.download?.[_lang] || 'Download'} ${dlName} (${sizeStr})`;
+    dl2.addEventListener('click', () => downloadText(bodyText, dlName));
+    $('httpResult').appendChild(dl2);
+    // Action buttons
+    $('httpResActions').innerHTML = `<button class="btn btn-sm" id="httpToSearchBtn" style="font-size:11px;padding:2px 8px;" data-lk-tl="tl_httpSearch">🔍 搜索</button> <button class="btn btn-sm" id="httpToJsonBtn" style="font-size:11px;padding:2px 8px;" data-lk-tl="tl_httpJson">{ } JSON</button> <button class="btn btn-sm" id="httpSaveBtn" style="font-size:11px;padding:2px 8px;">💾 保存</button>`;
+    $('httpToSearchBtn').addEventListener('click', () => {
+      const se = $('srchEditor');
+      se.textContent = bodyText;
+      se.dataset.lkPl = '';
+      se.contentEditable = 'true';
+      const tab = document.querySelector('.tab[data-tab="search"]');
+      if (tab) tab.click();
+      const st = document.querySelector('#p-search .sub-tab[data-sub="search"]');
+      if (st) st.click();
+      toast(_('sent_to_search'));
+    });
+    $('httpToJsonBtn').addEventListener('click', () => {
+      $('jsonInput').value = bodyText;
+      const tab = document.querySelector('.tab[data-tab="json"]');
+      if (tab) tab.click();
+      renderJSONResult(bodyText, true);
+      toast(_('sent_to_json'));
+    });
+    $('httpSaveBtn').addEventListener('click', () => downloadText(bodyText, dlName));
+    toast(`${sc} ${res.statusText} · ${elapsed}ms`);
+  } catch (e) {
+    clearTimeout(httpTimer);
+    if (e.name === 'AbortError') {
+      $('httpStatus').textContent = _('http_timeout');
+      $('httpStatus').style.color = 'var(--red)';
+      $('httpResult').textContent = '❌ ' + _('err_timeout_30');
+    } else {
+      $('httpStatus').textContent = _('http_failed');
+      $('httpStatus').style.color = 'var(--red)';
+      $('httpResult').textContent = '❌ ' + _('err_request_failed');
+    }
+  }
+  clearTimeout(httpTimer);
+  $('httpSendBtn').textContent = _('sending');
+  $('httpSendBtn').disabled = false;
+});
+$('httpClearBtn').addEventListener('click', () => {
+  $('httpUrl').value = '';
+  $('httpHeaders').value = '';
+  $('httpBody').value = '';
+  $('httpParams').value = '';
+  $('httpCookies').value = '';
+  $('httpResult').textContent = _('waiting_http');
+  $('httpStatus').textContent = '';
+  $('httpMeta').textContent = '';
+  $('httpRespHeaders').innerHTML = '';
+  $('httpResActions').innerHTML = '';
+  $('httpCurlWrap').style.display = 'none';
+});
+$('httpUrl').addEventListener('keydown', e => { if (e.key === 'Enter') $('httpSendBtn').click(); });
+
+// Header quick insert
+document.querySelectorAll('.http-hdr-ins').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const ta = $('httpHeaders');
+    const val = btn.dataset.val;
+    const cur = ta.value.trim();
+    if (cur) ta.value = cur + '\n' + val;
+    else ta.value = val;
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+  });
+});
+// Body format / minify
+$('httpBodyFmtBtn').addEventListener('click', () => {
+  try {
+    const v = $('httpBody').value.trim();
+    if (!v) return;
+    $('httpBody').value = JSON.stringify(JSON.parse(v), null, 2);
+    toast(_('err_formatting'));
+  } catch { toast(_('err_invalid_json'), 1); }
+});
+$('httpBodyMinBtn').addEventListener('click', () => {
+  try {
+    const v = $('httpBody').value.trim();
+    if (!v) return;
+    $('httpBody').value = JSON.stringify(JSON.parse(v));
+    toast(_('err_compacted'));
+  } catch { toast(_('err_invalid_json'), 1); }
+});
+// Body char count
+$('httpBody').addEventListener('input', () => {
+  const v = $('httpBody').value;
+  const el = $('httpBodyInfo');
+  if (!v) { el.textContent = ''; return; }
+  const bytes = new TextEncoder().encode(v).length;
+  el.textContent = bytes > 1024 ? `${(bytes/1024).toFixed(1)} KB` : `${bytes} B`;
+});
+// Ctrl+Shift+J: format body
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'J') {
+    if (document.activeElement?.id === 'httpBody') { e.preventDefault(); $('httpBodyFmtBtn').click(); }
+  }
+});
+
+// ═══════════════════════════════════════
+//  🔐 JWT
+// ═══════════════════════════════════════
+function decodeJWT(token) {
+  const parts = token.split('.');
+  if (parts.length !== 3) return { err: _('err_jwt_format') };
+  try {
+    const h = JSON.parse(atob(parts[0].replace(/-/g,'+').replace(/_/g,'/')));
+    const p = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+    const info = [];
+    if (p.exp) { const d = new Date(p.exp * 1000); info.push(`Exp: ${d.toLocaleString()}${d < new Date() ? ' ⚠Expired' : ''}`); }
+    if (p.iat) info.push(`签发: ${new Date(p.iat * 1000).toLocaleString()}`);
+    if (p.sub) info.push(`主题: ${p.sub}`);
+    if (p.iss) info.push(`签发者: ${p.iss}`);
+    return { header: JSON.stringify(h, null, 2), payload: JSON.stringify(p, null, 2), sig: parts[2], info: info.join(' ｜ ') };
+  } catch { return { err: _('err_jwt_decode') }; }
+}
+$('jwtDecodeBtn').addEventListener('click', () => {
+  const v = $('jwtInput').value.trim();
+  if (!v) { toast(_('err_input_jwt'), 1); return; }
+  const r = decodeJWT(v);
+  if (r.err) { toast(r.err, 1); $('jwtHeader').textContent = r.err; $('jwtPayload').textContent = ''; $('jwtSig').textContent = ''; $('jwtInfo').textContent = ''; return; }
+  $('jwtHeader').textContent = r.header;
+  $('jwtPayload').textContent = r.payload;
+  $('jwtSig').textContent = r.sig;
+  $('jwtInfo').textContent = r.info;
+});
+$('jwtClearBtn').addEventListener('click', () => {
+  $('jwtInput').value = '';
+  $('jwtHeader').textContent = '—';
+  $('jwtPayload').textContent = '—';
+  $('jwtSig').textContent = '—';
+  $('jwtInfo').textContent = '';
+});
+$('jwtInput').addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') $('jwtDecodeBtn').click(); });
+
+// ═══════════════════════════════════════
+//  📋 CSV
+// ═══════════════════════════════════════
+function parseCSV(text, delim) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 1) return { err: _('err_no_data') };
+  const rows = lines.map(l => {
+    const vals = [];
+    let cur = '', quoted = false;
+    for (let i = 0; i < l.length; i++) {
+      const ch = l[i];
+      if (quoted) { if (ch === '"') { if (l[i+1] === '"') { cur += '"'; i++; } else quoted = false; } else cur += ch; }
+      else if (ch === '"') quoted = true;
+      else if (ch === delim) { vals.push(cur); cur = ''; }
+      else cur += ch;
+    }
+    vals.push(cur);
+    return vals;
+  });
+  return { header: rows[0], rows: rows.slice(1), total: rows.length - 1 };
+}
+function renderCSV(text) {
+  if (!text.trim()) { $('csvResult').innerHTML = ''; $('csvStat').textContent = ''; return; }
+  const delim = $('csvDelimBtn').dataset.delim;
+  const r = parseCSV(text, delim);
+  if (r.err) { $('csvResult').textContent = r.err; $('csvStat').textContent = ''; return; }
+  const cols = r.header.length;
+  let html = '<table style="border-collapse:collapse;width:100%;font-size:13px;"><thead><tr>';
+  html += r.header.map(h => `<th style="border:1px solid var(--border);padding:6px 10px;background:var(--surface2);text-align:left;white-space:nowrap;font-weight:600;">${escHtml(h)}</th>`).join('');
+  html += '</tr></thead><tbody>';
+  for (const row of r.rows) {
+    html += '<tr>' + Array.from({length: cols}, (_, i) => `<td style="border:1px solid var(--border);padding:4px 10px;white-space:nowrap;">${escHtml(row[i] || '')}</td>`).join('') + '</tr>';
+  }
+  html += '</tbody></table>';
+  $('csvResult').innerHTML = html;
+  $('csvStat').textContent = _('csv_rows_cols').replace('${rows}', r.total).replace('${cols}', cols);
+}
+$('csvParseBtn').addEventListener('click', () => renderCSV($('csvInput').value));
+let csvTimer;
+$('csvInput').addEventListener('input', () => { clearTimeout(csvTimer); csvTimer = setTimeout(() => renderCSV($('csvInput').value), 200); });
+$('csvDelimBtn').addEventListener('click', () => {
+  const btn = $('csvDelimBtn');
+  btn.dataset.delim = btn.dataset.delim === ',' ? '\t' : ',';
+  btn.textContent = 'Delimiter: ' + (btn.dataset.delim === ',' ? ',' : '\\t');
+  renderCSV($('csvInput').value);
+});
+$('csvClearBtn').addEventListener('click', () => { $('csvInput').value = ''; $('csvResult').innerHTML = ''; $('csvStat').textContent = ''; });
+
+// ═══════════════════════════════════════
+//  复制 / 下载按钮
+// ═══════════════════════════════════════
+// 事件委托：复制/下载按钮（减少监听器数量）
+document.addEventListener('click', e => {
+  const smBtn = e.target.closest('.copy-btn-sm');
+  if (smBtn && smBtn.dataset.target) {
+    const el = $(smBtn.dataset.target);
+    if (el && el.textContent && el.textContent !== '—') copy(el.textContent);
+    else toast(_('no_content'), 1);
+    return;
+  }
+  const dlSm = e.target.closest('.copy-btn-sm:not([data-target])');
+  if (dlSm && dlSm.dataset.dlTarget) {
+    const el = $(dlSm.dataset.dlTarget);
+    if (el && el.textContent && el.textContent !== '—') downloadText(el.textContent, dlSm.dataset.dlTarget + '.txt');
+    else toast(_('no_content'), 1);
+    return;
+  }
+  const cpBtn = e.target.closest('.result-box .copy-btn:not(.download-btn)');
+  if (cpBtn) {
+    const box = cpBtn.closest('.result-box');
+    const clone = box.cloneNode(true);
+    clone.querySelector('.copy-btn')?.remove();
+    clone.querySelector('.download-btn')?.remove();
+    const t = clone.textContent.trim();
+    const dflts = [_('res_json'), _('waiting_result'), _('waiting_http'), _('res_json'),_('waiting_result'),_('waiting_http'),'Result','Waiting'];
+    if (t && !dflts.includes(t)) {
+      copy(t);
+      cpBtn.textContent = '✓';
+      cpBtn.style.color = 'var(--jt-str)';
+      setTimeout(() => { cpBtn.textContent = _('copy'); cpBtn.style.color = ''; }, 1200);
+    } else toast(_('no_content'), 1);
+    return;
+  }
+  const dlBtn = e.target.closest('.result-box .download-btn');
+  if (dlBtn) {
+    const box = dlBtn.closest('.result-box');
+    const clone = box.cloneNode(true);
+    clone.querySelectorAll('button').forEach(b => b.remove());
+    const t = clone.textContent.trim();
+    const dflts2 = [_('res_json'), _('waiting_result'), _('waiting_http'), _('res_json'),_('waiting_result'),_('waiting_http'),'Result','Waiting'];
+    if (t && !dflts2.includes(t)) downloadText(t, (box.id || 'output') + '.txt');
+    else toast(_('no_content'), 1);
+    return;
+  }
+});
+// 初始化小复制按钮 + 下载按钮
+document.querySelectorAll('.copy-btn-sm').forEach(btn => {
+  const dl = document.createElement('button');
+  dl.className = 'copy-btn-sm'; dl.textContent = '⬇';
+  dl.title = _L.download ? _L.download[_lang] : 'Download';
+  dl.dataset.dlTarget = btn.dataset.target;
+  btn.after(dl);
+});
+document.querySelectorAll('.result-box .copy-btn:not(.download-btn)').forEach(btn => {
+  const dl = document.createElement('button');
+  dl.className = 'copy-btn download-btn'; dl.textContent = '⬇';
+  dl.title = _L.download ? _L.download[_lang] : 'Download';
+  btn.after(dl);
+});
+
+// ═══════════════════════════════════════
+//  ⏱ 时区选择器
+// ═══════════════════════════════════════
+let tzData = [];
+let tzFiltered = [];
+let tzSelected = '';
+function tzOffset(tz) {
+  const d = new Date();
+  const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+  const p = fmt.formatToParts(d);
+  const get = (t) => +p.find(x=>x.type===t)?.value;
+  const tzMs = Date.UTC(get('year'), get('month')-1, get('day'), get('hour'), get('minute'), get('second'));
+  return Math.round((tzMs - Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds())) / 60000);
+}
+function tzLabel(tz) {
+  try {
+    const off = tzOffset(tz);
+    const sign = off >= 0 ? '+' : '-';
+    const absH = Math.floor(Math.abs(off) / 60);
+    const city = tz.split('/').pop().replace(/_/g, ' ');
+    return `${city} (UTC${sign}${absH})`;
+  } catch { return tz.replace(/_/g, ' '); }
+}
+const tzAll = (() => {
+  const common = ['Asia/Shanghai','Asia/Tokyo','Asia/Singapore','Asia/Hong_Kong','Asia/Seoul','Asia/Taipei','America/New_York','America/Chicago','America/Denver','America/Los_Angeles','Europe/London','Europe/Paris','Europe/Berlin','Europe/Moscow','Australia/Sydney','Pacific/Auckland'];
+  try { return [...common, ...Intl.supportedValuesOf('timeZone').filter(t => !common.includes(t))]; }
+  catch { return common; }
+})();
+tzData = tzAll.map(tz => ({ tz, label: tzLabel(tz) }));
+tzFiltered = [...tzData];
+
+function renderTzList(filter) {
+  const list = $('tzList');
+  filter = filter.toLowerCase().trim();
+  tzFiltered = filter ? tzData.filter(d => d.tz.toLowerCase().includes(filter) || d.label.toLowerCase().includes(filter)) : [...tzData];
+  list.innerHTML = tzFiltered.length
+    ? tzFiltered.map((d, i) => `<div class="tz-item${d.tz === tzSelected ? ' active' : ''}" data-idx="${i}">${d.label}</div>`).join('')
+    : '<div class="tz-item" style="color:var(--text-dim);">' + _('no_match') + '</div>';
+}
+$('tzSearch').addEventListener('focus', () => { $('tzList').classList.add('open'); renderTzList($('tzSearch').value); });
+$('tzSearch').addEventListener('input', () => renderTzList($('tzSearch').value));
+$('tzList').addEventListener('click', e => {
+  const item = e.target.closest('.tz-item');
+  if (!item || !('idx' in item.dataset)) return;
+  const d = tzFiltered[+item.dataset.idx];
+  if (!d) return;
+  tzSelected = d.tz;
+  $('tzSearch').value = d.label;
+  $('tzList').classList.remove('open');
+  renderTs(parseTs($('tsInput').value));
+});
+document.addEventListener('click', e => {
+  if (!$('tzPicker').contains(e.target)) $('tzList').classList.remove('open');
+});
+
+// ═══════════════════════════════════════
+//  操作历史
+// ═══════════════════════════════════════
+const HISTORY_KEY = 'litools_history';
+const HISTORY_MAX = 50;
+function getHistory() { try { return JSON.parse(sessionStorage.getItem(HISTORY_KEY)) || []; } catch { return []; } }
+function addHistory(tab, desc, data) {
+  const list = getHistory();
+  list.unshift({ tab, desc, data: data?.slice(0, 500), ts: Date.now() });
+  if (list.length > HISTORY_MAX) list.length = HISTORY_MAX;
+  try { sessionStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch {}
+}
+function renderHistory() {
+  const list = getHistory();
+  const el = $('historyList');
+  if (!list.length) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">暂无历史记录</div>'; return; }
+  el.innerHTML = list.map((h, i) => {
+    const t = new Date(h.ts);
+    const time = `${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
+    const tabNames = { json:'JSON', http:'HTTP', search:'搜索', ts:'时间戳', sql:'SQL', encode:'编解码', diff:'Diff', gen:'生成', text:'文本', color:'颜色' };
+    return `<div class="history-item" data-idx="${i}" style="padding:8px 14px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12px;display:flex;gap:8px;align-items:center;">
+      <span style="color:var(--accent);font-weight:500;white-space:nowrap;">${tabNames[h.tab] || h.tab}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-dim);">${escHtml(h.desc)}</span>
+      <span style="color:var(--text-dim);font-size:11px;white-space:nowrap;">${time}</span>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.history-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const idx = parseInt(item.dataset.idx);
+      const h = list[idx];
+      if (h && h.data) restoreHistory(h);
+      $('historyPanel').style.display = 'none';
+    });
+    item.addEventListener('mouseenter', () => item.style.background = 'var(--surface2)');
+    item.addEventListener('mouseleave', () => item.style.background = '');
+  });
+}
+function restoreHistory(h) {
+  switchTab(h.tab);
+  if (h.tab === 'json') { $('jsonInput').value = h.data; renderJSONResult(h.data, true); }
+  else if (h.tab === 'http') { $('httpUrl').value = h.data; }
+  else if (h.tab === 'search') { const se = $('srchEditor'); se.textContent = h.data; se.dataset.lkPl = ''; se.contentEditable = 'true'; applyHighlights(); }
+  else if (h.tab === 'sql') { $('sqlInput').value = h.data; }
+  else if (h.tab === 'encode') { $('b64Input').value = h.data; }
+  else if (h.tab === 'text') { $('tpInput').value = h.data; }
+  else if (h.tab === 'ts') { $('tsInput').value = h.data; renderTs(parseTs(h.data)); }
+}
+$('historyToggle').addEventListener('click', () => {
+  const p = $('historyPanel');
+  p.style.display = p.style.display === 'none' ? '' : 'none';
+  if (p.style.display !== 'none') renderHistory();
+});
+$('historyClose').addEventListener('click', () => $('historyPanel').style.display = 'none');
+$('historyClearAll').addEventListener('click', () => { try { sessionStorage.removeItem(HISTORY_KEY); } catch {} renderHistory(); });
+document.addEventListener('click', e => { if (!e.target.closest('#historyPanel') && !e.target.closest('#historyToggle')) $('historyPanel').style.display = 'none'; });
+
+// 在关键操作后记录历史
+const _origJsonRender = renderJSONResult;
+// JSON 格式化后记录
+const _origJsonFormat = $('jsonFormatBtn')?.addEventListener;
+// 用 MutationObserver 监听结果变化来记录历史（简单方案）
+function autoRecordHistory() {
+  const observers = [
+    { box: 'jsonResult', tab: 'json', getInput: () => $('jsonInput').value?.slice(0, 100) },
+    { box: 'httpResult', tab: 'http', getInput: () => $('httpUrl').value?.slice(0, 100) },
+    { box: 'sqlResult', tab: 'sql', getInput: () => $('sqlInput').value?.slice(0, 100) },
+    { box: 'b64Result', tab: 'encode', getInput: () => $('b64Input').value?.slice(0, 100) },
+    { box: 'tpResult', tab: 'text', getInput: () => $('tpInput').value?.slice(0, 100) },
+  ];
+  observers.forEach(({ box, tab, getInput }) => {
+    const el = $(box);
+    if (!el) return;
+    let lastContent = '', debounce = null;
+    new MutationObserver(() => {
+      if (debounce) return;
+      debounce = setTimeout(() => {
+        debounce = null;
+        const content = el.textContent?.trim();
+        if (content && content !== lastContent && content !== '结果' && content !== 'Result' && content !== '等待请求' && content !== 'Waiting') {
+          lastContent = content;
+          addHistory(tab, getInput() || content.slice(0, 60), getInput());
+        }
+      }, 1000);
+    }).observe(el, { childList: true, subtree: true, characterData: true });
+  });
+}
+
+// ═══════════════════════════════════════
+//  初始化
+// ═══════════════════════════════════════
+$('tsInput').value = Math.floor(Date.now() / 1000);
+renderTs(parseTs($('tsInput').value));
+// 右侧默认填入当前时间
+const n = new Date();
+$('tsRevInput').value = `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())} ${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+// Session persistence
+(function(){
+const KEYS = ['jsonInput','b64Input','urlInput','uuidCount','tpInput','bcInput','htmlInput','sqlInput','hashInput','colorInput','statsInput','jwtInput','csvInput','ccInput','httpUrl','httpHeaders','httpBody','httpMethod','httpCurlInput','httpParams','httpCookies'];
+const SAVE = () => {
+  const d = {};
+  KEYS.forEach(id => { const el = $(id); if (el && el.value) d[id] = el.value; });
+  const srch = $('srchEditor');
+  if (srch && srch.textContent) d.srchEditor = srch.textContent;
+  const rex = $('rexEditor');
+  if (rex && rex.textContent) d.rexEditor = rex.textContent;
+  const rp = $('rexPattern'); if (rp && rp.value) d.rexPattern = rp.value;
+  const active = document.querySelector('.tab-pane.active');
+  if (active) d.activeTab = active.id.replace('p-', '');
+  document.querySelectorAll('.tab-pane .sub-tab.active').forEach(st => {
+    const parentId = st.closest('.tab-pane').id;
+    d['sub_' + parentId] = st.dataset.sub;
+  });
+  try { sessionStorage.setItem('devtools', JSON.stringify(d)); } catch { toast(_('session_full'), 1); }
+};
+window.addEventListener('beforeunload', SAVE);
+try {
+  const raw = sessionStorage.getItem('devtools');
+  if (raw) {
+    const d = JSON.parse(raw);
+    KEYS.forEach(id => { const el = $(id); if (el && d[id]) el.value = d[id]; });
+    if (d.srchEditor) { $('srchEditor').textContent = d.srchEditor; $('srchEditor').dataset.lkPl = ''; }
+    if (d.rexEditor) { $('rexEditor').textContent = d.rexEditor; }
+    if (d.rexPattern) { $('rexPattern').value = d.rexPattern; }
+    if (d.activeTab) {
+      const tab = document.querySelector(`.tab[data-tab="${d.activeTab}"]`);
+      if (tab) tab.click();
+    }
+    // Restore sub-tab states
+    Object.keys(d).forEach(k => {
+      if (k.startsWith('sub_')) {
+        const st = document.querySelector(`#${k.slice(4)} .sub-tab[data-sub="${d[k]}"]`);
+        if (st) st.click();
+      }
+    });
+  }
+} catch {}
+})();
+
+renderTsRev();
+updateStats();
+bindStats($('jsonInput'), 'jsonStat');
+bindStats($('srchEditor'), 'srchStat');
+bindStats($('rexEditor'), 'rexStat');
+bindStats($('tpInput'), 'tpStat');
+bindStats($('statsInput'), 'statsStat');
+bindStats($('htmlInput'), 'htmlStat');
+bindStats($('sqlInput'), 'sqlStat');
+bindStats($('jwtInput'), 'jwtStat');
+autoRecordHistory();
+function applyLang(lang) {
+  _lang = lang; localStorage.setItem('lang', lang);
+  document.querySelectorAll('[data-lk]').forEach(el => {
+    const t = _L[el.dataset.lk]; if (!t) return;
+    let textNode = null;
+    for (let i = 0; i < el.childNodes.length; i++) {
+      if (el.childNodes[i].nodeType === 3 && el.childNodes[i].textContent.trim()) {
+        textNode = el.childNodes[i]; break;
+      }
+    }
+    if (textNode) textNode.textContent = t[lang];
+    else el.textContent = t[lang];
+  });
+  document.querySelectorAll('[data-lk-pl]').forEach(el => {
+    const t = _L[el.dataset.lkPl]; if (!t) return;
+    el.placeholder = t[lang];
+    el.dataset.lkPl = t[lang];
+  });
+  document.querySelectorAll('[data-lk-tl]').forEach(el => {
+    const t = _L[el.dataset.lkTl]; if (!t) return;
+    el.title = t[lang];
+  });
+  // update lang toggle text
+  document.getElementById('langToggle').textContent = lang === 'zh' ? '🌐' : '🌐';
+  document.getElementById('langToggle').title = _L.tl_langToggle[lang];
+  // 刷新统计栏
+  document.querySelectorAll('.stat-line').forEach(el => {
+    const src = el.previousElementSibling?.querySelector('textarea') || el.parentElement?.querySelector('textarea');
+    if (src) src.dispatchEvent(new Event('input'));
+  });
+  // 刷新搜索标签计数
+  if (srchTerms.length) updateSrchTags();
+}
+document.getElementById('langToggle').addEventListener('click', () => applyLang(_lang === 'zh' ? 'en' : 'zh'));
+applyLang(_lang);
+
+const tabMeta = [
+  {tab:'json', name:'{ } JSON', kw:'json 格式化 树形'},
+  {tab:'http', name:'🌐 HTTP', kw:'http 请求 curl api'},
+  {tab:'search', name:'🔍 搜索', kw:'查找 替换 正则 regex'},
+  {tab:'sql', name:'🗄️ SQL', sub:[{id:'sql-in',n:'IN 生成'},{id:'sql-insert',n:'INSERT 解析'}], kw:'sql 数据库 insert 值 列'},
+  {tab:'encode', name:'🔐 编解码', sub:[{id:'b64',n:'Base64'},{id:'url',n:'URL'},{id:'html',n:'HTML'},{id:'jwt',n:'JWT'},{id:'bc',n:'进制'}], kw:'编码 解码 base64 url html jwt 进制 hex bin oct'},
+  {tab:'gen', name:'🎲 生成', sub:[{id:'uuid',n:'UUID'},{id:'hash',n:'Hash'},{id:'color',n:'颜色'}], kw:'生成 uuid hash sha 颜色 色值'},
+  {tab:'text', name:'📝 文本', sub:[{id:'proc',n:'处理'},{id:'stats',n:'统计'},{id:'cc',n:'简繁'},{id:'trans',n:'翻译'},{id:'csv',n:'CSV'},{id:'diff',n:'Diff'}], kw:'排序 去重 统计 简繁 翻译 csv 表格 diff 比较'},
+  {tab:'ts', name:'⏱ 时间', sub:[{id:'ts-convert',n:'时间戳'},{id:'ts-calc',n:'日期计算'},{id:'ts-timer',n:'计时器'}], kw:'时间 日期 毫秒 秒 时间戳 计时 倒计时'},
+];
+const $tsi = $('tabSearchInput'), $tsr = $('tabSearchResults'), $tsIcon = $('tabSearchIcon');
+function tsOpen() { $tsi.style.display = ''; $tsi.focus(); $tsi.select(); }
+function tsClose() { $tsi.style.display = 'none'; $tsr.style.display = 'none'; $tsi.value = ''; }
+$tsIcon.addEventListener('click', tsOpen);
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); tsOpen(); }
+  if (e.key === 'Escape') { tsClose(); }
+  // Ctrl+Enter: 格式化 JSON（在 jsonInput 聚焦时）
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && document.activeElement?.id === 'jsonInput') {
+    e.preventDefault(); $('jsonFormatBtn')?.click();
+  }
+});
+$tsi.addEventListener('blur', () => setTimeout(() => { if (!$tsr.matches(':hover')) tsClose(); }, 200));
+$tsi.addEventListener('input', () => {
+  const q = $tsi.value.trim().toLowerCase();
+  if (!q) { $tsr.style.display = 'none'; return; }
+  let items = [];
+  for (const m of tabMeta) {
+    if (m.name.toLowerCase().includes(q) || m.kw.includes(q)) { items.push({tab:m.tab, name:m.name}); }
+    if (m.sub) for (const s of m.sub) if (s.n.toLowerCase().includes(q) || (m.kw||'').includes(q)) items.push({tab:m.tab, sub:s.id, name:m.name + ' › ' + s.n});
+  }
+  if (!items.length) { $tsr.style.display = 'none'; return; }
+  $tsr.innerHTML = items.map((it,i) => `<div class="tsr-item" data-idx="${i}" data-tab="${it.tab}"${it.sub ? ' data-sub="'+it.sub+'"' : ''} style="padding:6px 10px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);">${it.name}</div>`).join('');
+  $tsr.style.display = '';
+});
+$tsr.addEventListener('click', e => {
+  const el = e.target.closest('.tsr-item'); if (!el) return;
+  const tab = el.dataset.tab, sub = el.dataset.sub;
+  switchTab(tab); tsClose();
+  if (sub) setTimeout(() => { document.querySelectorAll('.sub-tab').forEach(st => { if (st.dataset.sub === sub) st.click(); }); }, 50);
+});
+$tsr.addEventListener('mouseover', e => { const el = e.target.closest('.tsr-item'); if (el) { $tsr.querySelectorAll('.tsr-item').forEach(x => x.style.background = ''); el.style.background = 'var(--accent)'; el.style.color = '#fff'; }});
+$tsr.addEventListener('mouseout', e => { const el = e.target.closest('.tsr-item'); if (el) { el.style.background = ''; el.style.color = ''; }});
+
+</script>
+</body>
+</html>
