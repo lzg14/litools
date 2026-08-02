@@ -149,6 +149,20 @@ textarea {
 .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
 
 textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; }
+.ln-editor { display: flex; align-items: stretch; }
+.ln-gutter {
+  min-width: 40px; max-width: 60px; overflow: hidden; flex: none;
+  padding: 8px 6px 8px 8px; text-align: right;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px; line-height: 1.7; color: var(--text-dim);
+  background: var(--surface2); border: 1px solid var(--border); border-right: none;
+  border-radius: var(--radius) 0 0 var(--radius);
+  user-select: none; white-space: pre; box-sizing: border-box;
+}
+.ln-editor textarea {
+  flex: 1; min-width: 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
 #jsonInput, #jsonResult, #sqlInput, #sqlResult,
 #diffLeft, #diffRight,
 #srchEditor, .diff-editor { min-height: calc(100vh - 200px) !important; }
@@ -311,18 +325,21 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <div class="tab" data-tab="gen" data-lk="tab_gen">🎲 生成</div>
     <div class="tab" data-tab="text" data-lk="tab_text">📝 文本</div>
     <div class="tab" data-tab="ts" data-lk="tab_ts">⏱ 时间</div>
+    <div class="tab" data-tab="screen" data-lk="tab_screen">🖥 屏幕</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
       <span id="themeToggle" style="cursor:pointer;font-size:16px;" title="切换主题" data-lk-tl="tl_themeToggle">🌙</span>
-      <span id="historyToggle" style="cursor:pointer;font-size:16px;" title="操作历史">📋</span>
+      <span id="historyToggle" style="cursor:pointer;font-size:16px;" title="操作历史" data-lk-tl="tl_historyToggle">📋</span>
       <div id="tabSearchWrap" style="position:relative;">
         <span id="tabSearchIcon" style="cursor:pointer;font-size:14px;" title="搜索页签 (Ctrl+K)" data-lk-tl="tl_tabSearch">🔍</span>
         <input type="text" id="tabSearchInput" placeholder="搜索页签…" spellcheck="false" style="display:none;width:130px;padding:3px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);position:absolute;right:0;top:-2px;" data-lk-pl="pl_tabSearch">
         <div id="tabSearchResults" style="position:absolute;top:100%;right:0;left:auto;min-width:220px;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:300px;overflow-y:auto;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
       </div>
       <span id="langToggle" style="cursor:pointer;font-size:14px;" title="切换语言" data-lk-tl="tl_langToggle">🌐</span>
+      <span id="settingsToggle" style="cursor:pointer;font-size:16px;" title="设置" data-lk-tl="tl_settingsToggle">⚙️</span>
     </div>
   </div>
+  <div id="pinnedToolbar" style="display:none;margin-bottom:8px;gap:6px;flex-wrap:wrap;"></div>
 
   <!-- ⏱ 时间 -->
   <div class="tab-pane" id="p-ts">
@@ -355,8 +372,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
           <div>
             <div class="result-item"><span class="label">UTC</span><span class="value" id="tsUtc">—</span><button class="copy-btn-sm" data-target="tsUtc">📋</button></div>
             <div class="result-item"><span class="label">RFC 2822</span><span class="value" id="tsRfc">—</span><button class="copy-btn-sm" data-target="tsRfc">📋</button></div>
-            <div class="result-item"><span class="label">相对</span><span class="value" id="tsRel">—</span></div>
-            <div class="result-item"><span class="label">毫秒</span><span class="value" id="tsMs">—</span><button class="copy-btn-sm" data-target="tsMs">📋</button></div>
+            <div class="result-item"><span class="label" data-lk="tsRel_label">相对</span><span class="value" id="tsRel">—</span></div>
+            <div class="result-item"><span class="label" data-lk="tsMs_label">毫秒</span><span class="value" id="tsMs">—</span><button class="copy-btn-sm" data-target="tsMs">📋</button></div>
             <div class="result-item"><span class="label" id="tzLabel" data-lk="tzLabel">时区</span><span class="value" id="tsTz">—</span><button class="copy-btn-sm" data-target="tsTz">📋</button></div>
           </div>
         </div>
@@ -366,8 +383,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
             <button class="btn" id="tsRevNowBtn" data-lk="tsRevNowBtn">当前</button>
             <button class="btn" id="tsRevClearBtn" data-lk="tsRevClearBtn">清空</button>
           </div>
-          <div class="result-item"><span class="label">秒</span><span class="value" id="tsRevSec" data-lk="tsRevSec">—</span><button class="copy-btn-sm" data-target="tsRevSec">📋</button></div>
-          <div class="result-item"><span class="label">毫秒</span><span class="value" id="tsRevMs" data-lk="tsRevMs">—</span><button class="copy-btn-sm" data-target="tsRevMs">📋</button></div>
+          <div class="result-item"><span class="label" data-lk="tsRevSec_label">秒</span><span class="value" id="tsRevSec">—</span><button class="copy-btn-sm" data-target="tsRevSec">📋</button></div>
+          <div class="result-item"><span class="label" data-lk="tsRevMs_label">毫秒</span><span class="value" id="tsRevMs">—</span><button class="copy-btn-sm" data-target="tsRevMs">📋</button></div>
         </div>
       </div>
     </div>
@@ -375,23 +392,23 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <div class="sub-pane" data-sub="ts-calc">
       <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:start;">
         <div>
-          <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">起始日期</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;" data-lk="tsCalcFrom_label">起始日期</div>
           <input type="datetime-local" id="tsCalcFrom" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;">
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:20px;">
           <button class="btn btn-sm" id="tsCalcSwap">⇄</button>
         </div>
         <div>
-          <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">结束日期</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;" data-lk="tsCalcTo_label">结束日期</div>
           <input type="datetime-local" id="tsCalcTo" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;">
         </div>
       </div>
       <div class="btn-group" style="margin-top:8px;">
-        <button class="btn btn-primary" id="tsCalcBtn">计算差值</button>
-        <button class="btn" id="tsCalcAddBtn">+ 加减天数</button>
+        <button class="btn btn-primary" id="tsCalcBtn" data-lk="tsCalcBtn">计算差值</button>
+        <button class="btn" id="tsCalcAddBtn" data-lk="tsCalcAddBtn">+ 加减天数</button>
         <input type="number" id="tsCalcDays" value="1" style="width:60px;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;text-align:center;">
-        <span style="font-size:12px;color:var(--text-dim);line-height:28px;">天</span>
-        <button class="btn" id="tsCalcClearBtn">清空</button>
+        <span style="font-size:12px;color:var(--text-dim);line-height:28px;" data-lk="tsCalcDays_unit">天</span>
+        <button class="btn" id="tsCalcClearBtn" data-lk="tsCalcClearBtn">清空</button>
       </div>
       <div id="tsCalcResult" style="margin-top:8px;"></div>
     </div>
@@ -400,9 +417,9 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div style="text-align:center;padding:20px 0;">
         <div id="timerDisplay" style="font-size:48px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-weight:700;letter-spacing:2px;margin-bottom:20px;">00:00:00.0</div>
         <div class="btn-group" style="justify-content:center;">
-          <button class="btn btn-primary" id="timerStartBtn" style="min-width:80px;">▶ 开始</button>
-          <button class="btn" id="timerLapBtn" style="min-width:80px;display:none;">📍 计次</button>
-          <button class="btn" id="timerResetBtn" style="min-width:80px;">↺ 重置</button>
+          <button class="btn btn-primary" id="timerStartBtn" style="min-width:80px;" data-lk="timerStartBtn">▶ 开始</button>
+          <button class="btn" id="timerLapBtn" style="min-width:80px;display:none;" data-lk="timerLapBtn">📍 计次</button>
+          <button class="btn" id="timerResetBtn" style="min-width:80px;" data-lk="timerResetBtn">↺ 重置</button>
         </div>
         <div id="timerLaps" style="margin-top:16px;max-height:300px;overflow-y:auto;text-align:left;font-size:12px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;"></div>
       </div>
@@ -414,6 +431,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <div class="sub-tabs">
       <div class="sub-tab active" data-sub="sql-in" data-lk="sub_sql_in">🗄️ IN 生成</div>
       <div class="sub-tab" data-sub="sql-insert" data-lk="sub_sql_insert">📋 INSERT 解析</div>
+      <div class="sub-tab" data-sub="sql-fmt" data-lk="sub_sql_fmt">✨ SQL 格式化</div>
     </div>
     <!-- IN 生成 -->
     <div class="sub-pane active" data-sub="sql-in">
@@ -444,6 +462,18 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       </div>
       <div id="sqlInsertResult" style="margin-top:6px;max-height:60vh;overflow:auto;"></div>
     </div>
+    <!-- SQL 格式化 -->
+    <div class="sub-pane" data-sub="sql-fmt">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <textarea id="sqlFmtInput" rows="10" placeholder="粘贴 SQL 语句，自动格式化&#10;支持 SELECT/INSERT/UPDATE/DELETE/WHERE/ORDER BY 等" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_sqlFmtInput"></textarea>
+        <div class="result-box" id="sqlFmtResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;" data-lk="sqlFmtResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+      </div>
+      <div class="btn-group" style="margin-top:8px;">
+        <button class="btn btn-primary" id="sqlFmtBtn" data-lk="sqlFmtBtn">格式化</button>
+        <button class="btn" id="sqlFmtClearBtn" data-lk="sqlFmtClearBtn">清空</button>
+        <span id="sqlFmtStat" style="font-size:12px;color:var(--text-dim);line-height:28px;"></span>
+      </div>
+    </div>
   </div>
 
   <!-- { } JSON -->
@@ -462,6 +492,13 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-primary" id="jsonFormatBtn" data-lk="jsonFormatBtn">格式化 (Ctrl+Enter)</button>
         <button class="btn" id="jsonCompressBtn" data-lk="jsonCompressBtn">压缩</button>
         <button class="btn" id="jsonLooseBtn" data-lk="jsonLooseBtn">宽松解析</button>
+        <button class="btn" id="jsonYamlBtn" data-lk="jsonYamlBtn">→ YAML</button>
+        <button class="btn" id="jsonXmlBtn" data-lk="jsonXmlBtn">→ XML</button>
+        <button class="btn" id="xmlJsonBtn" data-lk="xmlJsonBtn">XML →</button>
+        <button class="btn" id="jsonCodeBtn" data-lk="jsonCodeBtn">→ Code</button>
+        <button class="btn" id="jsonSchemaBtn" data-lk="jsonSchemaBtn">Schema</button>
+        <button class="btn" id="jsonMergeBtn" data-lk="jsonMergeBtn">合并</button>
+        <button class="btn" id="jsonDiffBtn" data-lk="jsonDiffBtn">对比</button>
         <button class="btn" id="jsonClearBtn" data-lk="jsonClearBtn">清空</button>
         <button class="btn" id="jsonFileBtn" data-lk="jsonFileBtn">📂 打开文件</button>
       </div>
@@ -536,6 +573,9 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div class="sub-tab" data-sub="html" data-lk="sub_html">HTML</div>
       <div class="sub-tab" data-sub="jwt" data-lk="sub_jwt">JWT</div>
       <div class="sub-tab" data-sub="bc" data-lk="sub_bc">🔢 进制</div>
+      <div class="sub-tab" data-sub="morse" data-lk="sub_morse">📻 Morse</div>
+      <div class="sub-tab" data-sub="caesar" data-lk="sub_caesar">🔐 Caesar</div>
+      <div class="sub-tab" data-sub="bintext" data-lk="sub_bintext">💾 二进制文本</div>
     </div>
     <!-- Base64 -->
     <div class="sub-pane active" data-sub="b64">
@@ -553,9 +593,11 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div class="btn-group">
         <button class="btn btn-primary" id="urlEncodeBtn" data-lk="urlEncodeBtn">编码</button>
         <button class="btn" id="urlDecodeBtn" data-lk="urlDecodeBtn">解码</button>
+        <button class="btn" id="urlParseBtn" data-lk="urlParseBtn">解析</button>
         <button class="btn" id="urlClearBtn" data-lk="urlClearBtn">清空</button>
       </div>
       <div class="result-box" id="urlResult" data-lk="urlResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+      <div id="urlParsed" style="margin-top:8px;font-size:12px;display:none;"></div>
     </div>
     <!-- HTML -->
     <div class="sub-pane" data-sub="html">
@@ -596,6 +638,46 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <div class="result-item"><span class="label" data-lk="bcOct">八进制</span><span class="value mono" id="bcOct">—</span><button class="copy-btn-sm" data-target="bcOct">📋</button></div>
       </div>
     </div>
+    <!-- Morse 电码 -->
+    <div class="sub-pane" data-sub="morse">
+      <textarea id="morseInput" rows="6" placeholder="输入文本，如 SOS" spellcheck="false" style="min-height:20vh;" data-lk-pl="pl_morseInput"></textarea>
+      <div class="btn-group">
+        <button class="btn btn-primary btn-sm" id="morseEncodeBtn" data-lk="morseEncodeBtn">→ Morse</button>
+        <button class="btn btn-sm" id="morseDecodeBtn" data-lk="morseDecodeBtn">← 解码</button>
+        <button class="btn btn-sm" id="morseClearBtn" data-lk="morseClearBtn">清空</button>
+      </div>
+      <div class="result-box" id="morseResult" style="font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.8;white-space:pre-wrap;" data-lk="morseResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+      <details style="margin-top:8px;">
+        <summary style="cursor:pointer;font-size:12px;color:var(--text-dim);" data-lk="morseTableTitle">对照表</summary>
+        <div id="morseTable" style="margin-top:6px;font-size:12px;line-height:1.9;"></div>
+      </details>
+    </div>
+    <!-- Caesar 密码 -->
+    <div class="sub-pane" data-sub="caesar">
+      <textarea id="caesarInput" rows="6" placeholder="输入文本，如 ABC" spellcheck="false" style="min-height:20vh;" data-lk-pl="pl_caesarInput"></textarea>
+      <div class="input-row" style="margin-top:8px;">
+        <label style="font-size:13px;white-space:nowrap;" data-lk="caesarShiftLabel">位移量:</label>
+        <input type="number" id="caesarShift" value="3" min="1" max="25" style="width:90px;" data-lk-pl="pl_caesarShift">
+        <button class="btn btn-primary btn-sm" id="caesarEncodeBtn" data-lk="caesarEncodeBtn">加密</button>
+        <button class="btn btn-sm" id="caesarDecodeBtn" data-lk="caesarDecodeBtn">解密</button>
+        <button class="btn btn-sm" id="caesarClearBtn" data-lk="caesarClearBtn">清空</button>
+      </div>
+      <div class="result-box" id="caesarResult" style="font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.8;white-space:pre-wrap;" data-lk="caesarResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+      <div class="btn-group" style="margin-top:8px;">
+        <button class="btn btn-sm" id="caesarBruteBtn" data-lk="caesarBruteBtn">💥 暴力破解</button>
+      </div>
+      <div id="caesarBrute" style="font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:12px;line-height:1.8;max-height:40vh;overflow:auto;"></div>
+    </div>
+    <!-- 二进制文本 -->
+    <div class="sub-pane" data-sub="bintext">
+      <textarea id="bintextInput" rows="6" placeholder="输入文本或二进制（每字符 8 位，UTF-8 多字节）" spellcheck="false" style="min-height:20vh;" data-lk-pl="pl_bintextInput"></textarea>
+      <div class="btn-group">
+        <button class="btn btn-primary btn-sm" id="bintextEncodeBtn" data-lk="bintextEncodeBtn">→ 二进制</button>
+        <button class="btn btn-sm" id="bintextDecodeBtn" data-lk="bintextDecodeBtn">← 解码</button>
+        <button class="btn btn-sm" id="bintextClearBtn" data-lk="bintextClearBtn">清空</button>
+      </div>
+      <div class="result-box" id="bintextResult" style="font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.8;white-space:pre-wrap;" data-lk="bintextResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+    </div>
   </div>
 
   <!-- 🎲 生成 (合并 UUID+Hash) -->
@@ -604,6 +686,11 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div class="sub-tab active" data-sub="uuid" data-lk="sub_uuid">UUID</div>
       <div class="sub-tab" data-sub="hash" data-lk="sub_hash">Hash</div>
       <div class="sub-tab" data-sub="color" data-lk="sub_color">🎨 颜色</div>
+      <div class="sub-tab" data-sub="passwd" data-lk="sub_passwd">🔑 密码</div>
+      <div class="sub-tab" data-sub="lorem" data-lk="sub_lorem">📃 Lorem</div>
+      <div class="sub-tab" data-sub="rex" data-lk="sub_rex">◎ 正则速查</div>
+      <div class="sub-tab" data-sub="cron" data-lk="sub_cron">⏰ Cron</div>
+      <div class="sub-tab" data-sub="fmt" data-lk="sub_fmt">🔧 代码格式化</div>
     </div>
     <!-- UUID -->
     <div class="sub-pane active" data-sub="uuid">
@@ -646,8 +733,77 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <div class="result-item"><span class="label" data-lk="colorHex">HEX</span><span class="value" id="cHex">—</span><button class="copy-btn-sm" data-target="cHex">📋</button></div>
         <div class="result-item"><span class="label" data-lk="colorRgb">RGB</span><span class="value" id="cRgb">—</span><button class="copy-btn-sm" data-target="cRgb">📋</button></div>
         <div class="result-item"><span class="label" data-lk="colorHsl">HSL</span><span class="value" id="cHsl">—</span><button class="copy-btn-sm" data-target="cHsl">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="colorCmyk">CMYK</span><span class="value" id="cCmyk">—</span><button class="copy-btn-sm" data-target="cCmyk">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="colorContrast">对比度</span><span class="value" id="cContrast">—</span></div>
       </div>
       <div id="colorPreview" style="height:48px;border-radius:var(--radius);border:1px solid var(--border);margin-top:8px;transition:background 0.2s;"></div>
+    </div>
+    <!-- 密码生成器 -->
+    <div class="sub-pane" data-sub="passwd">
+      <div class="input-row" style="flex-wrap:wrap;">
+        <label style="font-size:13px;white-space:nowrap;" data-lk="passwdLenLabel">长度:</label>
+        <input type="number" id="passwdLen" value="16" min="4" max="128" style="width:70px;">
+        <label style="font-size:13px;white-space:nowrap;"><input type="checkbox" id="passwdUpper" checked> <span data-lk="passwdUpper">大写 A-Z</span></label>
+        <label style="font-size:13px;white-space:nowrap;"><input type="checkbox" id="passwdLower" checked> <span data-lk="passwdLower">小写 a-z</span></label>
+        <label style="font-size:13px;white-space:nowrap;"><input type="checkbox" id="passwdNum" checked> <span data-lk="passwdNum">数字 0-9</span></label>
+        <label style="font-size:13px;white-space:nowrap;"><input type="checkbox" id="passwdSym" checked> <span data-lk="passwdSym">特殊 !@#$</span></label>
+      </div>
+      <div class="btn-group" style="margin-top:8px;">
+        <button class="btn btn-primary btn-sm" id="passwdGenBtn" data-lk="passwdGenBtn">生成</button>
+        <button class="btn btn-sm" id="passwdCopyBtn" data-lk="passwdCopyBtn">复制全部</button>
+      </div>
+      <div class="result-box" id="passwdResult" style="font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.9;white-space:pre-wrap;">结果</div>
+      <div class="stat-line" id="passwdStat"></div>
+    </div>
+    <!-- Lorem Ipsum -->
+    <div class="sub-pane" data-sub="lorem">
+      <div class="input-row" style="flex-wrap:wrap;">
+        <label style="font-size:13px;white-space:nowrap;" data-lk="loremTypeLabel">类型:</label>
+        <select id="loremType" style="width:110px;">
+          <option value="paragraphs">段落</option>
+          <option value="words">字数</option>
+          <option value="sentences">句子</option>
+        </select>
+        <input type="number" id="loremCount" value="5" min="1" max="100" style="width:70px;">
+        <label style="font-size:13px;white-space:nowrap;"><input type="checkbox" id="loremCn"> <span data-lk="loremCn">中文</span></label>
+        <button class="btn btn-primary btn-sm" id="loremGenBtn" data-lk="loremGenBtn">生成</button>
+        <button class="btn btn-sm" id="loremCopyBtn" data-lk="loremCopyBtn">复制</button>
+      </div>
+      <div class="result-box" id="loremResult" style="line-height:1.8;">结果</div>
+    </div>
+    <!-- 正则速查 -->
+    <div class="sub-pane" data-sub="rex">
+      <div class="input-row" style="margin-bottom:8px;">
+        <input type="text" id="rexExplainInput" placeholder="输入正则表达式，如 \d{4}-\d{2}-\d{2}" spellcheck="false" style="flex:1;font-family:'Cascadia Code',monospace;" data-lk-pl="pl_rexExplainInput">
+        <button class="btn btn-primary btn-sm" id="rexExplainBtn" data-lk="rexExplainBtn">解释</button>
+      </div>
+      <div id="rexExplainResult" style="margin-bottom:10px;font-size:12px;color:var(--text-dim);max-height:200px;overflow:auto;"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="rexCheatContainer"></div>
+      <div class="result-item" style="margin-top:8px;"><span class="label" data-lk="rexCheatPreview">预览</span><span class="value mono" id="rexCheatPreview" style="white-space:pre-wrap;font-size:12px;">—</span><button class="copy-btn-sm" data-target="rexCheatPreview">📋</button></div>
+    </div>
+    <!-- Cron 解析 -->
+    <div class="sub-pane" data-sub="cron">
+      <div class="input-row">
+        <input type="text" id="cronInput" value="*/5 * * * *" placeholder="* * * * *" spellcheck="false" style="font-family:'Cascadia Code',monospace;" data-lk-pl="pl_cronInput">
+        <button class="btn btn-primary btn-sm" id="cronParseBtn" data-lk="cronParseBtn">解析</button>
+      </div>
+      <div class="result-item"><span class="label" data-lk="cronDescLabel">描述</span><span class="value" id="cronDesc">—</span></div>
+      <div class="result-item"><span class="label" data-lk="cronNextLabel">未来 10 次执行</span><span class="value mono" id="cronNext" style="white-space:pre-wrap;font-size:12px;line-height:1.9;">—</span></div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:8px;" data-lk="cronHint">格式: 分 时 日 月 周（支持 * / , -）</div>
+    </div>
+    <!-- 代码格式化 -->
+    <div class="sub-pane" data-sub="fmt">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
+        <textarea id="fmtInput" rows="10" placeholder="粘贴 JS / CSS / HTML 代码" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_fmtInput"></textarea>
+        <div class="result-box" id="fmtResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="fmtResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+      </div>
+      <div class="btn-group" style="margin-top:8px;">
+        <button class="btn btn-primary btn-sm" id="fmtJsBeautifyBtn" data-lk="fmtJsBeautifyBtn">JS 美化</button>
+        <button class="btn btn-sm" id="fmtJsMinifyBtn" data-lk="fmtJsMinifyBtn">JS 压缩</button>
+        <button class="btn btn-sm" id="fmtCssBeautifyBtn" data-lk="fmtCssBeautifyBtn">CSS 美化</button>
+        <button class="btn btn-sm" id="fmtHtmlBeautifyBtn" data-lk="fmtHtmlBeautifyBtn">HTML 美化</button>
+        <button class="btn btn-sm" id="fmtClearBtn" data-lk="fmtClearBtn">清空</button>
+      </div>
     </div>
   </div>
 
@@ -657,14 +813,19 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div class="sub-tab active" data-sub="proc" data-lk="sub_proc">📝 处理</div>
       <div class="sub-tab" data-sub="stats" data-lk="sub_stats">📊 统计</div>
       <div class="sub-tab" data-sub="cc" data-lk="sub_cc">🀄 简繁</div>
+      <div class="sub-tab" data-sub="case" data-lk="sub_case">🔄 大小写</div>
       <div class="sub-tab" data-sub="trans" data-lk="sub_trans">🌐 翻译</div>
       <div class="sub-tab" data-sub="csv" data-lk="sub_csv">📋 CSV</div>
       <div class="sub-tab" data-sub="diff" data-lk="sub_diff">📑 Diff</div>
+      <div class="sub-tab" data-sub="markdown" data-lk="sub_markdown">📝 Markdown</div>
     </div>
     <!-- 文本处理 -->
     <div class="sub-pane active" data-sub="proc">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
-        <textarea id="tpInput" placeholder="输入文本" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_tpInput"></textarea>
+        <div class="ln-editor" style="min-height:55vh;">
+          <div class="ln-gutter" id="tpGutter" aria-hidden="true">1</div>
+          <textarea id="tpInput" placeholder="输入文本" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_tpInput"></textarea>
+        </div>
         <div class="result-box" id="tpResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="tpResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
       <div class="btn-group" style="margin-top:8px;">
@@ -679,11 +840,24 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-sm" id="tpClearEmpty" data-lk="tpClearEmpty">删空行</button>
         <button class="btn btn-sm" id="tpFileBtn" data-lk="tpFileBtn">📂 打开文件</button>
       </div>
+      <div class="input-row" style="margin-top:8px;flex-wrap:wrap;">
+        <input type="text" id="tpRegexPattern" placeholder="正则表达式" spellcheck="false" style="flex:2;min-width:140px;" data-lk-pl="pl_tpRegexPattern">
+        <input type="text" id="tpRegexReplace" placeholder="替换为 ($1/$2…)" spellcheck="false" style="flex:1;min-width:100px;" data-lk-pl="pl_tpRegexReplace">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-dim);white-space:nowrap;">
+          <input type="checkbox" id="tpRegexGI" checked> <span data-lk="tpRegexFlags">gi</span>
+        </label>
+        <button class="btn btn-sm" id="tpRegexBtn" data-lk="tpRegexBtn">正则替换</button>
+        <button class="btn btn-sm" id="tpRegexClearBtn" data-lk="tpRegexClearBtn">清空</button>
+      </div>
+      <div class="stat-line" id="tpRegexStat"></div>
       <div class="stat-line" id="tpStat"></div>
     </div>
     <!-- 统计 -->
     <div class="sub-pane" data-sub="stats">
-      <textarea id="statsInput" rows="10" placeholder="粘贴文本" spellcheck="false" data-lk-pl="pl_statsInput"></textarea>
+      <div class="ln-editor">
+        <div class="ln-gutter" id="statsGutter" aria-hidden="true">1</div>
+        <textarea id="statsInput" rows="10" placeholder="粘贴文本" spellcheck="false" data-lk-pl="pl_statsInput"></textarea>
+      </div>
       <div class="stat-line" id="statsStat"></div>
       <div class="btn-group">
         <button class="btn btn-sm" id="statsClearBtn" data-lk="statsClearBtn">清空</button>
@@ -700,40 +874,57 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <!-- 简繁 -->
     <div class="sub-pane" data-sub="cc">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
-        <textarea id="ccInput" placeholder="粘贴要转换的文本" spellcheck="false" style="min-height:55vh;font-size:14px;" data-lk-pl="pl_ccInput"></textarea>
-        <div class="result-box" id="ccResult" style="min-height:55vh;margin:0;font-size:14px;line-height:1.8;white-space:pre-wrap;overflow:auto;" data-lk="ccResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+        <textarea id="ccInput" rows="10" placeholder="粘贴要转换的文本" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_ccInput"></textarea>
+        <div class="result-box" id="ccResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="ccResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
-      <div class="stat-line" id="ccStat"></div>
       <div class="btn-group">
         <button class="btn btn-primary" id="ccToSimpBtn" data-lk="ccToSimpBtn">繁→简</button>
         <button class="btn" id="ccToTradBtn" data-lk="ccToTradBtn">简→繁</button>
         <button class="btn" id="ccClearBtn" data-lk="ccClearBtn">清空</button>
       </div>
     </div>
+    <!-- 大小写/命名转换 -->
+    <div class="sub-pane" data-sub="case">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
+        <textarea id="caseInput" rows="10" placeholder="输入文本，如 hello_world / HELLO WORLD / helloWorld" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_caseInput"></textarea>
+        <div class="result-box" id="caseResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="caseResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+      </div>
+      <div class="btn-group" style="margin-top:8px;">
+        <button class="btn btn-primary btn-sm" id="caseCamelBtn" data-lk="caseCamelBtn">camelCase</button>
+        <button class="btn btn-sm" id="casePascalBtn" data-lk="casePascalBtn">PascalCase</button>
+        <button class="btn btn-sm" id="caseSnakeBtn" data-lk="caseSnakeBtn">snake_case</button>
+        <button class="btn btn-sm" id="caseKebabBtn" data-lk="caseKebabBtn">kebab-case</button>
+        <button class="btn btn-sm" id="caseScreamingBtn" data-lk="caseScreamingBtn">SCREAMING_SNAKE</button>
+        <button class="btn btn-sm" id="caseClearBtn" data-lk="caseClearBtn">清空</button>
+      </div>
+    </div>
     <!-- 翻译 -->
     <div class="sub-pane" data-sub="trans">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
-        <textarea id="transInput" placeholder="输入要翻译的文本" spellcheck="false" style="min-height:55vh;font-size:14px;" data-lk-pl="pl_transInput"></textarea>
-        <div class="result-box" id="transResult" style="min-height:55vh;margin:0;font-size:14px;line-height:1.8;white-space:pre-wrap;overflow:auto;" data-lk="transResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+        <textarea id="transInput" rows="10" placeholder="输入要翻译的文本" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_transInput"></textarea>
+        <div class="result-box" id="transResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow:auto;" data-lk="transResult">等待输入</div>
+      </div>
+      <div class="btn-group" style="margin-top:8px;">
+        <button class="btn btn-primary btn-sm" id="transToEn" data-lk="transToEn">中→英</button>
+        <button class="btn btn-sm" id="transToZh" data-lk="transToZh">英→中</button>
+        <button class="btn btn-sm" id="transClearBtn" data-lk="transClearBtn">清空</button>
       </div>
       <div class="stat-line" id="transStat"></div>
-      <div class="btn-group">
-        <button class="btn btn-primary" id="transToEn" data-lk="transToEn">中 → 英</button>
-        <button class="btn" id="transToZh" data-lk="transToZh">英 → 中</button>
-        <button class="btn" id="transClearBtn" data-lk="transClearBtn">清空</button>
-      </div>
     </div>
     <!-- CSV -->
     <div class="sub-pane" data-sub="csv">
-      <textarea id="csvInput" rows="8" placeholder="粘贴 CSV 文本，或拖入 .csv 文件&#10;自动检测分隔符（逗号/制表符）" spellcheck="false" style="min-height:30vh;font-size:13px;" data-lk-pl="pl_csvInput"></textarea>
-      <div class="stat-line" id="csvStat"></div>
-      <div class="btn-group">
-        <button class="btn btn-primary" id="csvParseBtn" data-lk="csvParseBtn">解析</button>
-        <button class="btn" id="csvDelimBtn" data-delim="," data-lk="csvDelimBtn">分隔符: ,</button>
-        <button class="btn" id="csvClearBtn" data-lk="csvClearBtn">清空</button>
-        <span id="csvStatOld" style="font-size:12px;color:var(--text-dim);line-height:28px;"></span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
+        <textarea id="csvInput" rows="10" placeholder="粘贴 CSV 文本，或拖入 .csv 文件&#10;自动检测分隔符（逗号/制表符）" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_csvInput"></textarea>
+        <div class="result-box" id="csvResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.5;overflow:auto;">
+          <div style="padding:20px;text-align:center;color:var(--text-dim);">CSV 解析结果</div>
+        </div>
       </div>
-      <div id="csvResult" style="overflow:auto;max-height:60vh;font-size:13px;"></div>
+      <div class="btn-group" style="margin-top:8px;">
+        <button class="btn btn-sm" id="csvParseBtn" data-lk="csvParseBtn">解析</button>
+        <button class="btn btn-sm" id="csvDelimBtn" data-delim="," data-lk="csvDelimBtn">分隔符: ,</button>
+        <button class="btn btn-sm" id="csvClearBtn" data-lk="csvClearBtn">清空</button>
+      </div>
+      <div id="csvStat" style="font-size:12px;color:var(--text-dim);margin-top:8px;"></div>
     </div>
     <!-- Diff -->
     <div class="sub-pane" data-sub="diff">
@@ -742,10 +933,52 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <div id="diffRight" class="diff-editor" contenteditable="true" spellcheck="false" data-lk-pl="pl_diffRight"></div>
       </div>
       <div class="btn-group">
-        <button class="btn btn-primary" id="diffBtn" data-lk="diffBtn">比较</button>
-        <button class="btn" id="diffSwapBtn" data-lk="diffSwapBtn">⇄ 交换</button>
-        <button class="btn" id="diffClearBtn" data-lk="diffClearBtn">清空</button>
+        <button class="btn btn-primary btn-sm" id="diffBtn" data-lk="diffBtn">比较</button>
+        <button class="btn btn-sm" id="diffSwapBtn" data-lk="diffSwapBtn">⇄ 交换</button>
+        <button class="btn btn-sm" id="diffClearBtn" data-lk="diffClearBtn">清空</button>
         <span id="diffStat" style="font-size:12px;color:var(--text-dim);line-height:28px;margin-left:auto;"></span>
+      </div>
+    </div>
+    <!-- Markdown -->
+    <div class="sub-pane" data-sub="markdown">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
+        <textarea id="markdownInput" rows="10" placeholder="输入 Markdown 文本" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_markdownInput"></textarea>
+        <div class="result-box" id="markdownResult" style="min-height:55vh;margin:0;font-family:'Segoe UI',sans-serif;font-size:14px;line-height:1.6;overflow:auto;">
+          <div style="padding:20px;text-align:center;color:var(--text-dim);">Markdown 预览</div>
+        </div>
+      </div>
+      <div class="btn-group" style="margin-top:8px;">
+        <button class="btn btn-sm" id="markdownCopyBtn" data-lk="markdownCopyBtn">复制 HTML</button>
+        <button class="btn btn-sm" id="markdownClearBtn" data-lk="markdownClearBtn">清空</button>
+      </div>
+      <div id="markdownInfo" style="font-size:12px;color:var(--text-dim);margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <!-- 🖥 屏幕检测 -->
+  <div class="tab-pane" id="p-screen">
+    <div class="btn-group" style="margin-bottom:12px;">
+      <button class="btn btn-primary" id="screenRefreshBtn" data-lk="screenRefreshBtn">🔄 刷新数据</button>
+      <button class="btn" id="screenDeadPixelBtn" style="background:var(--red);color:#fff;" data-lk="screenDeadPixelBtn">🔍 坏点检测</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px;" data-lk="screen_title_screen">🖥 屏幕</div>
+        <div class="result-item"><span class="label" data-lk="scrRes_label">逻辑分辨率</span><span class="value" id="scrRes">—</span><button class="copy-btn-sm" data-target="scrRes">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="physRes_label">物理分辨率</span><span class="value" id="physRes">—</span><button class="copy-btn-sm" data-target="physRes">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="scrAvail_label">可用空间</span><span class="value" id="scrAvail">—</span><button class="copy-btn-sm" data-target="scrAvail">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="orientation_label">屏幕方向</span><span class="value" id="orientation">—</span><button class="copy-btn-sm" data-target="orientation">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="dprDepth_label">像素比 / 深度</span><span class="value" id="dprDepth">—</span><button class="copy-btn-sm" data-target="dprDepth">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="touchInfo_label">触摸</span><span class="value" id="touchInfo">—</span><button class="copy-btn-sm" data-target="touchInfo">📋</button></div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px;" data-lk="screen_title_window">📐 窗口</div>
+        <div class="result-item"><span class="label" data-lk="winInner_label">视口（内）</span><span class="value" id="winInner">—</span><button class="copy-btn-sm" data-target="winInner">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="winOuter_label">窗口（外）</span><span class="value" id="winOuter">—</span><button class="copy-btn-sm" data-target="winOuter">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="winPos_label">屏幕位置</span><span class="value" id="winPos">—</span><button class="copy-btn-sm" data-target="winPos">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="cssVp_label">CSS 视口</span><span class="value" id="cssVp">—</span><button class="copy-btn-sm" data-target="cssVp">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="scrollPos_label">页面滚动</span><span class="value" id="scrollPos">—</span><button class="copy-btn-sm" data-target="scrollPos">📋</button></div>
+        <div class="result-item"><span class="label" data-lk="docSize_label">文档尺寸</span><span class="value" id="docSize">—</span><button class="copy-btn-sm" data-target="docSize">📋</button></div>
       </div>
     </div>
   </div>
@@ -758,6 +991,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       </select>
       <input type="text" id="httpUrl" placeholder="请求 URL 或粘贴 curl 命令" spellcheck="false" style="flex:1;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;" data-lk-pl="pl_httpUrl">
       <button class="btn" id="httpCurlBtn" title="从 curl 解析" style="font-size:12px;padding:6px 10px;" data-lk-tl="tl_httpCurl">📋 curl</button>
+      <button class="btn" id="httpCollBtn" title="请求集合" style="font-size:12px;padding:6px 10px;" data-lk-tl="tl_httpColl">📁 集合</button>
+      <button class="btn" id="httpEnvBtn" title="环境变量" style="font-size:12px;padding:6px 10px;" data-lk-tl="tl_httpEnv">🔧 环境</button>
       <button class="btn btn-primary" id="httpSendBtn" style="padding:6px 16px;font-weight:600;min-width:80px;" data-lk="httpSendBtn">发送</button>
       <button class="btn" id="httpClearBtn" style="padding:6px 10px;" data-lk="httpClearBtn">清空</button>
     </div>
@@ -765,8 +1000,28 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <textarea id="httpCurlInput" rows="4" placeholder="粘贴 curl 命令" spellcheck="false" style="width:100%;font-size:12px;" data-lk-pl="pl_httpCurl"></textarea>
       <button class="btn btn-sm btn-primary" id="httpCurlParseBtn" style="margin-top:4px;" data-lk="httpCurlParseBtn">解析</button>
     </div>
+    <!-- 请求集合面板 -->
+    <div id="httpCollWrap" style="display:none;margin-bottom:6px;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-weight:600;font-size:12px;" data-lk="httpColl_title">📁 请求集合</span>
+        <button class="btn btn-sm btn-primary" id="httpCollSaveBtn" data-lk="httpCollSaveBtn">保存当前</button>
+        <button class="btn btn-sm" id="httpCollCloseBtn" style="margin-left:auto;">✕</button>
+      </div>
+      <div id="httpCollList" style="max-height:200px;overflow-y:auto;font-size:12px;"></div>
+    </div>
+    <!-- 环境变量面板 -->
+    <div id="httpEnvWrap" style="display:none;margin-bottom:6px;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-weight:600;font-size:12px;" data-lk="httpEnv_title">🔧 环境变量</span>
+        <select id="httpEnvSelect" style="font-size:11px;padding:2px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);"></select>
+        <button class="btn btn-sm" id="httpEnvAddBtn" data-lk="httpEnvAddBtn">+ 添加</button>
+        <button class="btn btn-sm" id="httpEnvCloseBtn" style="margin-left:auto;">✕</button>
+      </div>
+      <div id="httpEnvList" style="max-height:150px;overflow-y:auto;font-size:12px;"></div>
+      <div style="margin-top:6px;font-size:11px;color:var(--text-dim);" data-lk="httpEnv_hint">在 URL/Headers/Body 中使用 {{变量名}} 语法</div>
+    </div>
     <div class="collapsible-header" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed');">
-      <span class="arrow">▼</span> 请求配置
+      <span class="arrow">▼</span> <span data-lk="httpConfig_header">请求配置</span>
     </div>
     <div class="collapsible-body" style="max-height:50vh;">
     <div class="sub-tabs" style="margin-top:0;">
@@ -786,8 +1041,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <div class="sub-pane" data-sub="body">
       <div style="display:flex;gap:4px;margin-bottom:4px;align-items:center;">
-        <button class="btn btn-sm" id="httpBodyFmtBtn" title="格式化 JSON (Ctrl+Shift+J)">🔧 格式化</button>
-        <button class="btn btn-sm" id="httpBodyMinBtn" title="压缩 JSON">📦 压缩</button>
+        <button class="btn btn-sm" id="httpBodyFmtBtn" title="格式化 JSON (Ctrl+Shift+J)" data-lk-tl="tl_httpBodyFmt" data-lk="httpBodyFmtBtn">🔧 格式化</button>
+        <button class="btn btn-sm" id="httpBodyMinBtn" title="压缩 JSON" data-lk-tl="tl_httpBodyMin" data-lk="httpBodyMinBtn">📦 压缩</button>
         <span style="font-size:11px;color:var(--text-dim);margin-left:auto;" id="httpBodyInfo"></span>
       </div>
       <textarea id="httpBody" rows="3" placeholder='{"key": "value"}' spellcheck="false" style="width:100%;font-size:12px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="pl_httpBody"></textarea>
@@ -834,16 +1089,40 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="settingsPanel" style="display:none;position:fixed;top:44px;right:16px;width:340px;max-height:80vh;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 32px rgba(0,0,0,0.2);z-index:150;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;">
+    <span data-lk="settings_title">⚙️ 设置</span>
+    <span id="settingsClose" style="cursor:pointer;color:var(--text-dim);font-size:16px;line-height:1;">✕</span>
+  </div>
+  <div style="padding:12px 14px;font-size:12px;max-height:calc(80vh - 44px);overflow-y:auto;">
+    <div style="font-weight:600;color:var(--accent);margin-bottom:6px;" data-lk="settings_data">数据</div>
+    <div class="btn-group">
+      <button class="btn btn-sm" id="settingsExportBtn" data-lk="settingsExportBtn">⬇ 导出设置</button>
+      <button class="btn btn-sm" id="settingsImportBtn" data-lk="settingsImportBtn">⬆ 导入设置</button>
+      <input type="file" id="settingsImportFile" accept=".json" style="display:none;">
+    </div>
+    <div style="font-weight:600;color:var(--accent);margin:10px 0 6px;" data-lk="settings_pin">工具栏固定</div>
+    <div id="settingsPinList" style="margin-bottom:4px;"></div>
+    <div style="font-size:11px;color:var(--text-dim);" data-lk="settings_pin_hint">勾选模块后将固定到顶部工具栏，一键跳转</div>
+    <div style="font-weight:600;color:var(--accent);margin:10px 0 6px;" data-lk="settings_shortcuts">快捷键</div>
+    <div id="settingsShortcuts" style="font-size:11px;line-height:1.9;color:var(--text-dim);"></div>
+    <div style="font-weight:600;color:var(--accent);margin:10px 0 6px;" data-lk="settings_pwa">离线支持</div>
+    <div style="font-size:11px;color:var(--text-dim);" id="settingsPwaStatus"></div>
+  </div>
+</div>
 <div id="historyPanel" style="display:none;position:fixed;top:44px;right:16px;width:320px;max-height:70vh;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 32px rgba(0,0,0,0.2);z-index:150;overflow:hidden;">
   <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;">
-    <span>📋 操作历史</span>
+    <span data-lk="historyPanel_title">📋 操作历史</span>
     <div style="display:flex;gap:8px;">
-      <span id="historyClearAll" style="cursor:pointer;color:var(--text-dim);font-size:11px;font-weight:normal;">清空</span>
+      <span id="historyClearAll" style="cursor:pointer;color:var(--text-dim);font-size:11px;font-weight:normal;" data-lk="historyClearAll">清空</span>
       <span id="historyClose" style="cursor:pointer;color:var(--text-dim);font-size:16px;line-height:1;">✕</span>
     </div>
   </div>
   <div id="historyList" style="overflow-y:auto;max-height:calc(70vh - 44px);"></div>
 </div>
+
+<!-- 坏点检测全屏覆盖 -->
+<div id="deadPixelOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;cursor:pointer;"></div>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -852,61 +1131,84 @@ let _lang = localStorage.getItem('lang') || 'zh';
 const _L = {
   tab_search:{zh:'🔍 搜索',en:'🔍 Search'}, tab_ts:{zh:'⏱ 时间',en:'⏱ Time'}, sub_ts_convert:{zh:'⏱ 时间戳',en:'⏱ Timestamp'}, sub_ts_calc:{zh:'🔢 日期计算',en:'🔢 Date Calc'}, sub_ts_timer:{zh:'⏱ 计时器',en:'⏱ Timer'},
   tab_encode:{zh:'🔐 编解码',en:'🔐 Encode/Decode'}, tab_gen:{zh:'🎲 生成',en:'🎲 Generate'},
-  tab_text:{zh:'📝 文本',en:'📝 Text'}, tab_color:{zh:'🎨 颜色',en:'🎨 Color'},
+  tab_text:{zh:'📝 文本',en:'📝 Text'}, tab_color:{zh:'🎨 颜色',en:'🎨 Color'}, tab_diff:{zh:'📑 Diff',en:'📑 Diff'},
   tab_json:{zh:'{ } JSON',en:'{ } JSON'}, tab_http:{zh:'🌐 HTTP',en:'🌐 HTTP'},
-  tab_sql:{zh:'🗄️ SQL',en:'🗄️ SQL'}, tab_diff:{zh:'📑 Diff',en:'📑 Diff'},
-  sub_sql_in:{zh:'🗄️ IN 生成',en:'🗄️ IN Generator'}, sub_sql_insert:{zh:'📋 INSERT 解析',en:'📋 INSERT Parser'},
+  tab_sql:{zh:'🗄️ SQL',en:'🗄️ SQL'},
+  sub_sql_in:{zh:'🗄️ IN 生成',en:'🗄️ IN Generator'}, sub_sql_insert:{zh:'📋 INSERT 解析',en:'📋 INSERT Parser'}, sub_sql_fmt:{zh:'✨ SQL 格式化',en:'✨ SQL Formatter'},
   sub_bc:{zh:'🔢 进制',en:'🔢 Base Conv'}, sub_csv:{zh:'📋 CSV',en:'📋 CSV'}, sub_diff:{zh:'📑 Diff',en:'📑 Diff'}, sub_color:{zh:'🎨 颜色',en:'🎨 Color'},
+  sub_morse:{zh:'📻 Morse',en:'📻 Morse'}, sub_caesar:{zh:'🔐 Caesar',en:'🔐 Caesar'}, sub_bintext:{zh:'💾 二进制文本',en:'💾 Binary Text'},
   sub_search:{zh:'🔍 搜索',en:'🔍 Search'}, sub_regex:{zh:'◎ 正则',en:'◎ Regex'},
   sub_b64:{zh:'Base64',en:'Base64'}, sub_url:{zh:'URL',en:'URL'},
   sub_html:{zh:'HTML',en:'HTML'}, sub_jwt:{zh:'JWT',en:'JWT'},
   sub_uuid:{zh:'UUID',en:'UUID'}, sub_hash:{zh:'Hash',en:'Hash'},
+  sub_passwd:{zh:'🔑 密码',en:'🔑 Password'}, sub_lorem:{zh:'📃 Lorem',en:'📃 Lorem'},
+  sub_rex:{zh:'◎ 正则速查',en:'◎ Regex Cheat'}, sub_cron:{zh:'⏰ Cron',en:'⏰ Cron'}, sub_fmt:{zh:'🔧 代码格式化',en:'🔧 Code Formatter'},
+  rexExplainBtn:{zh:'解释',en:'Explain'}, pl_rexExplainInput:{zh:'输入正则表达式，如 \\d{4}-\\d{2}-\\d{2}',en:'Enter regex, e.g. \\d{4}-\\d{2}-\\d{2}'},
   sub_proc:{zh:'📝 处理',en:'📝 Process'}, sub_stats:{zh:'📊 统计',en:'📊 Stats'},
-  sub_cc:{zh:'🀄 简繁',en:'🀄 Chinese'}, sub_headers:{zh:'请求头',en:'Headers'},
+  sub_cc:{zh:'🀄 简繁',en:'🀄 Chinese'}, sub_case:{zh:'🔄 大小写',en:'🔄 Case'}, sub_headers:{zh:'请求头',en:'Headers'},
   sub_body:{zh:'请求体',en:'Body'}, sub_params:{zh:'查询参数',en:'Params'},
   sub_cookies:{zh:'Cookie',en:'Cookie'},
   tsNowBtn:{zh:'当前',en:'Now'}, tsClearBtn:{zh:'清空',en:'Clear'},
-  tsRevNowBtn:{zh:'当前',en:'Now'}, tsRevClearBtn:{zh:'清空',en:'Clear'},
-  tsResult:{zh:'等待输入',en:'Waiting'}, tsCopySec:{zh:'复制秒',en:'Copy sec'},
-  tsCopyMs:{zh:'复制毫秒',en:'Copy ms'}, tzLabel:{zh:'时区',en:'Timezone'},
-  tsRevSec:{zh:'秒',en:'Sec'}, tsRevMs:{zh:'毫秒',en:'ms'},
-  jsonResult:{zh:'结果',en:'Result'}, jsonFormatBtn:{zh:'格式化 (Ctrl+Enter)',en:'Format (Ctrl+Enter)'},
-  jsonCompressBtn:{zh:'压缩',en:'Compact'}, jsonLooseBtn:{zh:'宽松解析',en:'Loose'},
-  jsonClearBtn:{zh:'清空',en:'Clear'}, jsonFileBtn:{zh:'📂 打开文件',en:'📂 Open File'},
   jsonPathBtn:{zh:'查询',en:'Query'}, jsonPathInput:{zh:'JSONPath 查询，如 $.store.book[*].title',en:'JSONPath e.g. $.store.book[*].title'},
   sqlResult:{zh:'结果',en:'Result'}, sqlGenBtn:{zh:'生成 IN',en:'Generate IN'}, sqlInsertParseBtn:{zh:'解析',en:'Parse'}, sql_insert_title:{zh:'INSERT 语句',en:'INSERT Statement'},
+  sqlFmtResult:{zh:'结果',en:'Result'}, sqlFmtBtn:{zh:'格式化',en:'Format'}, sqlFmtClearBtn:{zh:'清空',en:'Clear'},
+  sqlFmtStats:{zh:'共 ${lines} 行',en:'${lines} lines'},
   sqlQuoteBtn:{zh:'切换引号',en:'Toggle Quote'}, sqlClearBtn:{zh:'清空',en:'Clear'},
   srchTerm:{zh:'搜索词',en:'Search'}, srchReplace:{zh:'替换为',en:'Replace with'},
   srchAddBtn:{zh:'添加',en:'Add'}, srchReplaceBtn:{zh:'替换',en:'Replace'},
   srchReplaceAllBtn:{zh:'全部替换',en:'Replace All'}, srchClearHighBtn:{zh:'清除',en:'Clear'},
   srchFilterBtn:{zh:'过滤',en:'Filter'}, srchClearBtn:{zh:'清空',en:'Clear'},
   srchStreamStopBtn:{zh:'停止',en:'Stop'},
-  rexTestBtn:{zh:'测试',en:'Test'}, rexClearBtn:{zh:'清空',en:'Clear'},
-  diffBtn:{zh:'比较',en:'Compare'}, diffSwapBtn:{zh:'⇄ 交换',en:'⇄ Swap'},
-  diffClearBtn:{zh:'清空',en:'Clear'},
-  httpSendBtn:{zh:'发送',en:'Send'}, httpClearBtn:{zh:'清空',en:'Clear'},
-  httpCurlParseBtn:{zh:'解析',en:'Parse'}, httpHeaders:{zh:'Content-Type: application/json',en:'Content-Type: application/json'},
-  httpParams:{zh:'每行一个, Key: Value\\npage: 1\\nlimit: 20',en:'One per line, Key: Value\\npage: 1\\nlimit: 20'},
-  httpCookies:{zh:'每行一个, Key: Value\\nsessionId: abc123',en:'One per line, Key: Value\\nsessionId: abc123'},
-  httpTitle:{zh:'响应',en:'Response'}, httpResult:{zh:'等待请求',en:'Waiting'},
-  copy:{zh:'复制',en:'Copy'}, download:{zh:'下载',en:'Download'},
+  searchEndBtn:{zh:'结束',en:'End'},
+  tsTitle:{zh:'时间戳',en:'Timestamp'}, tsResult:{zh:'等待输入',en:'Waiting'}, tsCopySec:{zh:'复制秒',en:'Copy sec'},
+  tsCopyMs:{zh:'复制毫秒',en:'Copy ms'}, tzLabel:{zh:'时区',en:'Timezone'},
+  tsRevSec:{zh:'秒',en:'Sec'}, tsRevMs:{zh:'毫秒',en:'ms'},
+  jsonResult:{zh:'结果',en:'Result'}, jsonFormatBtn:{zh:'格式化 (Ctrl+Enter)',en:'Format (Ctrl+Enter)'},
+  jsonWorkerHint:{zh:'⏳ 正在后台 Worker 中处理大数据…',en:'⏳ Processing in background worker…'},
+  jsonCompressBtn:{zh:'压缩',en:'Compact'}, jsonLooseBtn:{zh:'宽松解析',en:'Loose'},
+  jsonSchemaBtn:{zh:'Schema',en:'Schema'}, jsonMergeBtn:{zh:'合并',en:'Merge'}, jsonDiffBtn:{zh:'对比',en:'Diff'},
+  jsonXmlBtn:{zh:'→ XML',en:'→ XML'}, xmlJsonBtn:{zh:'XML →',en:'XML →'},   jsonCodeBtn:{zh:'→ Code',en:'→ Code'}, json_code_lang:{zh:'TypeScript / Python / Go?',en:'TypeScript / Python / Go?'}, json_code_invalid:{zh:'请输入 ts/python/go',en:'Enter ts/python/go'},
   copy_val:{zh:'复制值',en:'Copy value'}, copy_path:{zh:'复制路径',en:'Copy path'},
   genTxt:{zh:'生成',en:'Create'}, genCount:{zh:'个',en:''},
   uuidUpper:{zh:'大写',en:'Uppercase'}, uuidNoDash:{zh:'无连字符',en:'No Dashes'},
   uuidGenBtn:{zh:'生成',en:'Generate'}, uuidCopyAllBtn:{zh:'复制全部',en:'Copy All'},
+  passwdLenLabel:{zh:'长度:',en:'Length:'}, passwdUpper:{zh:'大写 A-Z',en:'Uppercase A-Z'},
+  passwdLower:{zh:'小写 a-z',en:'Lowercase a-z'}, passwdNum:{zh:'数字 0-9',en:'Digits 0-9'},
+  passwdSym:{zh:'特殊 !@#$',en:'Special !@#$'}, passwdGenBtn:{zh:'生成',en:'Generate'},
+  passwdCopyBtn:{zh:'复制全部',en:'Copy All'},
+  loremTypeLabel:{zh:'类型:',en:'Type:'}, loremCn:{zh:'中文',en:'Chinese'},
+  loremGenBtn:{zh:'生成',en:'Generate'}, loremCopyBtn:{zh:'复制',en:'Copy'},
+  rexCheatPreview:{zh:'预览',en:'Preview'},
+  cronParseBtn:{zh:'解析',en:'Parse'}, cronDescLabel:{zh:'描述',en:'Description'},
+  cronNextLabel:{zh:'未来 10 次执行',en:'Next 10 runs'}, cronHint:{zh:'格式: 分 时 日 月 周（支持 * / , -）',en:'Format: min hour day month weekday (* / , -)'},
+  fmtResult:{zh:'结果',en:'Result'}, fmtJsBeautifyBtn:{zh:'JS 美化',en:'JS Beautify'}, fmtJsMinifyBtn:{zh:'JS 压缩',en:'JS Minify'},
+  fmtCssBeautifyBtn:{zh:'CSS 美化',en:'CSS Beautify'}, fmtHtmlBeautifyBtn:{zh:'HTML 美化',en:'HTML Beautify'}, fmtClearBtn:{zh:'清空',en:'Clear'},
+  pl_fmtInput:{zh:'粘贴 JS / CSS / HTML 代码',en:'Paste JS / CSS / HTML code'},
   hashCalcBtn:{zh:'计算',en:'Calc'}, hashClearBtn:{zh:'清空',en:'Clear'},
   tpSortAsc:{zh:'排序 A→Z',en:'Sort A→Z'}, tpSortDesc:{zh:'排序 Z→A',en:'Sort Z→A'},
   tpUnique:{zh:'去重',en:'Unique'}, tpReverse:{zh:'反转行',en:'Reverse'},
   tpShuffle:{zh:'打乱',en:'Shuffle'}, tpUpper:{zh:'大写',en:'UPPER'},
   tpLower:{zh:'小写',en:'lower'}, tpTrim:{zh:'去首尾空格',en:'Trim'},
   tpClearEmpty:{zh:'删空行',en:'Rm Empty'}, tpFileBtn:{zh:'📂 打开文件',en:'📂 Open File'},
+  tpRegexBtn:{zh:'正则替换',en:'Regex Replace'}, tpRegexClearBtn:{zh:'清空',en:'Clear'}, tpRegexFlags:{zh:'gi',en:'gi'},
+  pl_tpRegexPattern:{zh:'正则表达式',en:'Regex pattern'},
+  pl_tpRegexReplace:{zh:'替换为 ($1/$2…)',en:'Replace with ($1/$2…)'},
+  tpRegexNeedPattern:{zh:'请输入正则表达式',en:'Enter a regex pattern'},
+  tpRegexStats:{zh:'匹配 ${n} 处 · ${len} → ${out} 字符',en:'${n} matches · ${len} → ${out} chars'},
+  err_regex:{zh:'正则错误',en:'Regex error'},
   tpResult:{zh:'结果',en:'Result'}, statsClearBtn:{zh:'清空',en:'Clear'},
   statsChars:{zh:'字数',en:'Chars'}, statsCharsWS:{zh:'字符（含空格）',en:'Chars (w/ space)'},
   statsLines:{zh:'行数',en:'Lines'}, statsWords:{zh:'单词',en:'Words'},
   statsParas:{zh:'段落',en:'Paras'}, statsBytes:{zh:'字节',en:'Bytes'},
   ccResult:{zh:'结果',en:'Result'}, ccToSimpBtn:{zh:'繁→简',en:'Trad→Simp'},
   ccToTradBtn:{zh:'简→繁',en:'Simp→Trad'}, ccClearBtn:{zh:'清空',en:'Clear'},
-  sub_trans:{zh:'🌐 翻译',en:'🌐 Translate'}, transResult:{zh:'结果',en:'Result'},
+  caseResult:{zh:'结果',en:'Result'}, caseCamelBtn:{zh:'camelCase',en:'camelCase'}, casePascalBtn:{zh:'PascalCase',en:'PascalCase'},
+  caseSnakeBtn:{zh:'snake_case',en:'snake_case'}, caseKebabBtn:{zh:'kebab-case',en:'kebab-case'}, caseScreamingBtn:{zh:'SCREAMING_SNAKE',en:'SCREAMING_SNAKE'}, caseClearBtn:{zh:'清空',en:'Clear'},
+  pl_caseInput:{zh:'输入文本，如 hello_world / HELLO WORLD / helloWorld',en:'Enter text, e.g. hello_world / HELLO WORLD / helloWorld'},
+  sub_trans:{zh:'🌐 翻译',en:'🌐 Translate'}, sub_markdown:{zh:'📝 Markdown',en:'📝 Markdown'}, transResult:{zh:'结果',en:'Result'},
+  markdownCopyBtn:{zh:'复制 HTML',en:'Copy HTML'}, markdownClearBtn:{zh:'清空',en:'Clear'},
+  markdown_empty:{zh:'输入 Markdown 开始预览',en:'Enter Markdown to preview'},
+  pl_markdownInput:{zh:'输入 Markdown 文本，右侧实时预览',en:'Enter Markdown, preview on right'},
   resp_body:{zh:'响应体',en:'Body'}, resp_headers:{zh:'响应头',en:'Headers'},
   transToEn:{zh:'中 → 英',en:'ZH → EN'}, transToZh:{zh:'英 → 中',en:'EN → ZH'},
   transClearBtn:{zh:'清空',en:'Clear'}, pl_transInput:{zh:'输入要翻译的文本',en:'Enter text to translate'},
@@ -914,14 +1216,24 @@ const _L = {
   pl_sqlInsert:{zh:'粘贴 INSERT 语句，自动解析列名与值的对应关系',en:'Paste INSERT statement to parse column-value mapping'},
   pl_sqlInsertSearch:{zh:'🔍 搜索值定位列名...',en:'🔍 Search value to locate column...'},
   pl_b64Input:{zh:'输入文本或 Base64',en:'Enter text or Base64'},
-  colorHex:{zh:'HEX',en:'HEX'}, colorRgb:{zh:'RGB',en:'RGB'}, colorHsl:{zh:'HSL',en:'HSL'},
+  colorHex:{zh:'HEX',en:'HEX'}, colorRgb:{zh:'RGB',en:'RGB'}, colorHsl:{zh:'HSL',en:'HSL'}, colorCmyk:{zh:'CMYK',en:'CMYK'}, colorContrast:{zh:'对比度',en:'Contrast'},
   bcClearBtn:{zh:'清空',en:'Clear'}, bcDec:{zh:'十进制',en:'Decimal'},
+  morseEncodeBtn:{zh:'→ Morse',en:'→ Morse'}, morseDecodeBtn:{zh:'← 解码',en:'← Decode'}, morseClearBtn:{zh:'清空',en:'Clear'},
+  morseTableTitle:{zh:'📋 对照表',en:'📋 Table'},
+  caesarEncodeBtn:{zh:'加密',en:'Encrypt'}, caesarDecodeBtn:{zh:'解密',en:'Decrypt'}, caesarClearBtn:{zh:'清空',en:'Clear'},
+  caesarBruteBtn:{zh:'💥 暴力破解',en:'💥 Brute force'}, caesarShiftLabel:{zh:'位移量:',en:'Shift:'},
+  bintextEncodeBtn:{zh:'→ 二进制',en:'→ Binary'}, bintextDecodeBtn:{zh:'← 解码',en:'← Decode'}, bintextClearBtn:{zh:'清空',en:'Clear'},
+  caesar_invalid_shift:{zh:'位移量需在 1-25 之间',en:'Shift must be 1-25'},
+  bintext_invalid:{zh:'二进制长度必须为 8 的倍数',en:'Binary length must be a multiple of 8'},
   bcHex:{zh:'十六进制',en:'Hexadecimal'}, bcBin:{zh:'二进制',en:'Binary'},
   bcOct:{zh:'八进制',en:'Octal'},
   csvParseBtn:{zh:'解析',en:'Parse'}, csvDelimBtn:{zh:'分隔符: ,',en:'Delimiter:'},
+  csv_delimiter:{zh:'分隔符',en:'Delimiter'},
+  rex_invalid:{zh:'⚠ 无效正则',en:'⚠ Invalid regex'},
+  bc_invalid:{zh:'⚠ 无效',en:'⚠ Invalid'},
   csvClearBtn:{zh:'清空',en:'Clear'}, b64EncodeBtn:{zh:'编码 →',en:'Encode →'},
   b64DecodeBtn:{zh:'解码 ←',en:'Decode ←'}, b64ClearBtn:{zh:'清空',en:'Clear'},
-  b64Result:{zh:'结果',en:'Result'}, urlEncodeBtn:{zh:'编码',en:'Encode'},
+  b64Result:{zh:'结果',en:'Result'},   urlEncodeBtn:{zh:'编码',en:'Encode'}, urlParseBtn:{zh:'解析',en:'Parse'},
   urlDecodeBtn:{zh:'解码',en:'Decode'}, urlClearBtn:{zh:'清空',en:'Clear'},
   urlResult:{zh:'结果',en:'Result'}, htmlEncodeBtn:{zh:'编码 →',en:'Encode →'},
   htmlDecodeBtn:{zh:'解码 ←',en:'Decode ←'}, htmlClearBtn:{zh:'清空',en:'Clear'},
@@ -933,6 +1245,7 @@ const _L = {
   pl_tsRevInput:{zh:'日期字符串，如 2026-07-25 16:30:00',en:'Date string e.g. 2026-07-25 16:30:00'},
   pl_jsonInput:{zh:'粘贴 JSON',en:'Paste JSON'},
   pl_sqlInput:{zh:'粘贴值，可用逗号、换行、空格分隔\\n例: abc, def, ghi',en:'Paste values (comma/newline/space sep)'},
+  pl_sqlFmtInput:{zh:'粘贴 SQL 语句，自动格式化\\n支持 SELECT/INSERT/UPDATE/DELETE/WHERE/ORDER BY 等',en:'Paste SQL to format (SELECT/INSERT/UPDATE/DELETE/WHERE/ORDER BY...)'},
   pl_srchEditor:{zh:'粘贴要搜索的文本',en:'Paste text to search'},
   pl_rexEditor:{zh:'粘贴测试文本',en:'Paste test text'},
   pl_rexPattern:{zh:'正则表达式',en:'Regex pattern'},
@@ -940,11 +1253,16 @@ const _L = {
   pl_htmlInput:{zh:'输入文本或 HTML 实体',en:'Enter text or HTML entities'},
   pl_jwtInput:{zh:'粘贴 JWT token',en:'Paste JWT token'},
   pl_hashInput:{zh:'输入要计算 Hash 的文本',en:'Enter text to hash'},
+  pl_cronInput:{zh:'Cron 表达式，如 */5 * * * *',en:'Cron expr, e.g. */5 * * * *'},
   pl_tpInput:{zh:'输入文本',en:'Enter text'},
   pl_statsInput:{zh:'粘贴文本',en:'Paste text'},
   pl_ccInput:{zh:'粘贴要转换的文本',en:'Paste text to convert'},
   pl_colorInput:{zh:'#FF6600 / rgb(255,102,0) / hsl(24,100%,50%)',en:'#FF6600 / rgb(255,102,0) / hsl(24,100%,50%)'},
   pl_bcInput:{zh:'输入数字，如 255 / 0xFF / 0b1111 / 0o377',en:'Enter number: 255 / 0xFF / 0b1111 / 0o377'},
+  pl_morseInput:{zh:'输入文本，如 SOS',en:'Enter text, e.g. SOS'},
+  pl_caesarInput:{zh:'输入文本，如 ABC',en:'Enter text, e.g. ABC'},
+  pl_caesarShift:{zh:'位移量 1-25',en:'Shift 1-25'},
+  pl_bintextInput:{zh:'输入文本或二进制（每字符 8 位，UTF-8 多字节）',en:'Enter text or binary (8-bit per char, UTF-8 multi-byte)'},
   pl_diffLeft:{zh:'原文本',en:'Original text'},
   pl_diffRight:{zh:'新文本',en:'New text'},
   pl_httpUrl:{zh:'请求 URL 或粘贴 curl 命令',en:'URL or paste curl command'},
@@ -968,6 +1286,14 @@ const _L = {
   sent_search:{zh:'已发送到搜索',en:'Sent to Search'},
   sent_json:{zh:'已发送到 JSON',en:'Sent to JSON'},
   waiting_result:{zh:'等待输入',en:'Waiting'}, waiting_http:{zh:'等待请求',en:'Waiting'},
+  jsonEmpty:{zh:'结果',en:'Result'}, httpWaiting:{zh:'等待请求',en:'Waiting'},
+  copy:{zh:'复制',en:'Copy'},
+  sqlEmpty:{zh:'结果',en:'Result'}, b64Empty:{zh:'结果',en:'Result'}, tpEmpty:{zh:'结果',en:'Result'},
+  httpColl_empty:{zh:'暂无请求，点击“保存当前”添加',en:'No requests. Click "Save" to add'},
+  httpColl_name:{zh:'请求名称:',en:'Request name:'},
+  saved:{zh:'已保存',en:'Saved'},
+  httpEnv_hint:{zh:'在 URL/Headers/Body 中使用 {{变量名}} 语法',en:'Use {{variable}} syntax in URL/Headers/Body'},
+  httpEnv_default:{zh:'默认环境',en:'Default env'}, httpEnv_name:{zh:'变量名',en:'Name'}, httpEnv_value:{zh:'值',en:'Value'},
   parse_ok:{zh:'已解析: ',en:'Parsed: '}, input_url:{zh:'请输入 URL',en:'Enter URL'},
   sending:{zh:'发送中…',en:'Sending…'}, req_failed:{zh:'请求失败',en:'Request Failed'},
   invalid_curl:{zh:'无法解析 curl 命令',en:'Invalid curl command'},
@@ -976,8 +1302,22 @@ const _L = {
   restored:{zh:'已恢复',en:'Restored'}, stopped:{zh:'已停止',en:'Stopped'},
   filtered:{zh:'已过滤',en:'Filtered'},
   // toast messages
-  err_input_json:{zh:'请输入 JSON',en:'Enter JSON'}, err_input_url:{zh:'请输入 URL',en:'Enter URL'},
+  err_input_json:{zh:'请输入 JSON',en:'Enter JSON'},   err_input_url:{zh:'请输入 URL',en:'Enter URL'}, loaded:{zh:'已加载',en:'Loaded'}, loaded_resp_history:{zh:'已加载历史记录',en:'Loaded response history'},
+  json_schema_prompt:{zh:'请输入 JSON Schema:',en:'Enter JSON Schema:'},
+  json_schema_valid:{zh:'✅ Schema 校验通过',en:'✅ Schema validation passed'},
+  json_schema_errors:{zh:'个校验错误',en:'validation errors'},
+  json_merge_prompt:{zh:'请输入 Patch JSON:',en:'Enter Patch JSON:'},
+  json_diff_prompt:{zh:'请输入第二个 JSON 进行对比:',en:'Enter second JSON to compare:'},
+  json_diff_equal:{zh:'✅ 两个 JSON 完全相同',en:'✅ JSONs are identical'},
   err_input_text:{zh:'请输入文本',en:'Enter text'}, err_input_jwt:{zh:'请输入 JWT token',en:'Enter JWT token'},
+  err_empty:{zh:'内容为空',en:'Empty'},
+  passwdNoSet:{zh:'至少选择一种字符类型',en:'Select at least one charset'},
+  passwdStrong:{zh:'强',en:'Strong'}, passwdMedium:{zh:'中',en:'Medium'}, passwdWeak:{zh:'弱',en:'Weak'},
+  passwdStats:{zh:'强度: ${s} · 长度 ${n}',en:'Strength: ${s} · length ${n}'},
+  rexCatValidate:{zh:'验证',en:'Validate'}, rexCatExtract:{zh:'提取',en:'Extract'}, rexCatReplace:{zh:'替换',en:'Replace'},
+  cronInvalid:{zh:'Cron 表达式需为 5 段',en:'Cron must have 5 fields'},
+  cronNoFuture:{zh:'5 年内无匹配时间',en:'No matches in 5 years'},
+  cronDescOther:{zh:'自定义调度',en:'Custom schedule'},
   err_input_insert:{zh:'请输入 INSERT 语句',en:'Enter INSERT statement'},
   err_no_result:{zh:'没有结果',en:'No result'}, err_no_match:{zh:'无匹配',en:'No match'},
   err_no_rows:{zh:'没有匹配的行',en:'No matching rows'},
@@ -1045,7 +1385,85 @@ const _L = {
   sql_parsed_cols:{zh:'已解析 ${n} 列',en:'Parsed ${n} columns'},
   // misc
   clipboard_err:{zh:'复制出错',en:'Copy error'}, session_full:{zh:'会话保存失败（存储空间不足）',en:'Session save failed (storage full)'},
-  no_content:{zh:'没有内容',en:'No content'}, copy_err:{zh:'复制出错',en:'Copy error'},
+  copy_err:{zh:'复制出错',en:'Copy error'},
+  // screen
+  tab_screen:{zh:'🖥 屏幕',en:'🖥 Screen'},
+  screenRefreshBtn:{zh:'🔄 刷新数据',en:'🔄 Refresh'},
+  screenDeadPixelBtn:{zh:'🔍 坏点检测',en:'🔍 Dead Pixel'},
+  screen_title_screen:{zh:'🖥 屏幕',en:'🖥 Screen'},
+  screen_title_window:{zh:'📐 窗口',en:'📐 Window'},
+  scrRes_label:{zh:'逻辑分辨率',en:'Logical Res'},
+  physRes_label:{zh:'物理分辨率',en:'Physical Res'},
+  scrAvail_label:{zh:'可用空间',en:'Available'},
+  orientation_label:{zh:'屏幕方向',en:'Orientation'},
+  dprDepth_label:{zh:'像素比 / 深度',en:'DPR / Depth'},
+  touchInfo_label:{zh:'触摸',en:'Touch'},
+  winInner_label:{zh:'视口（内）',en:'Inner'},
+  winOuter_label:{zh:'窗口（外）',en:'Outer'},
+  winPos_label:{zh:'屏幕位置',en:'Position'},
+  cssVp_label:{zh:'CSS 视口',en:'CSS VP'},
+  scrollPos_label:{zh:'页面滚动',en:'Scroll'},
+  docSize_label:{zh:'文档尺寸',en:'Document'},
+  scr_portrait:{zh:'竖屏',en:'Portrait'}, scr_landscape:{zh:'横屏',en:'Landscape'},
+  scr_touch_yes:{zh:'支持',en:'Yes'}, scr_touch_no:{zh:'不支持',en:'No'},
+  screen_refreshed:{zh:'已刷新',en:'Refreshed'},
+  // timestamp
+  tl_historyToggle:{zh:'操作历史',en:'History'},
+  tl_settingsToggle:{zh:'设置',en:'Settings'},
+  settings_title:{zh:'⚙️ 设置',en:'⚙️ Settings'}, settings_data:{zh:'数据',en:'Data'},
+  settingsExportBtn:{zh:'⬇ 导出设置',en:'⬇ Export'}, settingsImportBtn:{zh:'⬆ 导入设置',en:'⬆ Import'},
+  settings_pin:{zh:'工具栏固定',en:'Pinned toolbar'}, settings_pin_hint:{zh:'勾选模块后将固定到顶部工具栏，一键跳转',en:'Pinned modules appear in the top toolbar'},
+  settings_shortcuts:{zh:'快捷键',en:'Shortcuts'}, settings_pwa:{zh:'离线支持',en:'Offline support'},
+  sc_search:{zh:'搜索页签',en:'Search tabs'}, sc_format:{zh:'格式化 JSON',en:'Format JSON'},
+  sc_close:{zh:'关闭',en:'Close'}, sc_bodyfmt:{zh:'格式化 HTTP Body',en:'Format HTTP body'},
+  pwa_ok:{zh:'✅ 已启用离线缓存 (Service Worker)',en:'✅ Offline cache enabled (Service Worker)'},
+  pwa_no:{zh:'⚠ 当前环境不支持 Service Worker（file:// 或非 HTTPS）',en:'⚠ Service Worker not supported here (file:// or non-HTTPS)'},
+  settingsExported:{zh:'设置已导出',en:'Settings exported'},
+  settingsImported:{zh:'已导入 ${n} 项设置',en:'Imported ${n} settings'},
+  tsCalcFrom_label:{zh:'起始日期',en:'Start Date'},
+  tsCalcTo_label:{zh:'结束日期',en:'End Date'},
+  tsCalcBtn:{zh:'计算差值',en:'Calculate'},
+  tsCalcAddBtn:{zh:'加减天数',en:'Add Days'},
+  tsCalcDays_unit:{zh:'天',en:'days'},
+  tsCalcClearBtn:{zh:'清空',en:'Clear'},
+  timerStartBtn:{zh:'▶ 开始',en:'▶ Start'},
+  timerLapBtn:{zh:'📍 计次',en:'📍 Lap'},
+  timerResetBtn:{zh:'↺ 重置',en:'↺ Reset'},
+  timerPaused:{zh:'⏸ 暂停',en:'⏸ Pause'},
+  timerResume:{zh:'▶ 继续',en:'▶ Resume'},
+  tsRel_label:{zh:'相对',en:'Relative'},
+  tsMs_label:{zh:'毫秒',en:'Millisecond'},
+  tsRevSec_label:{zh:'秒',en:'Second'},
+  tsRevMs_label:{zh:'毫秒',en:'Millisecond'},
+  // http
+  httpConfig_header:{zh:'请求配置',en:'Request Config'},
+  httpBodyFmtBtn:{zh:'🔧 格式化',en:'🔧 Format'},
+  httpBodyMinBtn:{zh:'📦 压缩',en:'📦 Minify'},
+  tl_httpBodyFmt:{zh:'格式化 JSON (Ctrl+Shift+J)',en:'Format JSON (Ctrl+Shift+J)'},
+  tl_httpBodyMin:{zh:'压缩 JSON',en:'Minify JSON'},
+  // history
+  historyPanel_title:{zh:'📋 操作历史',en:'📋 History'},
+  historyClearAll:{zh:'清空',en:'Clear All'},
+  historyEmpty:{zh:'暂无历史记录',en:'No history'},
+  history_tab_json:{zh:'JSON',en:'JSON'},
+  history_tab_http:{zh:'HTTP',en:'HTTP'},
+  history_tab_search:{zh:'搜索',en:'Search'},
+  history_tab_ts:{zh:'时间戳',en:'Timestamp'},
+  history_tab_sql:{zh:'SQL',en:'SQL'},
+  history_tab_encode:{zh:'编解码',en:'Encode'},
+  history_tab_diff:{zh:'Diff',en:'Diff'},
+  history_tab_gen:{zh:'生成',en:'Generate'},
+  history_tab_text:{zh:'文本',en:'Text'},
+  history_tab_color:{zh:'颜色',en:'Color'},
+  history_tab_screen:{zh:'屏幕',en:'Screen'},
+  // date calc
+  tsCalc_totalDays:{zh:'总天数',en:'Total Days'},
+  tsCalc_workDays:{zh:'工作日',en:'Work Days'},
+  tsCalc_hms:{zh:'时分秒',en:'HMS'},
+  tsCalc_totalSec:{zh:'总秒数',en:'Total Sec'},
+  tsCalc_totalMs:{zh:'总毫秒',en:'Total Ms'},
+  tsCalc_needTwo:{zh:'请选择两个日期',en:'Select two dates'},
+  tsCalc_needFrom:{zh:'请先选择起始日期',en:'Select start date first'},
 };
 const _ = k => _L[k]?.[_lang] || k;
 
@@ -1261,7 +1679,7 @@ $('tsCopyMs').addEventListener('click', () => { const r = parseTs($('tsInput').v
 $('tsCalcBtn').addEventListener('click', () => {
   const from = new Date($('tsCalcFrom').value);
   const to = new Date($('tsCalcTo').value);
-  if (isNaN(from) || isNaN(to)) { toast('请选择两个日期', 1); return; }
+  if (isNaN(from) || isNaN(to)) { toast(_('tsCalc_needTwo'), 1); return; }
   const diff = Math.abs(to - from);
   const days = Math.floor(diff / 86400000);
   const hours = Math.floor((diff % 86400000) / 3600000);
@@ -1270,16 +1688,17 @@ $('tsCalcBtn').addEventListener('click', () => {
   // 工作日计算
   let workdays = 0, d = new Date(Math.min(from, to)), end = new Date(Math.max(from, to));
   while (d <= end) { if (d.getDay() !== 0 && d.getDay() !== 6) workdays++; d.setDate(d.getDate() + 1); }
+  const L = (k) => _L[k]?.[_lang] || k;
   $('tsCalcResult').innerHTML = `
-    <div class="result-item"><span class="label">总天数</span><span class="value">${days} 天</span></div>
-    <div class="result-item"><span class="label">工作日</span><span class="value">${workdays} 天</span></div>
-    <div class="result-item"><span class="label">时分秒</span><span class="value">${hours}h ${mins}m ${secs}s</span></div>
-    <div class="result-item"><span class="label">总秒数</span><span class="value">${Math.floor(diff / 1000).toLocaleString()} s</span></div>
-    <div class="result-item"><span class="label">总毫秒</span><span class="value">${diff.toLocaleString()} ms</span></div>`;
+    <div class="result-item"><span class="label">${L('tsCalc_totalDays')}</span><span class="value">${days} ${L('tsCalcDays_unit')}</span></div>
+    <div class="result-item"><span class="label">${L('tsCalc_workDays')}</span><span class="value">${workdays} ${L('tsCalcDays_unit')}</span></div>
+    <div class="result-item"><span class="label">${L('tsCalc_hms')}</span><span class="value">${hours}h ${mins}m ${secs}s</span></div>
+    <div class="result-item"><span class="label">${L('tsCalc_totalSec')}</span><span class="value">${Math.floor(diff / 1000).toLocaleString()} s</span></div>
+    <div class="result-item"><span class="label">${L('tsCalc_totalMs')}</span><span class="value">${diff.toLocaleString()} ms</span></div>`;
 });
 $('tsCalcAddBtn').addEventListener('click', () => {
   const from = new Date($('tsCalcFrom').value);
-  if (isNaN(from)) { toast('请先选择起始日期', 1); return; }
+  if (isNaN(from)) { toast(_('tsCalc_needFrom'), 1); return; }
   const days = parseInt($('tsCalcDays').value) || 0;
   const result = new Date(from.getTime() + days * 86400000);
   $('tsCalcTo').value = result.toISOString().slice(0, 16);
@@ -1318,13 +1737,13 @@ $('timerStartBtn').addEventListener('click', () => {
   if (!timerRunning) {
     timerRunning = true;
     timerStart = Date.now();
-    $('timerStartBtn').textContent = '⏸ 暂停';
+    $('timerStartBtn').textContent = _('timerPaused');
     $('timerLapBtn').style.display = '';
     updateTimer();
   } else {
     timerRunning = false;
     timerElapsed += Date.now() - timerStart;
-    $('timerStartBtn').textContent = '▶ 继续';
+    $('timerStartBtn').textContent = _('timerResume');
     if (timerRAF) cancelAnimationFrame(timerRAF);
   }
 });
@@ -1344,7 +1763,7 @@ $('timerResetBtn').addEventListener('click', () => {
   timerLaps = [];
   if (timerRAF) cancelAnimationFrame(timerRAF);
   $('timerDisplay').textContent = '00:00:00.0';
-  $('timerStartBtn').textContent = '▶ 开始';
+  $('timerStartBtn').textContent = _('timerStartBtn');
   $('timerLapBtn').style.display = 'none';
   $('timerLaps').innerHTML = '';
 });
@@ -1483,14 +1902,58 @@ document.addEventListener('drop', e => {
 const JSON_TREE_LIMIT = 10485760; // 10MB: beyond this, skip tree view, use plain text (tree render would be too many DOM nodes)
 const jsonInput = $('jsonInput');
 const jsonLines = $('jsonLines');
+let _jsonLinesCount = 0;
+
+// Phase 8.1: Blob-based Web Worker for heavy JSON parse/format on large inputs
+let _jsonWorker = null;
+let _jsonWorkerPending = false;
+function getJSONWorker() {
+  if (_jsonWorker) return _jsonWorker;
+  const code = `
+    self.onmessage = (e) => {
+      const { type, text } = e.data;
+      try {
+        if (type === 'validate') {
+          const d = JSON.parse(text);
+          self.postMessage({ type: 'ok', pretty: JSON.stringify(d, null, 2), valid: true });
+        }
+      } catch (err) {
+        self.postMessage({ type: 'err', message: err.message });
+      }
+    };
+  `;
+  const url = URL.createObjectURL(new Blob([code], { type: 'application/javascript' }));
+  _jsonWorker = new Worker(url);
+  _jsonWorker.onerror = () => { _jsonWorker = null; };
+  return _jsonWorker;
+}
+function jsonFormatInWorker(text, cb) {
+  try {
+    const w = getJSONWorker();
+    if (!w) { cb(null, true); return; }
+    _jsonWorkerPending = true;
+    w.onmessage = (e) => {
+      _jsonWorkerPending = false;
+      if (e.data.type === 'ok') cb(e.data.pretty, false);
+      else cb(null, true);
+    };
+    w.postMessage({ type: 'validate', text });
+    setTimeout(() => { if (_jsonWorkerPending) { _jsonWorkerPending = false; cb(null, true); } }, 3000);
+  } catch { cb(null, true); }
+}
 
 function updateJsonLines(errLine) {
   const text = jsonInput.value;
-  if (text.length > JSON_TREE_LIMIT) { jsonLines.innerHTML = ''; return; }
+  if (text.length > JSON_TREE_LIMIT) { jsonLines.innerHTML = ''; _jsonLinesCount = 0; return; }
   const lines = text.split('\n');
+  const count = lines.length;
+  // 行数未变时只更新错误行高亮
+  if (count === _jsonLinesCount && errLine == null) return;
+  _jsonLinesCount = count;
   jsonLines.innerHTML = lines.map((_, i) => `<div style="${i + 1 === errLine ? 'color:var(--red);font-weight:bold;' : ''}">${i + 1}</div>`).join('');
 }
-jsonInput.addEventListener('input', () => updateJsonLines());
+let _jsonLinesTimer;
+jsonInput.addEventListener('input', () => { clearTimeout(_jsonLinesTimer); _jsonLinesTimer = setTimeout(() => updateJsonLines(), 150); });
 jsonInput.addEventListener('scroll', () => { jsonLines.scrollTop = jsonInput.scrollTop; });
 
 function looseTransform(v) {
@@ -1626,16 +2089,357 @@ ctxMenu.addEventListener('click', e => {
   });
   document.addEventListener('mouseup', () => { if (dragging) { dragging = false; bar.style.background = ''; } });
 })();
-$('jsonFormatBtn').addEventListener('click', () => renderJSONResult($('jsonInput').value, false));
+$('jsonFormatBtn').addEventListener('click', () => {
+  const v = $('jsonInput').value;
+  if (v.length > 1048576) {
+    $('jsonResult').textContent = _('jsonWorkerHint');
+    jsonFormatInWorker(v, (pretty, fallback) => {
+      if (fallback || pretty === null) renderJSONResult(v, false);
+      else { try { $('jsonResult').textContent = pretty; _jsonData = JSON.parse(v); } catch { renderJSONResult(v, false); } }
+    });
+  } else renderJSONResult(v, false);
+});
 $('jsonCompressBtn').addEventListener('click', () => {
   const v = $('jsonInput').value.trim();
   if (!v) { toast(_('err_input_json'), 1); return; }
   try { $('jsonResult').textContent = JSON.stringify(JSON.parse(v)); } catch(e) { $('jsonResult').innerHTML = fmtJSONError(v, e); }
 });
 $('jsonLooseBtn').addEventListener('click', () => renderJSONResult($('jsonInput').value, true));
+
+// JSON → YAML 转换
+function jsonToYaml(obj, indent) {
+  indent = indent || 0;
+  const pad = '  '.repeat(indent);
+  if (obj === null) return 'null';
+  if (obj === undefined) return '~';
+  if (typeof obj === 'boolean') return obj.toString();
+  if (typeof obj === 'number') return obj.toString();
+  if (typeof obj === 'string') {
+    if (obj.includes('\n')) return '|\n' + obj.split('\n').map(l => pad + '  ' + l).join('\n');
+    if (/[:{}\[\],&*?|>!%@`#'"\n]/.test(obj) || obj.trim() !== obj || obj === '') return `"${obj.replace(/\\/g,'\\\\').replace(/"/g,'\\"')}"`;
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) return '[]';
+    return obj.map(item => {
+      const val = jsonToYaml(item, indent + 1);
+      if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
+        const firstLine = val.split('\n')[0];
+        const rest = val.split('\n').slice(1).join('\n');
+        return `\n${pad}- ${firstLine}${rest ? '\n' + rest : ''}`;
+      }
+      return `\n${pad}- ${val}`;
+    }).join('');
+  }
+  if (typeof obj === 'object') {
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return '{}';
+    return keys.map(k => {
+      const v = jsonToYaml(obj[k], indent + 1);
+      if (typeof obj[k] === 'object' && obj[k] !== null && (Array.isArray(obj[k]) ? obj[k].length > 0 : Object.keys(obj[k]).length > 0)) {
+        const lines = v.split('\n');
+        return `${pad}${k}:${lines[0]}\n${lines.slice(1).join('\n')}`;
+      }
+      return `${pad}${k}: ${v}`;
+    }).join('\n');
+  }
+  return String(obj);
+}
+$('jsonYamlBtn').addEventListener('click', () => {
+  const v = $('jsonInput').value.trim();
+  if (!v) { toast(_('err_input_json'), 1); return; }
+  try {
+    const obj = JSON.parse(v);
+    const yaml = jsonToYaml(obj).trim();
+    $('jsonResult').textContent = yaml;
+    addHistory('json', 'JSON → YAML', $('jsonInput').value.slice(0, 100));
+  } catch(e) { $('jsonResult').innerHTML = fmtJSONError(v, e); }
+});
+
+// JSON Schema 校验
+function validateSchema(obj, schema, path) {
+  path = path || '$';
+  const errors = [];
+  if (!schema || typeof schema !== 'object') return errors;
+  if (schema.type) {
+    const actual = Array.isArray(obj) ? 'array' : typeof obj;
+    if (schema.type === 'array') { if (!Array.isArray(obj)) errors.push({ path, msg: `expected array, got ${actual}` }); }
+    else if (schema.type === 'null') { if (obj !== null) errors.push({ path, msg: `expected null, got ${actual}` }); }
+    else if (schema.type === 'integer') { if (typeof obj !== 'number' || !Number.isInteger(obj)) errors.push({ path, msg: `expected integer, got ${actual}` }); }
+    else if (actual !== schema.type) errors.push({ path, msg: `expected ${schema.type}, got ${actual}` });
+  }
+  if (schema.required && typeof obj === 'object' && !Array.isArray(obj)) {
+    schema.required.forEach(k => { if (!(k in obj)) errors.push({ path: `${path}.${k}`, msg: `required property missing` }); });
+  }
+  if (schema.properties && typeof obj === 'object' && !Array.isArray(obj)) {
+    Object.entries(schema.properties).forEach(([k, s]) => { if (k in obj) errors.push(...validateSchema(obj[k], s, `${path}.${k}`)); });
+  }
+  if (schema.items && Array.isArray(obj)) {
+    obj.forEach((item, i) => errors.push(...validateSchema(item, schema.items, `${path}[${i}]`)));
+  }
+  if (schema.minimum != null && typeof obj === 'number' && obj < schema.minimum) errors.push({ path, msg: `value < ${schema.minimum}` });
+  if (schema.maximum != null && typeof obj === 'number' && obj > schema.maximum) errors.push({ path, msg: `value > ${schema.maximum}` });
+  if (schema.minLength != null && typeof obj === 'string' && obj.length < schema.minLength) errors.push({ path, msg: `length < ${schema.minLength}` });
+  if (schema.maxLength != null && typeof obj === 'string' && obj.length > schema.maxLength) errors.push({ path, msg: `length > ${schema.maxLength}` });
+  if (schema.enum && !schema.enum.includes(obj)) errors.push({ path, msg: `value not in enum` });
+  return errors;
+}
+$('jsonSchemaBtn').addEventListener('click', () => {
+  const v = $('jsonInput').value.trim();
+  if (!v) { toast(_('err_input_json'), 1); return; }
+  try {
+    const obj = JSON.parse(v);
+    const schemaStr = prompt(_('json_schema_prompt') || 'Enter JSON Schema:');
+    if (!schemaStr) return;
+    const schema = JSON.parse(schemaStr);
+    const errors = validateSchema(obj, schema);
+    if (errors.length === 0) { $('jsonResult').innerHTML = `<div style="color:var(--green);padding:8px;">✅ ${_('json_schema_valid') || 'Schema validation passed'}</div><pre style="margin-top:8px;">${escHtml(JSON.stringify(obj, null, 2))}</pre>`; }
+    else { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">❌ ${errors.length} ${_('json_schema_errors') || 'validation errors'}:</div><div style="padding:4px 8px;font-size:12px;">${errors.map(e => `<div style="padding:2px 0;border-bottom:1px solid var(--border);"><code>${escHtml(e.path)}</code>: ${escHtml(e.msg)}</div>`).join('')}</div>`; }
+  } catch(e) { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">⚠ ${escHtml(e.message)}</div>`; }
+});
+
+// JSON 合并 (RFC 7396 Merge Patch)
+function jsonMerge(base, patch) {
+  if (patch === null || typeof patch !== 'object' || Array.isArray(patch)) return patch;
+  if (base === null || typeof base !== 'object' || Array.isArray(base)) return patch;
+  const result = { ...base };
+  Object.keys(patch).forEach(k => {
+    if (patch[k] === null) delete result[k];
+    else if (typeof patch[k] === 'object' && !Array.isArray(patch[k]) && typeof result[k] === 'object' && !Array.isArray(result[k])) result[k] = jsonMerge(result[k], patch[k]);
+    else result[k] = patch[k];
+  });
+  return result;
+}
+$('jsonMergeBtn').addEventListener('click', () => {
+  const v = $('jsonInput').value.trim();
+  if (!v) { toast(_('err_input_json'), 1); return; }
+  try {
+    const base = JSON.parse(v);
+    const patchStr = prompt(_('json_merge_prompt') || 'Enter Patch JSON:');
+    if (!patchStr) return;
+    const patch = JSON.parse(patchStr);
+    const merged = jsonMerge(base, patch);
+    $('jsonResult').textContent = JSON.stringify(merged, null, 2);
+    addHistory('json', 'JSON Merge', $('jsonInput').value.slice(0, 100));
+  } catch(e) { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">⚠ ${escHtml(e.message)}</div>`; }
+});
+
+// JSON 对比
+function jsonDiff(a, b, path) {
+  path = path || '$';
+  const diffs = [];
+  if (a === b) return diffs;
+  if (a === null || b === null || typeof a !== typeof b || Array.isArray(a) !== Array.isArray(b)) {
+    diffs.push({ path, type: 'change', old: a, new: b });
+    return diffs;
+  }
+  if (typeof a === 'object' && !Array.isArray(a)) {
+    const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
+    allKeys.forEach(k => {
+      if (!(k in a)) diffs.push({ path: `${path}.${k}`, type: 'add', new: b[k] });
+      else if (!(k in b)) diffs.push({ path: `${path}.${k}`, type: 'remove', old: a[k] });
+      else diffs.push(...jsonDiff(a[k], b[k], `${path}.${k}`));
+    });
+  } else if (Array.isArray(a)) {
+    const maxLen = Math.max(a.length, b.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i >= a.length) diffs.push({ path: `${path}[${i}]`, type: 'add', new: b[i] });
+      else if (i >= b.length) diffs.push({ path: `${path}[${i}]`, type: 'remove', old: a[i] });
+      else diffs.push(...jsonDiff(a[i], b[i], `${path}[${i}]`));
+    }
+  } else if (a !== b) {
+    diffs.push({ path, type: 'change', old: a, new: b });
+  }
+  return diffs;
+}
+$('jsonDiffBtn').addEventListener('click', () => {
+  const v = $('jsonInput').value.trim();
+  if (!v) { toast(_('err_input_json'), 1); return; }
+  try {
+    const a = JSON.parse(v);
+    const bStr = prompt(_('json_diff_prompt') || 'Enter second JSON to compare:');
+    if (!bStr) return;
+    const b = JSON.parse(bStr);
+    const diffs = jsonDiff(a, b);
+    if (diffs.length === 0) { $('jsonResult').innerHTML = `<div style="color:var(--green);padding:8px;">✅ ${_('json_diff_equal') || 'JSONs are identical'}</div>`; }
+    else {
+      const colors = { add: 'var(--green)', remove: 'var(--red)', change: 'var(--orange)' };
+      const labels = { add: '+', remove: '-', change: '~' };
+      $('jsonResult').innerHTML = `<div style="padding:8px;font-size:12px;">${diffs.map(d => `<div style="padding:3px 0;border-bottom:1px solid var(--border);"><span style="color:${colors[d.type]};font-weight:bold;margin-right:6px;">[${labels[d.type]}]</span><code style="color:var(--accent);">${escHtml(d.path)}</code>${d.type === 'add' ? `: ${escHtml(JSON.stringify(d.new))}` : d.type === 'remove' ? `: ${escHtml(JSON.stringify(d.old))}` : `: ${escHtml(JSON.stringify(d.old))} → ${escHtml(JSON.stringify(d.new))}`}</div>`).join('')}</div>`;
+    }
+    addHistory('json', 'JSON Diff', $('jsonInput').value.slice(0, 100));
+  } catch(e) { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">⚠ ${escHtml(e.message)}</div>`; }
+});
+
 $('jsonClearBtn').addEventListener('click', () => { $('jsonInput').value = ''; $('jsonResult').innerHTML = (_L.res_json ? _L.res_json[_lang] : 'Result') + '<button class=\"copy-btn\" data-lk=\"copy\">' + (_L.copy?_L.copy[_lang]:'Copy') + '</button>'; _jsonData = null; updateJsonLines(); });
 $('jsonInput').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) renderJSONResult($('jsonInput').value, true); });
 setupFileInput({ btnId: 'jsonFileBtn', targetEl: $('jsonInput'), accept: '.json,.txt', onLoad: text => renderJSONResult(text, true) });
+
+// JSON → XML
+function jsonToXml(obj, rootTag, indent) {
+  indent = indent || 0;
+  rootTag = rootTag || 'root';
+  const pad = '  '.repeat(indent);
+  let xml = '';
+  if (Array.isArray(obj)) {
+    xml += pad + '<' + rootTag + '>\n';
+    obj.forEach(item => { xml += jsonToXml(item, 'item', indent + 1); });
+    xml += pad + '</' + rootTag + '>\n';
+  } else if (obj !== null && typeof obj === 'object') {
+    xml += pad + '<' + rootTag + '>\n';
+    for (const [k, v] of Object.entries(obj)) {
+      const safeTag = k.replace(/[^a-zA-Z0-9_-]/g, '_');
+      xml += jsonToXml(v, safeTag, indent + 1);
+    }
+    xml += pad + '</' + rootTag + '>\n';
+  } else {
+    xml += pad + '<' + rootTag + '>' + escHtml(String(obj ?? '')) + '</' + rootTag + '>\n';
+  }
+  return xml;
+}
+$('jsonXmlBtn').addEventListener('click', () => {
+  const v = $('jsonInput').value.trim();
+  if (!v) { toast(_('err_input_json'), 1); return; }
+  try {
+    const obj = JSON.parse(v);
+    const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' + jsonToXml(obj, 'root', 0);
+    $('jsonResult').textContent = xml;
+    addHistory('json', 'JSON→XML', v.slice(0, 100));
+  } catch (e) { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">⚠ ${escHtml(e.message)}</div>`; }
+});
+// XML → JSON
+function xmlToJson(xmlStr) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlStr, 'text/xml');
+  const err = doc.querySelector('parsererror');
+  if (err) throw new Error('Invalid XML: ' + err.textContent.slice(0, 120));
+  function nodeToObj(node) {
+    if (node.nodeType === 3) return node.textContent.trim() || null;
+    if (node.nodeType !== 1) return null;
+    const obj = {};
+    const childMap = {};
+    for (const ch of node.childNodes) {
+      if (ch.nodeType === 1) {
+        const name = ch.tagName;
+        if (!childMap[name]) childMap[name] = [];
+        childMap[name].push(ch);
+      }
+    }
+    if (Object.keys(childMap).length === 0) {
+      return node.textContent.trim() || null;
+    }
+    for (const [name, els] of Object.entries(childMap)) {
+      if (els.length === 1) {
+        const val = nodeToObj(els[0]);
+        obj[name] = val;
+      } else {
+        obj[name] = els.map(e => nodeToObj(e));
+      }
+    }
+    return obj;
+  }
+  return nodeToObj(doc.documentElement);
+}
+$('xmlJsonBtn').addEventListener('click', () => {
+  const v = $('jsonInput').value.trim();
+  if (!v) { toast(_('err_input_json'), 1); return; }
+  try {
+    const obj = xmlToJson(v);
+    const json = JSON.stringify(obj, null, 2);
+    $('jsonResult').textContent = json;
+    addHistory('json', 'XML→JSON', v.slice(0, 100));
+  } catch (e) { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">⚠ ${escHtml(e.message)}</div>`; }
+});
+
+// JSON → Code (TS/Python/Go)
+function guessType(v, name) {
+  if (v === null) return 'null';
+  if (Array.isArray(v)) {
+    if (v.length === 0) return 'unknown[]';
+    const inner = guessType(v[0], name);
+    return inner.endsWith('[]') ? inner + '[]' : inner + '[]';
+  }
+  if (typeof v === 'object') return 'object';
+  return typeof v;
+}
+function jsonToTs(obj, indent) {
+  indent = indent || 0;
+  const pad = '  '.repeat(indent);
+  const lines = [];
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+      lines.push(pad + k + ': {');
+      lines.push(jsonToTs(v, indent + 1));
+      lines.push(pad + '};');
+    } else if (Array.isArray(v)) {
+      const t = v.length > 0 ? guessType(v[0]) : 'unknown[]';
+      lines.push(pad + k + ': ' + t + ';');
+    } else {
+      lines.push(pad + k + ': ' + guessType(v) + ';');
+    }
+  }
+  return lines.join('\n');
+}
+function jsonToPy(obj, indent) {
+  indent = indent || 0;
+  const pad = '  '.repeat(indent);
+  const lines = [];
+  for (const [k, v] of Object.entries(obj)) {
+    if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+      lines.push(pad + k + ':');
+      lines.push(jsonToPy(v, indent + 1));
+    } else if (Array.isArray(v)) {
+      lines.push(pad + k + ': list[' + (v.length > 0 ? guessType(v[0]) : 'Any') + ']');
+    } else {
+      const t = guessType(v);
+      const pyMap = { string: 'str', number: 'float | int', boolean: 'bool', null: 'None' };
+      lines.push(pad + k + ': ' + (pyMap[t] || t));
+    }
+  }
+  return lines.join('\n');
+}
+function jsonToGo(obj, indent) {
+  indent = indent || 0;
+  const pad = '  '.repeat(indent);
+  const lines = [];
+  for (const [k, v] of Object.entries(obj)) {
+    const goName = k.charAt(0).toUpperCase() + k.slice(1).replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+    if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+      lines.push(pad + goName + ' struct {');
+      lines.push(jsonToGo(v, indent + 1));
+      lines.push(pad + '} `json:"' + k + '"`');
+    } else if (Array.isArray(v)) {
+      const t = v.length > 0 ? guessType(v[0]) : 'interface{}';
+      const goArrMap = { string: 'string', number: 'float64', boolean: 'bool', object: 'map[string]interface{}' };
+      lines.push(pad + goName + ' []' + (goArrMap[t] || 'interface{}') + ' `json:"' + k + '"`');
+    } else {
+      const goMap = { string: 'string', number: 'float64', boolean: 'bool', null: 'interface{}' };
+      lines.push(pad + goName + ' ' + (goMap[guessType(v)] || 'interface{}') + ' `json:"' + k + '"`');
+    }
+  }
+  return lines.join('\n');
+}
+$('jsonCodeBtn').addEventListener('click', () => {
+  const v = $('jsonInput').value.trim();
+  if (!v) { toast(_('err_input_json'), 1); return; }
+  try {
+    const obj = JSON.parse(v);
+    const lang = prompt(_('json_code_lang') || 'TypeScript / Python / Go?');
+    if (!lang) return;
+    let code = '';
+    if (/ts|typescript/i.test(lang)) {
+      code = 'interface Response {\n' + jsonToTs(obj, 1) + '\n}';
+    } else if (/py|python/i.test(lang)) {
+      code = 'class Response:\n' + jsonToPy(obj, 1);
+    } else if (/go/i.test(lang)) {
+      code = 'type Response struct {\n' + jsonToGo(obj, 1) + '\n}';
+    } else {
+      toast(_('json_code_invalid'), 1); return;
+    }
+    $('jsonResult').textContent = code;
+    addHistory('json', 'JSON→Code', v.slice(0, 100));
+  } catch (e) { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">⚠ ${escHtml(e.message)}</div>`; }
+});
 
 // JSONPath query
 function resolveJsonPath(obj, path) {
@@ -1701,7 +2505,34 @@ $('urlDecodeBtn').addEventListener('click', () => {
   try { $('urlResult').textContent = decodeURIComponent(v); }
   catch (e) { $('urlResult').textContent = '⚠ ' + _('err_invalid_url'); }
 });
-$('urlClearBtn').addEventListener('click', () => { $('urlInput').value = ''; $('urlResult').textContent = _('res_json'); });
+$('urlClearBtn').addEventListener('click', () => { $('urlInput').value = ''; $('urlResult').textContent = _('res_json'); $('urlParsed').style.display = 'none'; });
+
+// URL 解析器
+$('urlParseBtn').addEventListener('click', () => {
+  const v = $('urlInput').value.trim();
+  if (!v) { toast(_('tpEmpty'), 1); return; }
+  try {
+    const u = new URL(v);
+    const params = [...u.searchParams.entries()];
+    const rows = [
+      ['协议', u.protocol],
+      ['主机', u.hostname],
+      ['端口', u.port || '(默认)'],
+      ['路径', u.pathname],
+      ['查询', u.search || '(空)'],
+      ['哈希', u.hash || '(空)'],
+      ['来源', u.origin],
+    ];
+    if (params.length) rows.push(['参数', params.map(([k,v]) => `${k}=${v}`).join('&')]);
+    let html = '<div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12px;">';
+    for (const [k, val] of rows) {
+      html += `<div style="color:var(--text-dim);font-weight:600;">${k}</div><div style="word-break:break-all;">${escHtml(val)}</div>`;
+    }
+    html += '</div>';
+    $('urlParsed').innerHTML = html;
+    $('urlParsed').style.display = '';
+  } catch { $('urlParsed').innerHTML = `<div style="color:var(--red);font-size:12px;">⚠ ${_('err_invalid_url')}</div>`; $('urlParsed').style.display = ''; }
+});
 
 // ═══════════════════════════════════════
 //  🎲 UUID
@@ -1784,12 +2615,23 @@ function rgbToHsl(r, g, b) {
 }
 function renderColor(input) {
   const c = parseColor(input);
-  if (!c) { ['cHex','cRgb','cHsl'].forEach(id => $(id).textContent = '—'); $('colorPreview').style.background = 'transparent'; return; }
+  if (!c) { ['cHex','cRgb','cHsl','cCmyk','cContrast'].forEach(id => $(id).textContent = '—'); $('colorPreview').style.background = 'transparent'; return; }
   const hsl = rgbToHsl(c.r, c.g, c.b);
   const hex = '#' + [c.r, c.g, c.b].map(v => pad(v.toString(16))).join('').toUpperCase();
   $('cHex').textContent = hex;
   $('cRgb').textContent = `rgb(${c.r}, ${c.g}, ${c.b})`;
   $('cHsl').textContent = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+  // CMYK
+  const rr = c.r/255, gg = c.g/255, bb = c.b/255;
+  const k = 1 - Math.max(rr, gg, bb);
+  const cmyk = k < 1 ? [((1-rr-k)/(1-k)), ((1-gg-k)/(1-k)), ((1-bb-k)/(1-k))].map(v => Math.round(v*100)) : [0,0,0];
+  $('cCmyk').textContent = k < 1 ? `cmyk(${cmyk[0]}%, ${cmyk[1]}%, ${cmyk[2]}%, ${Math.round(k*100)}%)` : 'cmyk(0%, 0%, 0%, 100%)';
+  // Contrast ratio (WCAG)
+  const lum = (r,g,b) => { const a = [r,g,b].map(v => { v /= 255; return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); }); return 0.2126*a[0] + 0.7152*a[1] + 0.0722*a[2]; };
+  const l1 = lum(c.r, c.g, c.b), l2 = lum(255, 255, 255);
+  const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  const grade = ratio >= 7 ? 'AAA ✅' : ratio >= 4.5 ? 'AA ✅' : ratio >= 3 ? 'AA 大字' : '不达标 ⚠';
+  $('cContrast').textContent = `${ratio.toFixed(2)}:1 (${grade})`;
   $('colorPreview').style.background = hex;
 }
 $('colorPicker').addEventListener('input', () => {
@@ -2116,6 +2958,131 @@ $('srchFileBtn').addEventListener('click', () => {
 $('srchStreamStopBtn').addEventListener('click', () => { srchExitStream(true); toast(_('stopped')); });
 
 // ═══════════════════════════════════════
+//  🖥 屏幕检测
+// ═══════════════════════════════════════
+function getScreenInfo() {
+  const scr = screen;
+  const win = window;
+  const doc = document.documentElement;
+  const dpr = win.devicePixelRatio || 1;
+  
+  // screen.width/height 在高DPI屏下返回CSS像素，需乘以DPR得到物理像素
+  const physW = Math.round(scr.width * dpr);
+  const physH = Math.round(scr.height * dpr);
+  
+  // 基本信息
+  const info = {
+    scrWidth: scr.width,
+    scrHeight: scr.height,
+    physWidth: physW,
+    physHeight: physH,
+    scrAvailW: scr.availWidth,
+    scrAvailH: scr.availHeight,
+    winInnerW: win.innerWidth,
+    winInnerH: win.innerHeight,
+    winOuterW: win.outerWidth,
+    winOuterH: win.outerHeight,
+    winScreenX: win.screenX ?? win.screenLeft,
+    winScreenY: win.screenY ?? win.screenTop,
+    devPixelRatio: dpr,
+    colorDepth: scr.colorDepth,
+    pixelDepth: scr.pixelDepth,
+    orientation: scr.orientation?.type || (scr.width > scr.height ? 'landscape' : 'portrait'),
+    hasTouch: 'ontouchstart' in win,
+    maxTouchPoints: navigator.maxTouchPoints || 0,
+    cssWidth: doc.clientWidth,
+    cssHeight: doc.clientHeight,
+    scrollX: win.scrollX,
+    scrollY: win.scrollY,
+    docWidth: Math.max(doc.scrollWidth, doc.offsetWidth),
+    docHeight: Math.max(doc.scrollHeight, doc.offsetHeight),
+  };
+
+  return { basic: info };
+}
+
+function renderScreenBasic(info) {
+  const el = (id, val) => { const e = $(id); if (e) e.textContent = val; };
+  const L = (k) => _L[k]?.[_lang] || k;
+  
+  el('scrRes', info.scrWidth + ' × ' + info.scrHeight);
+  el('physRes', info.physWidth + ' × ' + info.physHeight);
+  el('scrAvail', info.scrAvailW + ' × ' + info.scrAvailH);
+  el('orientation', info.orientation === 'portrait' ? L('scr_portrait') : L('scr_landscape'));
+  el('dprDepth', info.devPixelRatio + 'x · ' + info.colorDepth + 'bit');
+  el('touchInfo', L('scr_touch_' + (info.hasTouch ? 'yes' : 'no')) + ' · ' + info.maxTouchPoints);
+  
+  el('winInner', info.winInnerW + ' × ' + info.winInnerH);
+  el('winOuter', info.winOuterW + ' × ' + info.winOuterH);
+  el('winPos', info.winScreenX + ', ' + info.winScreenY);
+  el('cssVp', info.cssWidth + ' × ' + info.cssHeight);
+  el('scrollPos', info.scrollX + ', ' + info.scrollY);
+  el('docSize', info.docWidth + ' × ' + info.docHeight);
+}
+
+function refreshScreenData() {
+  const { basic } = getScreenInfo();
+  renderScreenBasic(basic);
+}
+
+$('screenRefreshBtn').addEventListener('click', () => { refreshScreenData(); toast(_('screen_refreshed')); });
+
+// ═══════════════════════════════════════
+//  🔍 坏点检测
+// ═══════════════════════════════════════
+(function() {
+  const overlay = $('deadPixelOverlay');
+  const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffffff', '#000000'];
+  let idx = 0;
+  let active = false;
+
+  function startDeadPixel() {
+    idx = 0;
+    active = true;
+    overlay.style.display = 'block';
+    overlay.style.background = colors[0];
+    try { overlay.requestFullscreen?.(); } catch {}
+  }
+
+  function stopDeadPixel() {
+    active = false;
+    overlay.style.display = 'none';
+    overlay.style.background = '';
+    try { document.exitFullscreen?.(); } catch {}
+  }
+
+  overlay.addEventListener('click', () => {
+    if (!active) return;
+    idx = (idx + 1) % colors.length;
+    overlay.style.background = colors[idx];
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!active) return;
+    if (e.key === 'Escape') { stopDeadPixel(); return; }
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      idx = (idx + 1) % colors.length;
+      overlay.style.background = colors[idx];
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      idx = (idx - 1 + colors.length) % colors.length;
+      overlay.style.background = colors[idx];
+    }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    if (active && !document.fullscreenElement) stopDeadPixel();
+  });
+
+  $('screenDeadPixelBtn').addEventListener('click', startDeadPixel);
+})();
+
+// 初始化屏幕数据
+setTimeout(refreshScreenData, 100);
+
+// ═══════════════════════════════════════
 //  ◎ 正则
 // ═══════════════════════════════════════
 const rexEditor = $('rexEditor');
@@ -2131,7 +3098,7 @@ function rexHighlight() {
   const flags = $('rexFlags').value;
   if (!pattern) { rexEditor.textContent = text; rexUpdateLines(); $('rexInfo').textContent = ''; return; }
   let re;
-  try { re = new RegExp(pattern, flags); } catch { rexEditor.textContent = text; rexUpdateLines(); $('rexInfo').textContent = '⚠ Invalid regex'; return; }
+  try { re = new RegExp(pattern, flags); } catch { rexEditor.textContent = text; rexUpdateLines(); $('rexInfo').textContent = _('rex_invalid'); return; }
   let count = 0;
   if (text.length > REX_CHUNK_SIZE) {
     rexEditor.textContent = text;
@@ -2156,6 +3123,58 @@ rexEditor.addEventListener('input', rexDelayed);
 rexEditor.addEventListener('scroll', () => { $('rexLines').scrollTop = rexEditor.scrollTop; });
 $('rexTestBtn').addEventListener('click', rexHighlight);
 $('rexClearBtn').addEventListener('click', () => { rexEditor.innerHTML = ''; $('rexPattern').value = ''; $('rexInfo').textContent = ''; $('rexLines').innerHTML = ''; });
+
+// 正则解释器
+function explainRegex(pattern) {
+  if (!pattern) return '';
+  const parts = [];
+  let i = 0;
+  while (i < pattern.length) {
+    if (pattern[i] === '\\') {
+      const next = pattern[i+1];
+      const map = { d:'任意数字', D:'任意非数字', w:'字母数字下划线', W:'非字母数字下划线', s:'空白字符', S:'非空白字符', b:'单词边界', B:'非单词边界', n:'换行符', t:'制表符', r:'回车符', f:'换页符', v:'垂直制表符', 0:'空字符' };
+      if (map[next]) parts.push({ ch: pattern.slice(i, i+2), desc: map[next] });
+      else if (next === 'x') { const hex = pattern.slice(i+2, i+4); parts.push({ ch: pattern.slice(i, i+4), desc: `字符 ${hex} (0x${hex})` }); i += 2; }
+      else if (next === 'u') { const uni = pattern.slice(i+2, i+6); parts.push({ ch: pattern.slice(i, i+6), desc: `Unicode ${uni}` }); i += 4; }
+      else if (/\d/.test(next)) { parts.push({ ch: pattern.slice(i, i+2), desc: `反向引用 #${next}` }); }
+      else parts.push({ ch: pattern.slice(i, i+2), desc: `转义 "${next}"` });
+      i += 2;
+    } else if (pattern[i] === '[') {
+      const end = pattern.indexOf(']', i + 1);
+      if (end > 0) {
+        const cls = pattern.slice(i, end + 1);
+        const neg = cls[1] === '^';
+        const inner = cls.slice(neg ? 2 : 1, -1);
+        const desc = neg ? `匹配 "${inner}" 以外的字符` : `匹配 "${inner}" 中的任意一个字符`;
+        parts.push({ ch: cls, desc }); i = end + 1;
+      } else { parts.push({ ch: pattern[i], desc: '未闭合的字符类' }); i++; }
+    } else if (pattern[i] === '(') {
+      const desc = pattern[i+1] === '?' ?
+        (pattern[i+2] === ':' ? '非捕获组' : pattern[i+2] === '=' ? '正向前瞻' : pattern[i+2] === '!' ? '负向前瞻' : pattern[i+2] === '<' ? (pattern[i+3] === '=' ? '正向后顾' : '负向后顾') : '分组') :
+        '捕获组（可引用）';
+      parts.push({ ch: '(', desc }); i++;
+    } else if (pattern[i] === ')') { parts.push({ ch: ')', desc: '分组结束' }); i++; }
+    else if (pattern[i] === '^') { parts.push({ ch: '^', desc: '行首' }); i++; }
+    else if (pattern[i] === '$') { parts.push({ ch: '$', desc: '行尾' }); i++; }
+    else if (pattern[i] === '.') { parts.push({ ch: '.', desc: '任意字符（除换行符）' }); i++; }
+    else if (pattern[i] === '*') { parts.push({ ch: '*', desc: '0 次或多次（贪婪）' }); i++; }
+    else if (pattern[i] === '+') { parts.push({ ch: '+', desc: '1 次或多次（贪婪）' }); i++; }
+    else if (pattern[i] === '?') { parts.push({ ch: '?', desc: '0 或 1 次 / 非贪婪' }); i++; }
+    else if (pattern[i] === '{') {
+      const m = pattern.slice(i).match(/^\{(\d+)(?:,(\d*))?\}/);
+      if (m) { const desc = m[2] === undefined ? `恰好 ${m[1]} 次` : m[2] === '' ? `至少 ${m[1]} 次` : `${m[1]} 到 ${m[2]} 次`; parts.push({ ch: m[0], desc }); i += m[0].length; }
+      else { parts.push({ ch: pattern[i], desc: '量词字符' }); i++; }
+    }
+    else { parts.push({ ch: pattern[i], desc: `"${pattern[i]}"` }); i++; }
+  }
+  return parts.map(p => `<span style="color:var(--accent);font-weight:600;" title="${escHtml(p.desc)}">${escHtml(p.ch)}</span> → ${escHtml(p.desc)}`).join('<br>');
+}
+$('rexExplainBtn').addEventListener('click', () => {
+  const pattern = $('rexExplainInput').value.trim();
+  if (!pattern) { toast(_('tpEmpty'), 1); return; }
+  $('rexExplainResult').innerHTML = explainRegex(pattern);
+});
+$('rexExplainInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('rexExplainBtn').click(); });
 
 // ═══════════════════════════════════════
 //  🎲 Hash
@@ -2185,10 +3204,276 @@ $('hashClearBtn').addEventListener('click', () => {
 });
 
 // ═══════════════════════════════════════
+//  🔑 密码生成器
+// ═══════════════════════════════════════
+function genPassword() {
+  const len = Math.min(Math.max(parseInt($('passwdLen').value) || 16, 4), 128);
+  const sets = [];
+  if ($('passwdUpper').checked) sets.push('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+  if ($('passwdLower').checked) sets.push('abcdefghijklmnopqrstuvwxyz');
+  if ($('passwdNum').checked) sets.push('0123456789');
+  if ($('passwdSym').checked) sets.push('!@#$%^&*()-_=+[]{};:,.<>?/');
+  if (!sets.length) { toast(_('passwdNoSet'), 1); return null; }
+  const all = sets.join('');
+  const out = [];
+  for (let i = 0; i < sets.length; i++) out.push(sets[i][Math.floor(Math.random() * sets[i].length)]);
+  while (out.length < len) out.push(all[Math.floor(Math.random() * all.length)]);
+  for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
+  return out.join('');
+}
+function passwordStrength(pw) {
+  let score = 0;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/\d/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (pw.length >= 20) score++;
+  return score >= 4 ? _('passwdStrong') : score >= 2 ? _('passwdMedium') : _('passwdWeak');
+}
+$('passwdGenBtn').addEventListener('click', () => {
+  const pws = [];
+  for (let i = 0; i < 8; i++) { const p = genPassword(); if (p) pws.push(p); }
+  if (!pws.length) return;
+  $('passwdResult').textContent = pws.join('\n');
+  $('passwdStat').textContent = _('passwdStats').replace('${s}', passwordStrength(pws[0])).replace('${n}', pws[0].length);
+});
+$('passwdCopyBtn').addEventListener('click', () => {
+  const v = $('passwdResult').textContent;
+  if (!v || v === _('res_json')) { toast(_('err_empty'), 1); return; }
+  copy(v); toast(_('copied'));
+});
+
+// ═══════════════════════════════════════
+//  📃 Lorem Ipsum
+// ═══════════════════════════════════════
+const _LOREM = "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim id est laborum".split(' ');
+const _LOREM_CN = "天地玄黄宇宙洪荒日月盈昃辰宿列张寒来暑往秋收冬藏闰余成岁律吕调阳云腾致雨露结为霜金生丽水玉出昆冈剑号巨阙珠称夜光果珍李柰菜重芥姜海咸河淡鳞潜羽翔龙师火帝鸟官人皇始制文字乃服衣裳".split('');
+function loremWords(n) {
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(_LOREM[Math.floor(Math.random() * _LOREM.length)]);
+  return out.join(' ');
+}
+function loremCnWords(n) {
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(_LOREM_CN[Math.floor(Math.random() * _LOREM_CN.length)]);
+  return out.join('');
+}
+function loremSentences(n) {
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const wc = 6 + (Math.random() * 10 | 0);
+    out.push(loremWords(wc).replace(/^./, c => c.toUpperCase()) + '.');
+  }
+  return out.join(' ');
+}
+function loremParagraphs(n) {
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const sc = 3 + (Math.random() * 4 | 0);
+    out.push(loremSentences(sc));
+  }
+  return out.join('\n\n');
+}
+$('loremGenBtn').addEventListener('click', () => {
+  const type = $('loremType').value;
+  const count = Math.min(Math.max(parseInt($('loremCount').value) || 5, 1), 100);
+  const cn = $('loremCn').checked;
+  let text;
+  if (cn) text = cn ? loremCnWords(count * 40) : '';
+  else if (type === 'paragraphs') text = loremParagraphs(count);
+  else if (type === 'sentences') text = loremSentences(count);
+  else text = loremWords(count);
+  $('loremResult').textContent = text;
+});
+$('loremCopyBtn').addEventListener('click', () => {
+  const v = $('loremResult').textContent;
+  if (!v || v === _('res_json')) { toast(_('err_empty'), 1); return; }
+  copy(v); toast(_('copied'));
+});
+
+// ═══════════════════════════════════════
+//  ◎ 正则速查
+// ═══════════════════════════════════════
+const _REX_CHEAT = [
+  { cat: _('rexCatValidate'), items: [
+    ['Email', '^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$'],
+    ['手机号 (CN)', '^1[3-9]\\d{9}$'],
+    ['URL', '^https?://[\\w.-]+(?:\\/[^\\s]*)?$'],
+    ['IPv4', '^(?:\\d{1,3}\\.){3}\\d{1,3}$'],
+    ['日期 YYYY-MM-DD', '^\\d{4}-\\d{2}-\\d{2}$'],
+    ['时间 HH:MM:SS', '^\\d{2}:\\d{2}:\\d{2}$']
+  ]},
+  { cat: _('rexCatExtract'), items: [
+    ['提取所有数字', '\\d+'],
+    ['提取所有单词', '\\b[a-zA-Z]+\\b'],
+    ['提取所有邮箱', '[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+'],
+    ['提取 URL', 'https?://[\\w.-]+(?:\\/[^\\s]*)?'],
+    ['提取引号内容', '"[^"]*"']
+  ]},
+  { cat: _('rexCatReplace'), items: [
+    ['去除空白', '\\s+'],
+    ['HTML 标签', '<[^>]*>'],
+    ['重复空白折叠', '\\s{2,}']
+  ]}
+];
+function renderRexCheat() {
+  const wrap = $('rexCheatContainer');
+  if (!wrap) return;
+  wrap.innerHTML = _REX_CHEAT.map(g => `
+    <div style="flex:1;min-width:220px;">
+      <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:4px;">${g.cat}</div>
+      ${g.items.map(([name, pat]) => `<button class="btn btn-sm" style="margin:2px 4px 2px 0;" data-rex-pattern="${pat}">${name}</button>`).join('')}
+    </div>`).join('');
+  wrap.querySelectorAll('[data-rex-pattern]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $('rexCheatPreview').textContent = btn.dataset.rexPattern;
+      const srch = $('rexPattern');
+      if (srch) { srch.value = btn.dataset.rexPattern; rexHighlight(); }
+    });
+  });
+}
+renderRexCheat();
+
+// ═══════════════════════════════════════
+//  ⏰ Cron 解析
+// ═══════════════════════════════════════
+function cronFieldToSet(field, min, max, step) {
+  const set = new Set();
+  const parts = String(field).split(',');
+  for (const p of parts) {
+    if (p === '*') { for (let v = min; v <= max; v += (step || 1)) set.add(v); }
+    else if (/^\*\/(\d+)$/.test(p)) {
+      const s = +RegExp.$1;
+      for (let v = min; v <= max; v += s) set.add(v);
+    } else if (/^(\d+)-(\d+)$/.test(p)) {
+      const [a, b] = [+RegExp.$1, +RegExp.$2];
+      for (let v = a; v <= b; v++) set.add(v);
+    } else if (/^(\d+)-(\d+)\/(\d+)$/.test(p)) {
+      const [a, b, s] = [+RegExp.$1, +RegExp.$2, +RegExp.$3];
+      for (let v = a; v <= b; v += s) set.add(v);
+    } else if (/^\d+$/.test(p)) set.add(+p);
+  }
+  return set;
+}
+function cronDescribe(fields) {
+  const [mi, h, d, mo, w] = fields;
+  const parts = [];
+  if (d === '*' && w === '*') {
+    parts.push((h === '*' ? '每小时' : '每小时 ' + h + ' 时'));
+  } else if (w !== '*' && d === '*') {
+    parts.push((h === '*' ? '每小时' : h + ' 时') + (mi === '*' ? '' : ' ' + mi + ' 分') + (w === '1-5' ? ' 工作日' : ''));
+  }
+  return parts.join('') || _('cronDescOther');
+}
+function cronNextRuns(fields, n) {
+  const mins = cronFieldToSet(fields[0], 0, 59);
+  const hrs = cronFieldToSet(fields[1], 0, 23);
+  const days = cronFieldToSet(fields[2], 1, 31);
+  const months = cronFieldToSet(fields[3], 1, 12);
+  const wds = cronFieldToSet(fields[4], 0, 6);
+  const now = new Date();
+  const runs = [];
+  let dt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes() + 1, 0, 0);
+  while (runs.length < n && dt.getFullYear() < now.getFullYear() + 5) {
+    if (months.has(dt.getMonth() + 1) && days.has(dt.getDate()) && wds.has(dt.getDay()) && hrs.has(dt.getHours()) && mins.has(dt.getMinutes())) {
+      runs.push(dt.toString());
+    }
+    dt = new Date(dt.getTime() + 60000);
+  }
+  return runs;
+}
+$('cronParseBtn').addEventListener('click', () => {
+  const raw = $('cronInput').value.trim();
+  const fields = raw.split(/\s+/);
+  if (fields.length !== 5) { toast(_('cronInvalid'), 1); return; }
+  $('cronDesc').textContent = cronDescribe(fields);
+  const runs = cronNextRuns(fields, 10);
+  $('cronNext').textContent = runs.length ? runs.join('\n') : _('cronNoFuture');
+});
+
+// ═══════════════════════════════════════
+//  🔧 代码格式化
+// ═══════════════════════════════════════
+function jsBeautify(code) {
+  let indent = 0, out = [], inStr = false, strCh = '';
+  for (let i = 0; i < code.length; i++) {
+    const c = code[i];
+    if (inStr) { out.push(c); if (c === strCh && code[i-1] !== '\\') inStr = false; continue; }
+    if (c === '"' || c === "'" || c === '`') { inStr = true; strCh = c; out.push(c); continue; }
+    if (c === '{' || c === '[') { out.push('\n' + '  '.repeat(indent) + c); indent++; continue; }
+    if (c === '}' || c === ']') { indent = Math.max(0, indent-1); out.push('\n' + '  '.repeat(indent) + c); continue; }
+    if (c === ';') { out.push(';\n' + '  '.repeat(indent)); continue; }
+    if (c === ',') { out.push(',\n' + '  '.repeat(indent)); continue; }
+    out.push(c);
+  }
+  return out.join('').replace(/\n\s*\n/g, '\n').trim();
+}
+function jsMinify(code) {
+  return code.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').trim();
+}
+function cssBeautify(code) {
+  let indent = 0, out = [], inStr = false, strCh = '';
+  for (let i = 0; i < code.length; i++) {
+    const c = code[i];
+    if (inStr) { out.push(c); if (c === strCh && code[i-1] !== '\\') inStr = false; continue; }
+    if (c === '"' || c === "'") { inStr = true; strCh = c; out.push(c); continue; }
+    if (c === '{') { out.push(' {\n' + '  '.repeat(indent + 1)); indent++; continue; }
+    if (c === '}') { indent = Math.max(0, indent-1); out.push('\n' + '  '.repeat(indent) + '}'); continue; }
+    if (c === ';') { out.push(';\n' + '  '.repeat(indent)); continue; }
+    out.push(c);
+  }
+  return out.join('').replace(/\n\s*\n/g, '\n').trim();
+}
+function htmlBeautify(code) {
+  let indent = 0, out = [], inTag = false, inClose = false, inSelfClose = false;
+  const selfClosing = new Set(['br','hr','img','input','meta','link','area','base','col','embed','source','track','wbr']);
+  for (let i = 0; i < code.length; i++) {
+    const c = code[i];
+    if (c === '<') {
+      inTag = true;
+      inClose = code[i+1] === '/';
+      out.push('\n' + '  '.repeat(indent));
+      if (inClose) indent = Math.max(0, indent-1);
+      out.push(c);
+      continue;
+    }
+    if (inTag && c === '>') {
+      inTag = false;
+      const tag = code.slice(Math.max(0, i - 20), i).match(/<(\w[\w-]*)/);
+      if (tag && !inClose && !selfClosing.has(tag[1].toLowerCase()) && code[i-1] !== '/') indent++;
+      out.push(c);
+      continue;
+    }
+    out.push(c);
+  }
+  return out.join('').replace(/\n\s*\n/g, '\n').trim();
+}
+$('fmtJsBeautifyBtn').addEventListener('click', () => { const v = $('fmtInput').value; if (!v.trim()) { toast(_('tpEmpty'), 1); return; } $('fmtResult').textContent = jsBeautify(v); });
+$('fmtJsMinifyBtn').addEventListener('click', () => { const v = $('fmtInput').value; if (!v.trim()) { toast(_('tpEmpty'), 1); return; } $('fmtResult').textContent = jsMinify(v); });
+$('fmtCssBeautifyBtn').addEventListener('click', () => { const v = $('fmtInput').value; if (!v.trim()) { toast(_('tpEmpty'), 1); return; } $('fmtResult').textContent = cssBeautify(v); });
+$('fmtHtmlBeautifyBtn').addEventListener('click', () => { const v = $('fmtInput').value; if (!v.trim()) { toast(_('tpEmpty'), 1); return; } $('fmtResult').textContent = htmlBeautify(v); });
+$('fmtClearBtn').addEventListener('click', () => { $('fmtInput').value = ''; $('fmtResult').textContent = _('fmtResult'); });
+
+// ═══════════════════════════════════════
 //  📝 文本处理
 // ═══════════════════════════════════════
 function getTP() { return $('tpInput').value; }
 function setTP(text) { $('tpResult').textContent = text || _('res_json'); }
+function initLineNumbers(textareaId, gutterId) {
+  const ta = $(textareaId), gut = $(gutterId);
+  if (!ta || !gut) return;
+  const render = () => {
+    const lines = ta.value.split('\n').length;
+    gut.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+  };
+  ta.addEventListener('input', render);
+  ta.addEventListener('scroll', () => { gut.scrollTop = ta.scrollTop; });
+  const ro = new ResizeObserver(render);
+  ro.observe(ta);
+  render();
+}
+initLineNumbers('tpInput', 'tpGutter');
+initLineNumbers('statsInput', 'statsGutter');
 function linesTP(fn) {
   const text = getTP();
   if (!text) { toast(_('err_input_text'), 1); return; }
@@ -2203,7 +3488,125 @@ $('tpUpper').addEventListener('click', () => { const t = getTP(); if (!t) { toas
 $('tpLower').addEventListener('click', () => { const t = getTP(); if (!t) { toast(_('err_input_text'), 1); return; } setTP(t.toLowerCase()); });
 $('tpTrim').addEventListener('click', () => { const t = getTP(); if (!t) { toast(_('err_input_text'), 1); return; } setTP(t.split('\n').map(l => l.trim()).join('\n')); });
 $('tpClearEmpty').addEventListener('click', () => { const t = getTP(); if (!t) { toast(_('err_input_text'), 1); return; } setTP(t.split('\n').filter(l => l.trim()).join('\n')); });
+function applyRegexReplace() {
+  const text = getTP();
+  const pattern = $('tpRegexPattern').value;
+  if (!text) { toast(_('err_input_text'), 1); return; }
+  if (!pattern) { toast(_('tpRegexNeedPattern'), 1); return; }
+  let re;
+  try { re = new RegExp(pattern, $('tpRegexGI').checked ? 'gi' : 'g'); }
+  catch (e) { toast(_('err_regex') + ': ' + e.message, 1); return; }
+  const matches = (text.match(re) || []).length;
+  const result = text.replace(re, $('tpRegexReplace').value || '');
+  setTP(result);
+  $('tpRegexStat').textContent = _('tpRegexStats').replace('${n}', matches).replace('${len}', text.length.toLocaleString()).replace('${out}', result.length.toLocaleString());
+}
+$('tpRegexBtn').addEventListener('click', applyRegexReplace);
+$('tpRegexClearBtn').addEventListener('click', () => {
+  $('tpRegexPattern').value = ''; $('tpRegexReplace').value = '';
+  $('tpRegexStat').textContent = ''; setTP(getTP() || _('res_json'));
+});
+$('tpRegexPattern').addEventListener('keydown', e => { if (e.key === 'Enter') applyRegexReplace(); });
 setupFileInput({ btnId: 'tpFileBtn', targetEl: $('tpInput') });
+
+// ═══════════════════════════════════════
+//  📝 Markdown 预览
+// ═══════════════════════════════════════
+function mdEscape(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function mdInline(s) {
+  let t = mdEscape(s);
+  t = t.replace(/`([^`]+)`/g, '<code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:0.9em;">$1</code>');
+  t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  t = t.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+  t = t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:4px;" onerror="this.style.display=\'none\'">');
+  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:var(--accent);">$1</a>');
+  t = t.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+  return t;
+}
+function renderMarkdown(src) {
+  if (!src.trim()) return '<div style="padding:20px;text-align:center;color:var(--text-dim);">' + (_('markdown_empty') || '输入 Markdown 开始预览') + '</div>';
+  let html = '';
+  const lines = src.replace(/\r\n/g, '\n').split('\n');
+  let inCode = false, codeLang = '', codeBuf = [];
+  let listType = null, listItems = [];
+  let tbl = [];
+  const flushList = () => {
+    if (!listItems.length) return;
+    const tag = listType === 'ol' ? 'ol' : 'ul';
+    html += '<' + tag + ' style="padding-left:24px;margin:8px 0;">' + listItems.map(li => '<li style="margin:2px 0;">' + li + '</li>').join('') + '</' + tag + '>';
+    listItems = []; listType = null;
+  };
+  const flushTbl = () => {
+    if (!tbl.length) return;
+    const isHead = tbl[0] && tbl[0].isHead;
+    html += '<div style="overflow-x:auto;margin:8px 0;"><table style="border-collapse:collapse;font-size:13px;width:100%;"><thead><tr>' + (isHead ? tbl[0].cells.map(c => '<th style="border:1px solid var(--border);padding:6px 10px;background:var(--surface2);text-align:left;">' + c + '</th>').join('') : '') + '</tr></thead><tbody>' + (isHead ? tbl.slice(1) : tbl).map(r => '<tr>' + r.cells.map(c => '<td style="border:1px solid var(--border);padding:5px 10px;">' + c + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
+    tbl = [];
+  };
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.trim().startsWith('```')) {
+      if (!inCode) { flushList(); flushTbl(); inCode = true; codeLang = line.trim().slice(3).trim(); codeBuf = []; }
+      else {
+        inCode = false;
+        html += '<pre style="background:var(--surface2);padding:12px;border-radius:6px;overflow-x:auto;margin:8px 0;font-family:Consolas,monospace;font-size:12px;line-height:1.5;"><code' + (codeLang ? ' class="lang-' + mdEscape(codeLang) + '"' : '') + '>' + mdEscape(codeBuf.join('\n')) + '</code></pre>';
+      }
+      continue;
+    }
+    if (inCode) { codeBuf.push(line); continue; }
+    const codeMatch = line.match(/^ {4}/);
+    if (codeMatch) { flushList(); flushTbl(); html += '<pre style="background:var(--surface2);padding:10px;border-radius:6px;overflow-x:auto;margin:6px 0;font-family:Consolas,monospace;font-size:12px;">' + mdEscape(line.slice(4)) + '</pre>'; continue; }
+    const h = line.match(/^(#{1,6})\s+(.*)$/);
+    if (h) { flushList(); flushTbl(); const lv = h[1].length; html += '<h' + lv + ' style="margin:12px 0 8px;line-height:1.3;">' + mdInline(h[2]) + '</h' + lv + '>'; continue; }
+    if (/^\s*([-*+])\s+/.test(line) && !/^\s*[-*+](\s)+$/.test(line)) {
+      const m = line.match(/^\s*([-*+])\s+(.*)$/);
+      const tag = m[1] === '-' ? 'ul' : (m[1] === '+' ? 'ul' : 'ul');
+      if (listType !== 'ul') { flushList(); flushTbl(); listType = 'ul'; }
+      listItems.push(mdInline(m[2]));
+      continue;
+    }
+    if (/^\s*\d+[.)]\s+/.test(line)) {
+      const m = line.match(/^\s*\d+[.)]\s+(.*)$/);
+      if (listType !== 'ol') { flushList(); flushTbl(); listType = 'ol'; }
+      listItems.push(mdInline(m[1]));
+      continue;
+    }
+    const bq = line.match(/^>\s?(.*)$/);
+    if (bq) { flushList(); flushTbl(); html += '<blockquote style="border-left:3px solid var(--accent);padding:6px 12px;margin:8px 0;background:var(--surface2);color:var(--text-dim);">' + mdInline(bq[1]) + '</blockquote>'; continue; }
+    if (/^\|.*\|$/.test(line.trim())) {
+      const cells = line.trim().slice(1, -1).split('|').map(c => mdInline(c.trim()));
+      if (tbl.length === 1 && /^:?-{3,}:?$/.test(cells[0]) && /^:?-{3,}:?$/.test(cells[1])) { tbl[0].isHead = true; continue; }
+      tbl.push({ cells, isHead: tbl.length === 0 ? true : false });
+      continue;
+    }
+    if (/^\s*(---+|\*\*\*+|___+)\s*$/.test(line)) { flushList(); flushTbl(); html += '<hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">'; continue; }
+    if (!line.trim()) { flushList(); flushTbl(); html += '<div style="height:8px;"></div>'; continue; }
+    flushList(); flushTbl();
+    html += '<p style="margin:6px 0;line-height:1.7;">' + mdInline(line.trim()) + '</p>';
+  }
+  if (inCode) html += '<pre style="background:var(--surface2);padding:12px;border-radius:6px;overflow-x:auto;font-family:Consolas,monospace;font-size:12px;"><code>' + mdEscape(codeBuf.join('\n')) + '</code></pre>';
+  flushList(); flushTbl();
+  return html;
+}
+let _mdTimer;
+$('markdownInput').addEventListener('input', () => {
+  clearTimeout(_mdTimer);
+  _mdTimer = setTimeout(() => { $('markdownResult').innerHTML = renderMarkdown($('markdownInput').value); }, 150);
+});
+$('markdownResult').addEventListener('click', () => {
+  const sel = window.getSelection(); if (sel && sel.toString()) return;
+  const input = $('markdownInput'); if (input) input.focus();
+});
+$('markdownCopyBtn').addEventListener('click', () => {
+  const html = renderMarkdown($('markdownInput').value);
+  copy(html);
+  toast(_('copied'));
+});
+$('markdownClearBtn').addEventListener('click', () => {
+  $('markdownInput').value = '';
+  $('markdownResult').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);">' + (_('markdown_empty') || '输入 Markdown 开始预览') + '</div>';
+});
+$('markdownInput').value = '# Hello Markdown\n\n支持 **粗体**、*斜体*、`行内代码`、[链接](https://example.com)\n\n```js\nconst a = 1;\n```\n\n- 列表项 1\n- 列表项 2\n\n| 列1 | 列2 |\n| --- | --- |\n| A | B |';
+$('markdownResult').innerHTML = renderMarkdown($('markdownInput').value);
 
 // ═══════════════════════════════════════
 //  🔢 进制转换
@@ -2216,7 +3619,7 @@ function convertBase(input) {
   else if (/^0b/i.test(input)) num = parseInt(input.slice(2), 2);
   else if (/^0o/i.test(input)) num = parseInt(input.slice(2), 8);
   else num = parseInt(input, 10);
-  if (isNaN(num)) { ['bcDec','bcHex','bcBin','bcOct'].forEach(id => $(id).textContent = '⚠ Invalid'); return; }
+  if (isNaN(num)) { ['bcDec','bcHex','bcBin','bcOct'].forEach(id => $(id).textContent = _('bc_invalid')); return; }
   $('bcDec').textContent = num.toString(10);
   $('bcHex').textContent = '0x' + num.toString(16).toUpperCase();
   $('bcBin').textContent = '0b' + num.toString(2);
@@ -2225,6 +3628,113 @@ function convertBase(input) {
 $('bcInput').addEventListener('input', () => convertBase($('bcInput').value));
 $('bcClearBtn').addEventListener('click', () => { $('bcInput').value = ''; convertBase(''); });
 convertBase('FF');
+
+// ═══════════════════════════════════════
+//  📻 Morse 电码
+// ═══════════════════════════════════════
+const _MORSE = {
+  'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....',
+  'I':'..','J':'.---','K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.',
+  'Q':'--.-','R':'.-.','S':'...','T':'-','U':'..-','V':'...-','W':'.--','X':'-..-',
+  'Y':'-.--','Z':'--..',
+  '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....',
+  '6':'-....','7':'--...','8':'---..','9':'----.',
+  '.':'.-.-.-',',':'--..--','?':'..--..','!':'-.-.--','\'':'.----.','"':'.-..-.',
+  '/':'-..-.','(':'-.--.',')':'-.--.-','&':'.-...',':':'---...',';':'-.-.-.',
+  '=':'-...-','+':'.-.-.','-':'-....-','_':'..--.-','$':'...-..-','@':'.--.-.'
+};
+const _MORSE_REV = {};
+for (const k in _MORSE) _MORSE_REV[_MORSE[k]] = k;
+function morseEncode(text) {
+  return text.toUpperCase().split('').map(ch => {
+    if (ch === ' ') return '/';
+    return _MORSE[ch] || '?';
+  }).join(' ');
+}
+function morseDecode(text) {
+  return text.trim().split(/\s+/).map(code => {
+    if (code === '/') return ' ';
+    return _MORSE_REV[code] || '?';
+  }).join('');
+}
+function renderMorseTable() {
+  const keys = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9'];
+  const cells = keys.map(k => `<span style="display:inline-block;margin:2px 10px 2px 0;"><b>${k}</b> ${_MORSE[k]}</span>`).join('');
+  $('morseTable').innerHTML = cells;
+}
+$('morseEncodeBtn').addEventListener('click', () => {
+  const v = $('morseInput').value;
+  if (!v) { toast(_('err_input_text'), 1); return; }
+  $('morseResult').textContent = morseEncode(v);
+});
+$('morseDecodeBtn').addEventListener('click', () => {
+  const v = $('morseInput').value;
+  if (!v) { toast(_('err_input_text'), 1); return; }
+  $('morseResult').textContent = morseDecode(v);
+});
+$('morseClearBtn').addEventListener('click', () => { $('morseInput').value = ''; $('morseResult').textContent = _('res_json'); });
+renderMorseTable();
+
+// ═══════════════════════════════════════
+//  🔐 Caesar 密码
+// ═══════════════════════════════════════
+function caesarShift(text, shift) {
+  return text.split('').map(ch => {
+    const code = ch.charCodeAt(0);
+    if (code >= 65 && code <= 90) return String.fromCharCode(65 + (code - 65 + shift) % 26);
+    if (code >= 97 && code <= 122) return String.fromCharCode(97 + (code - 97 + shift) % 26);
+    return ch;
+  }).join('');
+}
+$('caesarEncodeBtn').addEventListener('click', () => {
+  const v = $('caesarInput').value, s = parseInt($('caesarShift').value, 10);
+  if (!v) { toast(_('err_input_text'), 1); return; }
+  if (isNaN(s) || s < 1 || s > 25) { toast(_('caesar_invalid_shift'), 1); return; }
+  $('caesarResult').textContent = caesarShift(v, s);
+});
+$('caesarDecodeBtn').addEventListener('click', () => {
+  const v = $('caesarInput').value, s = parseInt($('caesarShift').value, 10);
+  if (!v) { toast(_('err_input_text'), 1); return; }
+  if (isNaN(s) || s < 1 || s > 25) { toast(_('caesar_invalid_shift'), 1); return; }
+  $('caesarResult').textContent = caesarShift(v, -s);
+});
+$('caesarClearBtn').addEventListener('click', () => { $('caesarInput').value = ''; $('caesarResult').textContent = _('res_json'); $('caesarBrute').innerHTML = ''; });
+$('caesarBruteBtn').addEventListener('click', () => {
+  const v = $('caesarInput').value;
+  if (!v) { toast(_('err_input_text'), 1); return; }
+  const rows = [];
+  for (let s = 1; s <= 25; s++) {
+    rows.push(`<div><span style="display:inline-block;min-width:32px;color:var(--text-dim);">${s}</span><span style="font-family:'Cascadia Code',monospace;">${escHtml(caesarShift(v, s))}</span></div>`);
+  }
+  $('caesarBrute').innerHTML = rows.join('');
+});
+
+// ═══════════════════════════════════════
+//  💾 二进制文本
+// ═══════════════════════════════════════
+function bintextEncode(text) {
+  const bytes = new TextEncoder().encode(text);
+  return Array.from(bytes, b => b.toString(2).padStart(8, '0')).join(' ');
+}
+function bintextDecode(bin) {
+  const bits = bin.replace(/\s+/g, '');
+  if (bits.length % 8 !== 0) throw new Error(_('bintext_invalid') + ': ' + (bits.length % 8) + ' bit');
+  const bytes = [];
+  for (let i = 0; i < bits.length; i += 8) bytes.push(parseInt(bits.slice(i, i + 8), 2));
+  return new TextDecoder().decode(new Uint8Array(bytes));
+}
+$('bintextEncodeBtn').addEventListener('click', () => {
+  const v = $('bintextInput').value;
+  if (!v) { toast(_('err_input_text'), 1); return; }
+  $('bintextResult').textContent = bintextEncode(v);
+});
+$('bintextDecodeBtn').addEventListener('click', () => {
+  const v = $('bintextInput').value;
+  if (!v) { toast(_('err_input_text'), 1); return; }
+  try { $('bintextResult').textContent = bintextDecode(v); }
+  catch (e) { toast(e.message, 1); }
+});
+$('bintextClearBtn').addEventListener('click', () => { $('bintextInput').value = ''; $('bintextResult').textContent = _('res_json'); });
 
 // ═══════════════════════════════════════
 //  🔐 HTML 实体
@@ -2323,6 +3833,55 @@ $('sqlInsertParseBtn').addEventListener('click', () => {
 });
 $('sqlInsertClearBtn').addEventListener('click', () => { $('sqlInsertInput').value = ''; $('sqlInsertResult').innerHTML = ''; $('sqlInsertSearch').value = ''; _insertPairs = null; });
 $('sqlInsertSearch').addEventListener('input', () => { if (_insertPairs) renderInsertResult(_insertPairs, $('sqlInsertSearch').value); });
+
+// ═══════════════════════════════════════
+//  ✨ SQL 格式化
+// ═══════════════════════════════════════
+const SQL_KEYWORDS = new Set(['SELECT','INSERT','UPDATE','DELETE','FROM','WHERE','JOIN','LEFT','RIGHT','INNER','OUTER','FULL','ON','GROUP','BY','HAVING','ORDER','LIMIT','OFFSET','SET','VALUES','INTO','AND','OR','AS','DISTINCT','CASE','WHEN','THEN','ELSE','END','UNION','ALL','EXISTS','BETWEEN','LIKE','IN','IS','NULL','NOT','ASC','DESC','CREATE','TABLE','DROP','ALTER','ADD','COLUMN','INDEX','VIEW','PRIMARY','KEY','FOREIGN','REFERENCES','UNIQUE','CONSTRAINT','WITH','RETURNING','OVER','PARTITION','ROWS','RANGE','PRECEDING','FOLLOWING']);
+function sqlFormat(sql) {
+  let s = sql.replace(/;?\s*$/,'').replace(/\s+/g,' ').trim();
+  s = s.replace(/\s*,\s*/g, ', ');
+  s = s.replace(/\bORDER\s+BY\b/gi, 'ORDER BY').replace(/\bGROUP\s+BY\b/gi, 'GROUP BY');
+  SQL_KEYWORDS.forEach(kw => { s = s.replace(new RegExp('\\b'+kw+'\\b','gi'), kw); });
+  const re = /(\b(?:SELECT|FROM|WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|FULL|ON|GROUP\s+BY|HAVING|ORDER\s+BY|LIMIT|OFFSET|SET|VALUES|AND|OR|UNION|ALL|INSERT|UPDATE|DELETE|INTO|WITH|RETURNING)\b|\(|\))/gi;
+  let depth = 0, out = [], pushFrom = 0;
+  const indent = () => '  '.repeat(depth);
+  const flushText = (end) => {
+    const seg = s.slice(pushFrom, end).trim();
+    if (seg) { out.push(indent() + seg); }
+    pushFrom = end;
+  };
+  for (const m of s.matchAll(re)) {
+    const tok = m[0].toUpperCase();
+    const start = m.index, end = m.index + m[0].length;
+    const before = s.slice(pushFrom, start).trim();
+    if (before) { out.push(indent() + before); }
+    pushFrom = end;
+    if (tok === '(') { out.push(indent() + '('); depth++; continue; }
+    if (tok === ')') { depth = Math.max(0, depth-1); out.push(indent() + ')'); continue; }
+    if (['BY'].includes(tok)) { out.push(' ' + tok); continue; }
+    if (['AND','OR'].includes(tok)) { out.push(indent() + tok); continue; }
+    if (['SELECT','INSERT','UPDATE','DELETE','INTO','SET','VALUES','FROM','WHERE','GROUP BY','ORDER BY','HAVING','LIMIT','OFFSET','RETURNING','UNION','JOIN','LEFT','RIGHT','INNER','OUTER','FULL','ON'].includes(tok)) {
+      depth = Math.max(0, depth-1); out.push(indent() + tok); depth++;
+    } else {
+      out.push(tok);
+    }
+  }
+  flushText(s.length);
+  return out.join('\n');
+}
+$('sqlFmtBtn').addEventListener('click', () => {
+  const input = $('sqlFmtInput').value.trim();
+  if (!input) { $('sqlFmtResult').innerHTML = (_L.sqlEmpty ? _L.sqlEmpty[_lang] : 'Result'); return; }
+  try {
+    const formatted = sqlFormat(input);
+    $('sqlFmtResult').textContent = formatted;
+    $('sqlFmtStat').textContent = _('sqlFmtStats').replace('${lines}', formatted.split('\n').length);
+  } catch (e) {
+    $('sqlFmtResult').textContent = 'Error: ' + e.message;
+  }
+});
+$('sqlFmtClearBtn').addEventListener('click', () => { $('sqlFmtInput').value = ''; $('sqlFmtResult').innerHTML = (_L.sqlEmpty ? _L.sqlEmpty[_lang] : 'Result'); $('sqlFmtStat').textContent = ''; });
 
 // ═══════════════════════════════════════
 //  📑 Diff
@@ -2492,6 +4051,34 @@ bindStats($('ccInput'), 'ccStat');
 })();
 
 // ═══════════════════════════════════════
+//  🔄 大小写/命名转换
+// ═══════════════════════════════════════
+function splitCaseWords(text) {
+  return text
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_\-\.]+/g, ' ')
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+function toCamel(text) { const w = splitCaseWords(text); return w.length ? w[0] + w.slice(1).map(s => s[0].toUpperCase() + s.slice(1)).join('') : ''; }
+function toPascal(text) { return splitCaseWords(text).map(s => s[0].toUpperCase() + s.slice(1)).join(''); }
+function toSnake(text) { return splitCaseWords(text).join('_'); }
+function toKebab(text) { return splitCaseWords(text).join('-'); }
+function toScreaming(text) { return splitCaseWords(text).map(s => s.toUpperCase()).join('_'); }
+function caseConvert(fn) {
+  const v = $('caseInput').value;
+  if (!v.trim()) { toast(_('tpEmpty') || 'Enter text', 1); return; }
+  $('caseResult').textContent = fn(v);
+}
+$('caseCamelBtn').addEventListener('click', () => caseConvert(toCamel));
+$('casePascalBtn').addEventListener('click', () => caseConvert(toPascal));
+$('caseSnakeBtn').addEventListener('click', () => caseConvert(toSnake));
+$('caseKebabBtn').addEventListener('click', () => caseConvert(toKebab));
+$('caseScreamingBtn').addEventListener('click', () => caseConvert(toScreaming));
+$('caseClearBtn').addEventListener('click', () => { $('caseInput').value = ''; $('caseResult').textContent = _('caseResult'); });
+
+// ═══════════════════════════════════════
 //  🌐 翻译
 // ═══════════════════════════════════════
 let _transAbort = null;
@@ -2622,18 +4209,105 @@ $('httpUrl').addEventListener('paste', e => {
     }
   }
 });
+
+// 请求集合 (Collections)
+function getHttpCollections() { try { return JSON.parse(localStorage.getItem('litools_http_collections') || '[]'); } catch { return []; } }
+function saveHttpCollections(list) { localStorage.setItem('litools_http_collections', JSON.stringify(list)); }
+function renderHttpCollections() {
+  const list = getHttpCollections();
+  const el = $('httpCollList');
+  if (!list.length) { el.innerHTML = `<div style="padding:12px;text-align:center;color:var(--text-dim);">${_('httpColl_empty')}</div>`; return; }
+  el.innerHTML = list.map((c, i) => `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--border);cursor:pointer;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><b>${escHtml(c.method)}</b> ${escHtml(c.url?.slice(0, 60))}</span>
+    <span style="color:var(--text-dim);font-size:11px;">${escHtml(c.name || '')}</span>
+    <button class="btn btn-sm" onclick="httpCollLoad(${i})" data-lk="httpColl_load">加载</button>
+    <button class="btn btn-sm" onclick="httpCollDelete(${i})" style="color:var(--red);" data-lk="httpColl_delete">删除</button>
+  </div>`).join('');
+}
+window.httpCollLoad = function(i) {
+  const c = getHttpCollections()[i]; if (!c) return;
+  $('httpMethod').value = c.method || 'GET';
+  $('httpUrl').value = c.url || '';
+  $('httpHeaders').value = c.headers || '';
+  $('httpBody').value = c.body || '';
+  $('httpParams').value = c.params || '';
+  $('httpCookies').value = c.cookies || '';
+  $('httpCollWrap').style.display = 'none';
+  toast(_('loaded'));
+};
+window.httpCollDelete = function(i) {
+  const list = getHttpCollections(); list.splice(i, 1); saveHttpCollections(list); renderHttpCollections();
+};
+$('httpCollBtn').addEventListener('click', () => {
+  const w = $('httpCollWrap'); w.style.display = w.style.display === 'none' ? '' : 'none';
+  if (w.style.display !== 'none') renderHttpCollections();
+});
+$('httpCollCloseBtn').addEventListener('click', () => { $('httpCollWrap').style.display = 'none'; });
+$('httpCollSaveBtn').addEventListener('click', () => {
+  const name = prompt(_('httpColl_name') || 'Request name:');
+  if (name === null) return;
+  const req = { name, method: $('httpMethod').value, url: $('httpUrl').value, headers: $('httpHeaders').value, body: $('httpBody').value, params: $('httpParams').value, cookies: $('httpCookies').value, ts: Date.now() };
+  const list = getHttpCollections(); list.unshift(req); if (list.length > 50) list.pop(); saveHttpCollections(list);
+  renderHttpCollections(); toast(_('saved'));
+});
+
+// 环境变量
+function getHttpEnvs() { try { return JSON.parse(localStorage.getItem('litools_http_envs') || '{}'); } catch { return {}; } }
+function saveHttpEnvs(envs) { localStorage.setItem('litools_http_envs', JSON.stringify(envs)); }
+function renderHttpEnvList() {
+  const envs = getHttpEnvs();
+  const envName = $('httpEnvSelect').value || 'default';
+  const vars = envs[envName] || {};
+  const el = $('httpEnvList');
+  const entries = Object.entries(vars);
+  if (!entries.length) { el.innerHTML = `<div style="padding:8px;text-align:center;color:var(--text-dim);">${_('httpEnv_hint')}</div>`; return; }
+  el.innerHTML = entries.map(([k, v]) => `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);">
+    <input type="text" value="${escHtml(k)}" class="http-env-key" style="flex:1;font-size:12px;padding:2px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);" data-lk-pl="httpEnv_name">
+    <input type="text" value="${escHtml(v)}" class="http-env-val" style="flex:1;font-size:12px;padding:2px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);" data-lk-pl="httpEnv_value">
+    <button class="btn btn-sm" onclick="httpEnvDelete('${escHtml(k)}')" style="color:var(--red);" data-lk="httpEnv_delete">删除</button>
+  </div>`).join('');
+}
+function renderHttpEnvSelect() {
+  const envs = getHttpEnvs();
+  const sel = $('httpEnvSelect');
+  sel.innerHTML = Object.keys(envs).map(k => `<option value="${escHtml(k)}">${escHtml(k)}</option>`).join('') + `<option value="default">${_('httpEnv_default')}</option>`;
+  if (!sel.value) sel.value = 'default';
+}
+window.httpEnvDelete = function(key) {
+  const envs = getHttpEnvs(); const envName = $('httpEnvSelect').value || 'default';
+  if (envs[envName]) { delete envs[envName][key]; saveHttpEnvs(envs); renderHttpEnvList(); }
+};
+function applyEnvVars(text) {
+  const envs = getHttpEnvs(); const envName = $('httpEnvSelect').value || 'default';
+  const vars = envs[envName] || {};
+  return text.replace(/\{\{(\w+)\}\}/g, (_, k) => k in vars ? vars[k] : `{{${k}}}`);
+}
+$('httpEnvBtn').addEventListener('click', () => {
+  const w = $('httpEnvWrap'); w.style.display = w.style.display === 'none' ? '' : 'none';
+  if (w.style.display !== 'none') { renderHttpEnvSelect(); renderHttpEnvList(); }
+});
+$('httpEnvCloseBtn').addEventListener('click', () => { $('httpEnvWrap').style.display = 'none'; });
+$('httpEnvAddBtn').addEventListener('click', () => {
+  const envs = getHttpEnvs(); const envName = $('httpEnvSelect').value || 'default';
+  if (!envs[envName]) envs[envName] = {};
+  const key = prompt(_('httpEnv_name') || 'Variable name:'); if (!key) return;
+  const val = prompt(_('httpEnv_value') || 'Value:'); if (val === null) return;
+  envs[envName][key] = val; saveHttpEnvs(envs); renderHttpEnvList();
+});
+$('httpEnvSelect').addEventListener('change', renderHttpEnvList);
+
 $('httpSendBtn').addEventListener('click', async () => {
-  let url = $('httpUrl').value.trim();
+  let url = applyEnvVars($('httpUrl').value.trim());
   if (!url) { toast(_('input_url'), 1); return; }
   const method = $('httpMethod').value;
-  const headers = kvParse($('httpHeaders').value);
-  const params = kvParse($('httpParams').value);
+  const headers = kvParse(applyEnvVars($('httpHeaders').value));
+  const params = kvParse(applyEnvVars($('httpParams').value));
   const paramsStr = kvStringify(params);
   if (paramsStr) url += (url.includes('?') ? '&' : '?') + paramsStr;
-  const cookies = kvParse($('httpCookies').value);
+  const cookies = kvParse(applyEnvVars($('httpCookies').value));
   const cookieStr = Object.entries(cookies).map(([k, v]) => `${k}=${v}`).join('; ');
   if (cookieStr) headers['Cookie'] = cookieStr;
-  const body = ['POST','PUT','PATCH'].includes(method) ? ($('httpBody').value || undefined) : undefined;
+  const body = ['POST','PUT','PATCH'].includes(method) ? (applyEnvVars($('httpBody').value || '') || undefined) : undefined;
   $('httpSendBtn').innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite;">⏳</span> ' + _('sending');
   $('httpSendBtn').disabled = true;
   $('httpStatus').textContent = '';
@@ -2743,7 +4417,7 @@ document.querySelectorAll('.http-hdr-ins').forEach(btn => {
     ta.setSelectionRange(ta.value.length, ta.value.length);
   });
 });
-// Body format / minify
+  // Body format / minify
 $('httpBodyFmtBtn').addEventListener('click', () => {
   try {
     const v = $('httpBody').value.trim();
@@ -2752,6 +4426,510 @@ $('httpBodyFmtBtn').addEventListener('click', () => {
     toast(_('err_formatting'));
   } catch { toast(_('err_invalid_json'), 1); }
 });
+
+// Response visualization
+function renderJsonTree(obj, indent, parentId) {
+  let html = '';
+  const id = parentId + '_' + Math.random().toString(36).substr(2, 9);
+  if (Array.isArray(obj)) {
+    html += `<div style="padding-left:${indent*8}px;"><span style="color:var(--jt-bracket);">}</span> <span style="color:var(--jt-accent);">Array</span> <span style="color:var(--jt-bracket);">(</span>`;
+    obj.forEach((item, i) => {
+      html += `<div style="margin-top:2px;"><span style="color:var(--jt-bracket);">(</span><span style="color:var(--jt-number);">${i}</span><span style="color:var(--jt-bracket);">)</span> ${renderJsonTreeItem(item, indent + 1, id + '_' + i)}</div>`;
+    });
+    html += `<div style="padding-left:${indent*8}px;"><span style="color:var(--jt-bracket);">}</span></div>`;
+  } else if (obj !== null && typeof obj === 'object') {
+    const keys = Object.keys(obj);
+    html += `<div style="padding-left:${indent*8}px;"><span style="color:var(--jt-bracket);">}</span> <span style="color:var(--jt-accent);">Object</span> <span style="color:var(--jt-bracket);">{</span>`;
+    keys.forEach((k, i) => {
+      const val = obj[k];
+      const isLast = i === keys.length - 1;
+      const prefix = isLast ? '└─' : '├─';
+      html += `<div style="margin-top:2px;"><span style="color:var(--jt-bracket);">${prefix}</span><span style="color:var(--jt-key);">${escHtml(k)}</span>: ${renderJsonTreeItem(val, indent + 1, id + '_' + k)}</div>`;
+    });
+    html += `<div style="padding-left:${indent*8}px;"><span style="color:var(--jt-bracket);">}</span></div>`;
+  } else {
+    return renderJsonLeaf(obj, indent, id);
+  }
+  return html;
+}
+
+function renderJsonTreeItem(val, indent, id) {
+  if (val === null) return `<span style="color:var(--jt-null);">null</span>`;
+  if (typeof val === 'boolean') return `<span style="color:var(--jt-boolean);">${val}</span>`;
+  if (typeof val === 'number') return `<span style="color:var(--jt-number);">${val}</span>`;
+  if (typeof val === 'string') return `<span style="color:var(--jt-str);">"${escHtml(val)}"</span>`;
+  if (Array.isArray(val)) return renderJsonTree(val, indent, id);
+  return renderJsonTree(val, indent, id);
+}
+
+function renderJsonLeaf(val, indent, id) {
+  if (val === null) return `<span style="color:var(--jt-null);">null</span>`;
+  if (typeof val === 'boolean') return `<span style="color:var(--jt-boolean);">${val}</span>`;
+  if (typeof val === 'number') return `<span style="color:var(--jt-number);">${val}</span>`;
+  if (typeof val === 'string') {
+    if (val === '') return `<span style="color:var(--jt-str);">""</span>`;
+    if (/^https?:\/\//.test(val)) return `<a href="${val}" target="_blank" style="color:var(--accent);text-decoration:none;">${escHtml(val)}</a>`;
+    return `<span style="color:var(--jt-str);">"${escHtml(val)}"</span>`;
+  }
+  return `<span>${val}</span>`;
+}
+
+// Response preview panel (sidebar)
+const respPreview = document.createElement('div');
+respPreview.style.cssText = `
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 300px;
+  max-height: 80vh;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  padding: 12px;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+  overflow: auto;
+  display: none;
+  z-index: 200;
+`;
+document.body.appendChild(respPreview);
+
+// Toggle response preview
+function toggleRespPreview() {
+  if (respPreview.style.display === 'none') {
+    renderRespPreview();
+    respPreview.style.display = 'block';
+  } else {
+    respPreview.style.display = 'none';
+  }
+}
+
+// Render response preview
+function renderRespPreview() {
+  const bodyText = $('httpResult').textContent;
+  const ct = ($('httpMeta').textContent || '').split(' · ')[2] || '';
+  
+  let preview = '';
+  if (ct.includes('json')) {
+    try {
+      const obj = JSON.parse(bodyText);
+      preview += `<div style="font-size:12px;font-family:'Cascadia Code',monospace;">
+        <div style="color:var(--text-dim);margin-bottom:8px;">JSON 结构:</div>
+        ${renderJsonTree(obj, 0, 'root')}
+      </div>`;
+    } catch {
+      preview += `<div style="color:var(--text-dim);font-size:12px;">无效的 JSON</div>`;
+    }
+  } else if (ct.includes('image')) {
+    preview += `<div style="text-align:center;">
+      <div style="color:var(--text-dim);margin-bottom:8px;font-size:12px;">图片预览</div>
+      <img src="data:${ct};base64," + btoa(unescape(encodeURIComponent(bodyText))) style="max-width:100%;border-radius:4px;" onerror="this.style.display='none'" />
+      <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">大小: ${(new TextEncoder().encode(bodyText).length / 1024).toFixed(2)} KB</div>
+    </div>`;
+  } else if (ct.includes('html')) {
+    preview += `<div style="font-size:12px;font-family:'Cascadia Code',monospace;">
+      <div style="color:var(--text-dim);margin-bottom:8px;">HTML 结构:</div>
+      <div style="background:var(--surface2);padding:8px;border-radius:4px;overflow:auto;max-height:200px;">
+        <div style="color:var(--jt-tag);">&lt;html&gt;</div>
+        <div style="padding-left:16px;color:var(--jt-comment);">... HTML 内容 ...</div>
+        <div style="color:var(--jt-tag);">&lt;/html&gt;</div>
+      </div>
+    </div>`;
+  } else if (ct.includes('text') || ct.includes('plain')) {
+    const lines = bodyText.split('\n').length;
+    preview += `<div style="font-family:'Cascadia Code',monospace;font-size:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;color:var(--text-dim);">
+        <span>文本内容</span>
+        <span>${lines} 行</span>
+      </div>
+      <div style="background:var(--surface2);padding:8px;border-radius:4px;overflow:auto;max-height:200px;">
+        ${bodyText.split('\n').slice(0, 10).map((line, i) => `<div style="color:var(--text);">${i+1}. ${escHtml(line)}</div>`).join('')}
+        ${bodyText.split('\n').length > 10 ? '<div style="color:var(--text-dim);text-align:center;">...</div>' : ''}
+      </div>
+    </div>`;
+  } else {
+    preview += `<div style="text-align:center;color:var(--text-dim);font-size:12px;padding:40px;">
+      <div style="margin-bottom:8px;">🆕 ${ct || '未知'} 内容</div>
+      <div>大小: ${(new TextEncoder().encode(bodyText).length / 1024).toFixed(2)} KB</div>
+    </div>`;
+  }
+  
+  respPreview.innerHTML = preview;
+}
+
+// Update response preview when response changes
+function updateRespPreview() {
+  if (respPreview.style.display === 'block') {
+    renderRespPreview();
+  }
+}
+
+// Save response to history
+function saveRespToHistory() {
+  const bodyText = $('httpResult').textContent;
+  const sc = ($('httpStatus').textContent || '').split(' ')[0];
+  const ct = ($('httpMeta').textContent || '').split(' · ')[2] || '';
+  if (bodyText.includes('❌') || bodyText.includes('⚠')) return; // Skip error responses
+  
+  const history = JSON.parse(localStorage.getItem('litools_http_history') || '[]');
+  history.unshift({
+    ts: Date.now(),
+    url: $('httpUrl').value,
+    method: $('httpMethod').value,
+    status: sc,
+    statusText: ($('httpStatus').textContent || '').split(' ').slice(1).join(' '),
+    contentType: ct,
+    size: new TextEncoder().encode(bodyText).length,
+    body: bodyText
+  });
+  if (history.length > 50) history.pop();
+  localStorage.setItem('litools_http_history', JSON.stringify(history));
+  renderRespHistory();
+}
+
+// Render response history (in sidebar)
+function renderRespHistory() {
+  const history = JSON.parse(localStorage.getItem('litools_http_history') || '[]');
+  const html = history.map((item, i) => `
+    <div class="resp-history-item" onclick="loadRespHistory(${i})" style="display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid var(--border);cursor:pointer;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <div style="width:40px;text-align:center;">
+        <div style="font-size:11px;color:${item.status < 300 ? 'var(--jt-str)' : item.status < 400 ? 'var(--accent)' : item.status < 500 ? 'var(--orange)' : 'var(--red)'};">${item.status}</div>
+        <div style="font-size:9px;color:var(--text-dim);">${new Date(item.ts).toLocaleTimeString()}</div>
+      </div>
+      <div style="flex:1;overflow:hidden;">
+        <div style="font-size:12px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;">${item.method} ${item.url}</div>
+        <div style="font-size:11px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;">${item.contentType}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;">${(item.size / 1024).toFixed(2)} KB</div>
+      </div>
+    </div>
+  `).join('');
+  
+  const historyPanel = document.getElementById('respHistoryPanel') || document.createElement('div');
+  if (!document.getElementById('respHistoryPanel')) {
+    historyPanel.id = 'respHistoryPanel';
+    historyPanel.style.cssText = `
+      position: absolute;
+      top: 50%;
+      right: 300px;
+      transform: translateY(-50%);
+      width: 300px;
+      max-height: 80vh;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      padding: 12px;
+      box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+      overflow: auto;
+      display: none;
+      z-index: 199;
+    `;
+    historyPanel.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:8px;">
+        <span style="font-weight:600;font-size:13px;">📊 请求历史</span>
+        <button id="closeRespHistory" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;">✕</button>
+      </div>
+      <div id="respHistoryList" style="font-size:12px;">
+        ${html}
+      </div>
+    `;
+    document.body.appendChild(historyPanel);
+    
+    document.getElementById('closeRespHistory').addEventListener('click', () => {
+      historyPanel.style.display = 'none';
+    });
+  } else {
+    document.getElementById('respHistoryList').innerHTML = html;
+  }
+}
+
+window.loadRespHistory = function(i) {
+  const history = JSON.parse(localStorage.getItem('litools_http_history') || '[]');
+  const item = history[i];
+  if (!item) return;
+  
+  $('httpMethod').value = item.method;
+  $('httpUrl').value = item.url;
+  $('httpResult').textContent = item.body;
+  $('httpStatus').textContent = `${item.status} ${item.statusText}`;
+  const scColor = item.status < 300 ? 'var(--jt-str)' : item.status < 400 ? 'var(--accent)' : item.status < 500 ? 'var(--orange)' : 'var(--red)';
+  $('httpStatus').style.color = scColor;
+  $('httpMeta').textContent = `${new Date(item.ts).toLocaleString()} · ${item.size} B · ${item.contentType}`;
+  
+  // Hide preview and history panels
+  respPreview.style.display = 'none';
+  document.getElementById('respHistoryPanel').style.display = 'none';
+  
+  toast(_('loaded_resp_history'));
+};
+
+// Update statistics
+function updateRespStats() {
+  const history = JSON.parse(localStorage.getItem('litools_http_history') || '[]');
+  const statsPanel = document.getElementById('respStatsPanel') || document.createElement('div');
+  if (!document.getElementById('respStatsPanel')) {
+    statsPanel.id = 'respStatsPanel';
+    statsPanel.style.cssText = `
+      position: absolute;
+      top: 50%;
+      right: 600px;
+      transform: translateY(-50%);
+      width: 300px;
+      max-height: 80vh;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      padding: 12px;
+      box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+      overflow: auto;
+      display: none;
+      z-index: 198;
+    `;
+    statsPanel.innerHTML = `
+      <div style="font-weight:600;font-size:13px;margin-bottom:12px;">📈 统计分析</div>
+      <div id="respStatsContent">
+        ${renderRespStats(history)}
+      </div>
+    `;
+    document.body.appendChild(statsPanel);
+  } else {
+    document.getElementById('respStatsContent').innerHTML = renderRespStats(history);
+  }
+}
+
+function renderRespStats(history) {
+  if (!history.length) {
+    return `<div style="text-align:center;color:var(--text-dim);padding:40px;font-size:12px;">暂无历史数据</div>`;
+  }
+  
+  const last24h = history.filter(item => Date.now() - item.ts < 24 * 60 * 60 * 1000);
+  const successRate = last24h.length ? (last24h.filter(item => item.status < 300).length / last24h.length * 100).toFixed(1) : 0;
+  const avgTime = last24h.length ? last24h.reduce((sum, item) => sum + (item.ts - new Date(item.ts).getTime()), 0) / last24h.length / 1000 : 0;
+  
+  const statusCounts = {};
+  history.forEach(item => {
+    statusCounts[item.status] = (statusCounts[item.status] || 0) + 1;
+  });
+  
+  return `
+    <div style="display:grid;gap:8px;font-size:12px;">
+      <div style="display:flex;justify-content:space-between;padding:6px;background:var(--surface2);border-radius:4px;">
+        <span>今日请求:</span>
+        <span style="font-weight:600;">${last24h.length}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px;background:var(--surface2);border-radius:4px;">
+        <span>成功率:</span>
+        <span style="font-weight:600;color:var(--jt-str);">${successRate}%</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px;background:var(--surface2);border-radius:4px;">
+        <span>平均响应时间:</span>
+        <span style="font-weight:600;">${avgTime.toFixed(0)}ms</span>
+      </div>
+      <div style="margin-top:8px;">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">状态码分布</div>
+        ${Object.entries(statusCounts).map(([code, count]) => `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <div style="width:40px;font-size:11px;">${code}</div>
+            <div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;">
+              <div style="height:100%;background:${code < 300 ? 'var(--jt-str)' : code < 400 ? 'var(--accent)' : code < 500 ? 'var(--orange)' : 'var(--red)'};width:${(count / history.length * 100).toFixed(1)}%;"></div>
+            </div>
+            <div style="width:30px;text-align:right;font-size:11px;">${count}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// Toggle response statistics
+function toggleRespStats() {
+  const statsPanel = document.getElementById('respStatsPanel');
+  if (statsPanel.style.display === 'none') {
+    updateRespStats();
+    statsPanel.style.display = 'block';
+  } else {
+    statsPanel.style.display = 'none';
+  }
+}
+
+// Action buttons for response preview/history/stats
+$('httpResActions').innerHTML = `
+  <button class="btn btn-sm" id="showRespPreviewBtn" style="font-size:11px;padding:2px 8px;" data-lk-tl="tl_respPreview">👁️ 预览</button>
+  <button class="btn btn-sm" id="showRespHistoryBtn" style="font-size:11px;padding:2px 8px;" data-lk-tl="tl_respHistory">📊 历史</button>
+  <button class="btn btn-sm" id="showRespStatsBtn" style="font-size:11px;padding:2px 8px;" data-lk-tl="tl_respStats">📈 统计</button>
+`;
+
+$('showRespPreviewBtn').addEventListener('click', toggleRespPreview);
+$('showRespHistoryBtn').addEventListener('click', () => {
+  const historyPanel = document.getElementById('respHistoryPanel');
+  if (historyPanel.style.display === 'none') {
+    renderRespHistory();
+    historyPanel.style.display = 'block';
+  } else {
+    historyPanel.style.display = 'none';
+  }
+});
+$('showRespStatsBtn').addEventListener('click', toggleRespStats);
+
+// Save response to history when response is received
+$('httpSendBtn').addEventListener('click', async () => {
+  // ... existing code ...
+  
+  // After successful response
+  saveRespToHistory();
+  updateRespPreview();
+});
+
+// Translation keys for new features
+if (!_L.respPreview) _L.respPreview = { zh: '👁️ 预览', en: '👁️ Preview' };
+if (!_L.respHistory) _L.respHistory = { zh: '📊 历史', en: '📊 History' };
+if (!_L.respStats) _L.respStats = { zh: '📈 统计', en: '📈 Stats' };
+if (!_L.loaded_resp_history) _L.loaded_resp_history = { zh: '已加载历史记录', en: 'Loaded response history' };
+
+// Add CSS for preview animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes slideOutRight {
+    from { transform: translateX(0); }
+    to { transform: translateX(100%); }
+  }
+  .resp-history-item {
+    transition: all 0.2s ease;
+  }
+`;
+document.head.appendChild(style);
+
+// Add CSS variable for status colors if not defined
+if (!document.documentElement.style.getPropertyValue('--jt-str')) {
+  document.documentElement.style.setProperty('--jt-str', '#2e7d32');
+}
+if (!document.documentElement.style.getPropertyValue('--jt-null')) {
+  document.documentElement.style.setProperty('--jt-null', '#d32f2f');
+}
+if (!document.documentElement.style.getPropertyValue('--jt-boolean')) {
+  document.documentElement.style.setProperty('--jt-boolean', '#1976d2');
+}
+if (!document.documentElement.style.getPropertyValue('--jt-number')) {
+  document.documentElement.style.setProperty('--jt-number', '#ed6c02');
+}
+if (!document.documentElement.style.getPropertyValue('--jt-key')) {
+  document.documentElement.style.setProperty('--jt-key', '#9c27b0');
+}
+if (!document.documentElement.style.getPropertyValue('--jt-accent')) {
+  document.documentElement.style.setProperty('--jt-accent', '#1976d2');
+}
+if (!document.documentElement.style.getPropertyValue('--jt-bracket')) {
+  document.documentElement.style.setProperty('--jt-bracket', '#757575');
+}
+if (!document.documentElement.style.getPropertyValue('--jt-comment')) {
+  document.documentElement.style.setProperty('--jt-comment', '#757575');
+}
+if (!document.documentElement.style.getPropertyValue('--orange')) {
+  document.documentElement.style.setProperty('--orange', '#ed6c02');
+}
+if (!document.documentElement.style.getPropertyValue('--red')) {
+  document.documentElement.style.setProperty('--red', '#d32f2f');
+}
+if (!document.documentElement.style.getPropertyValue('--accent')) {
+  document.documentElement.style.setProperty('--accent', '#1976d2');
+}
+if (!document.documentElement.style.getPropertyValue('--accent-dim')) {
+  document.documentElement.style.setProperty('--accent-dim', '#1565c0');
+}
+if (!document.documentElement.style.getPropertyValue('--surface')) {
+  document.documentElement.style.setProperty('--surface', '#fafafa');
+}
+if (!document.documentElement.style.getPropertyValue('--surface2')) {
+  document.documentElement.style.setProperty('--surface2', '#f5f5f5');
+}
+if (!document.documentElement.style.getPropertyValue('--surface3')) {
+  document.documentElement.style.setProperty('--surface3', '#eeeeee');
+}
+if (!document.documentElement.style.getPropertyValue('--border')) {
+  document.documentElement.style.setProperty('--border', '#e0e0e0');
+}
+if (!document.documentElement.style.getPropertyValue('--text')) {
+  document.documentElement.style.setProperty('--text', '#212121');
+}
+if (!document.documentElement.style.getPropertyValue('--text-dim')) {
+  document.documentElement.style.setProperty('--text-dim', '#757575');
+}
+document.head.appendChild(style);
+
+// Add response preview/history/stats toggle buttons to HTTP panel header
+const httpHeader = document.querySelector('#p-http > div > div');
+if (httpHeader) {
+  const respToggleBtn = document.createElement('button');
+  respToggleBtn.className = 'btn';
+  respToggleBtn.id = 'respToggleBtn';
+  respToggleBtn.title = '显示/隐藏响应面板';
+  respToggleBtn.innerHTML = '📊';
+  respToggleBtn.style.marginLeft = 'auto';
+  respToggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const statsPanel = document.getElementById('respStatsPanel');
+    if (statsPanel.style.display === 'block' || respPreview.style.display === 'block') {
+      statsPanel.style.display = 'none';
+      respPreview.style.display = 'none';
+      document.getElementById('respHistoryPanel').style.display = 'none';
+    } else {
+      statsPanel.style.display = 'block';
+      respPreview.style.display = 'block';
+      document.getElementById('respHistoryPanel').style.display = 'block';
+    }
+  });
+  httpHeader.insertBefore(respToggleBtn, httpHeader.firstChild);
+}
+
+// Update translation when language changes
+function updateRespUITranslation() {
+  if (respPreview.style.display === 'block') {
+    renderRespPreview();
+  }
+  const historyPanel = document.getElementById('respHistoryPanel');
+  if (historyPanel && historyPanel.style.display === 'block') {
+    renderRespHistory();
+  }
+  const statsPanel = document.getElementById('respStatsPanel');
+  if (statsPanel && statsPanel.style.display === 'block') {
+    updateRespStats();
+  }
+}
+
+// Apply language changes
+const originalApplyLang = applyLang;
+applyLang = function(lang) {
+  originalApplyLang(lang);
+  updateRespUITranslation();
+};
+
+// Add title translations
+tl_respPreview = tl_respPreview || {zh: '👁️ 预览', en: '👁️ Preview'};
+tl_respHistory = tl_respHistory || {zh: '📊 历史', en: '📊 History'};
+tl_respStats = tl_respStats || {zh: '📈 统计', en: '📈 Stats'};
+
+// Add CSS variable for the color scheme
+const root = document.documentElement;
+root.style.setProperty('--jt-str', '#2e7d32');
+root.style.setProperty('--jt-null', '#d32f2f');
+root.style.setProperty('--jt-boolean', '#1976d2');
+root.style.setProperty('--jt-number', '#ed6c02');
+root.style.setProperty('--jt-key', '#9c27b0');
+root.style.setProperty('--jt-accent', '#1976d2');
+root.style.setProperty('--jt-bracket', '#757575');
+root.style.setProperty('--jt-comment', '#757575');
+root.style.setProperty('--orange', '#ed6c02');
+root.style.setProperty('--red', '#d32f2f');
+root.style.setProperty('--accent', '#1976d2');
+root.style.setProperty('--accent-dim', '#1565c0');
+root.style.setProperty('--surface', '#fafafa');
+root.style.setProperty('--surface2', '#f5f5f5');
+root.style.setProperty('--surface3', '#eeeeee');
+root.style.setProperty('--border', '#e0e0e0');
+root.style.setProperty('--text', '#212121');
+root.style.setProperty('--text-dim', '#757575');
 $('httpBodyMinBtn').addEventListener('click', () => {
   try {
     const v = $('httpBody').value.trim();
@@ -2854,7 +5032,7 @@ $('csvInput').addEventListener('input', () => { clearTimeout(csvTimer); csvTimer
 $('csvDelimBtn').addEventListener('click', () => {
   const btn = $('csvDelimBtn');
   btn.dataset.delim = btn.dataset.delim === ',' ? '\t' : ',';
-  btn.textContent = 'Delimiter: ' + (btn.dataset.delim === ',' ? ',' : '\\t');
+  btn.textContent = _('csv_delimiter') + ': ' + (btn.dataset.delim === ',' ? ',' : '\\t');
   renderCSV($('csvInput').value);
 });
 $('csvClearBtn').addEventListener('click', () => { $('csvInput').value = ''; $('csvResult').innerHTML = ''; $('csvStat').textContent = ''; });
@@ -2991,13 +5169,14 @@ function addHistory(tab, desc, data) {
 function renderHistory() {
   const list = getHistory();
   const el = $('historyList');
-  if (!list.length) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">暂无历史记录</div>'; return; }
+  if (!list.length) { el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px;">${_('historyEmpty')}</div>`; return; }
   el.innerHTML = list.map((h, i) => {
     const t = new Date(h.ts);
     const time = `${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
-    const tabNames = { json:'JSON', http:'HTTP', search:'搜索', ts:'时间戳', sql:'SQL', encode:'编解码', diff:'Diff', gen:'生成', text:'文本', color:'颜色' };
+    const tabKey = 'history_tab_' + h.tab;
+    const tabName = _L[tabKey]?.[_lang] || h.tab;
     return `<div class="history-item" data-idx="${i}" style="padding:8px 14px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12px;display:flex;gap:8px;align-items:center;">
-      <span style="color:var(--accent);font-weight:500;white-space:nowrap;">${tabNames[h.tab] || h.tab}</span>
+      <span style="color:var(--accent);font-weight:500;white-space:nowrap;">${tabName}</span>
       <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-dim);">${escHtml(h.desc)}</span>
       <span style="color:var(--text-dim);font-size:11px;white-space:nowrap;">${time}</span>
     </div>`;
@@ -3045,21 +5224,23 @@ function autoRecordHistory() {
     { box: 'b64Result', tab: 'encode', getInput: () => $('b64Input').value?.slice(0, 100) },
     { box: 'tpResult', tab: 'text', getInput: () => $('tpInput').value?.slice(0, 100) },
   ];
+  const emptyTexts = new Set([_('jsonEmpty'), _('httpWaiting'), _('sqlEmpty'), _('b64Empty'), _('tpEmpty')]);
   observers.forEach(({ box, tab, getInput }) => {
     const el = $(box);
     if (!el) return;
     let lastContent = '', debounce = null;
-    new MutationObserver(() => {
+    const obs = new MutationObserver(() => {
       if (debounce) return;
       debounce = setTimeout(() => {
         debounce = null;
         const content = el.textContent?.trim();
-        if (content && content !== lastContent && content !== '结果' && content !== 'Result' && content !== '等待请求' && content !== 'Waiting') {
+        if (content && content !== lastContent && !emptyTexts.has(content)) {
           lastContent = content;
           addHistory(tab, getInput() || content.slice(0, 60), getInput());
         }
       }, 1000);
-    }).observe(el, { childList: true, subtree: true, characterData: true });
+    });
+    obs.observe(el, { childList: true, subtree: true, characterData: true });
   });
 }
 
@@ -3117,7 +5298,6 @@ try {
 renderTsRev();
 updateStats();
 bindStats($('jsonInput'), 'jsonStat');
-bindStats($('srchEditor'), 'srchStat');
 bindStats($('rexEditor'), 'rexStat');
 bindStats($('tpInput'), 'tpStat');
 bindStats($('statsInput'), 'statsStat');
@@ -3165,11 +5345,12 @@ const tabMeta = [
   {tab:'json', name:'{ } JSON', kw:'json 格式化 树形'},
   {tab:'http', name:'🌐 HTTP', kw:'http 请求 curl api'},
   {tab:'search', name:'🔍 搜索', kw:'查找 替换 正则 regex'},
-  {tab:'sql', name:'🗄️ SQL', sub:[{id:'sql-in',n:'IN 生成'},{id:'sql-insert',n:'INSERT 解析'}], kw:'sql 数据库 insert 值 列'},
-  {tab:'encode', name:'🔐 编解码', sub:[{id:'b64',n:'Base64'},{id:'url',n:'URL'},{id:'html',n:'HTML'},{id:'jwt',n:'JWT'},{id:'bc',n:'进制'}], kw:'编码 解码 base64 url html jwt 进制 hex bin oct'},
-  {tab:'gen', name:'🎲 生成', sub:[{id:'uuid',n:'UUID'},{id:'hash',n:'Hash'},{id:'color',n:'颜色'}], kw:'生成 uuid hash sha 颜色 色值'},
-  {tab:'text', name:'📝 文本', sub:[{id:'proc',n:'处理'},{id:'stats',n:'统计'},{id:'cc',n:'简繁'},{id:'trans',n:'翻译'},{id:'csv',n:'CSV'},{id:'diff',n:'Diff'}], kw:'排序 去重 统计 简繁 翻译 csv 表格 diff 比较'},
+  {tab:'sql', name:'🗄️ SQL', sub:[{id:'sql-in',n:'IN 生成'},{id:'sql-insert',n:'INSERT 解析'},{id:'sql-fmt',n:'SQL 格式化'}], kw:'sql 数据库 insert 值 列 格式化'},
+  {tab:'encode', name:'🔐 编解码', sub:[{id:'b64',n:'Base64'},{id:'url',n:'URL'},{id:'html',n:'HTML'},{id:'jwt',n:'JWT'},{id:'bc',n:'进制'},{id:'morse',n:'Morse'},{id:'caesar',n:'Caesar'},{id:'bintext',n:'二进制文本'}], kw:'编码 解码 base64 url html jwt 进制 hex bin oct morse caesar 凯撒 二进制'},
+  {tab:'gen', name:'🎲 生成', sub:[{id:'uuid',n:'UUID'},{id:'hash',n:'Hash'},{id:'color',n:'颜色'},{id:'passwd',n:'密码'},{id:'lorem',n:'Lorem'},{id:'rex',n:'正则速查'},{id:'cron',n:'Cron'},{id:'fmt',n:'代码格式化'}], kw:'生成 uuid hash sha 颜色 色值 密码 lorem cron 正则速查 代码格式化 beautify minify js css html'},
+  {tab:'text', name:'📝 文本', sub:[{id:'proc',n:'处理'},{id:'stats',n:'统计'},{id:'cc',n:'简繁'},{id:'case',n:'大小写'},{id:'trans',n:'翻译'},{id:'csv',n:'CSV'},{id:'diff',n:'Diff'},{id:'markdown',n:'Markdown'}], kw:'排序 去重 统计 简繁 大小写 camel snake kebab 翻译 csv 表格 diff 比较 markdown 预览'},
   {tab:'ts', name:'⏱ 时间', sub:[{id:'ts-convert',n:'时间戳'},{id:'ts-calc',n:'日期计算'},{id:'ts-timer',n:'计时器'}], kw:'时间 日期 毫秒 秒 时间戳 计时 倒计时'},
+  {tab:'screen', name:'🖥 屏幕', kw:'屏幕 screen 分辨率 视口 触摸 坏点'},
 ];
 const $tsi = $('tabSearchInput'), $tsr = $('tabSearchResults'), $tsIcon = $('tabSearchIcon');
 function tsOpen() { $tsi.style.display = ''; $tsi.focus(); $tsi.select(); }
@@ -3204,6 +5385,100 @@ $tsr.addEventListener('click', e => {
 });
 $tsr.addEventListener('mouseover', e => { const el = e.target.closest('.tsr-item'); if (el) { $tsr.querySelectorAll('.tsr-item').forEach(x => x.style.background = ''); el.style.background = 'var(--accent)'; el.style.color = '#fff'; }});
 $tsr.addEventListener('mouseout', e => { const el = e.target.closest('.tsr-item'); if (el) { el.style.background = ''; el.style.color = ''; }});
+
+// ═══════════════════════════════════════
+//  ⚙️ 设置面板 + 工具栏固定 + 快捷键 + PWA
+// ═══════════════════════════════════════
+const settingsPanel = $('settingsPanel');
+$('settingsToggle').addEventListener('click', (e) => {
+  e.stopPropagation();
+  settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
+  if (settingsPanel.style.display === 'block') renderSettings();
+});
+$('settingsClose').addEventListener('click', () => settingsPanel.style.display = 'none');
+document.addEventListener('click', e => { if (!e.target.closest('#settingsPanel') && !e.target.closest('#settingsToggle')) settingsPanel.style.display = 'none'; });
+
+const ALL_MODULES = [
+  {id:'json', name:'JSON'}, {id:'http', name:'HTTP'}, {id:'search', name:'🔍 搜索'},
+  {id:'sql', name:'SQL'}, {id:'encode', name:'🔐 编解码'}, {id:'gen', name:'🎲 生成'},
+  {id:'text', name:'📝 文本'}, {id:'ts', name:'⏱ 时间'}, {id:'screen', name:'🖥 屏幕'}
+];
+function getPinned() { try { return JSON.parse(localStorage.getItem('litools_pinned') || '[]'); } catch { return []; } }
+function setPinned(list) { localStorage.setItem('litools_pinned', JSON.stringify(list)); }
+function renderPinnedToolbar() {
+  const bar = $('pinnedToolbar');
+  const pinned = getPinned();
+  if (!pinned.length) { bar.style.display = 'none'; bar.innerHTML = ''; return; }
+  bar.style.display = 'flex';
+  bar.innerHTML = pinned.map(id => {
+    const m = ALL_MODULES.find(x => x.id === id);
+    return `<button class="btn btn-sm" data-pin="${id}" style="padding:3px 10px;font-size:12px;">${m ? m.name : id}</button>`;
+  }).join('');
+  bar.querySelectorAll('[data-pin]').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.pin));
+  });
+}
+function renderSettings() {
+  const pinned = getPinned();
+  $('settingsPinList').innerHTML = ALL_MODULES.map(m => {
+    const chk = pinned.includes(m.id) ? 'checked' : '';
+    return `<label style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;cursor:pointer;"><input type="checkbox" data-pin-mod="${m.id}" ${chk}> ${m.name}</label>`;
+  }).join('');
+  $('settingsPinList').querySelectorAll('[data-pin-mod]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const list = getPinned();
+      if (cb.checked) { if (!list.includes(cb.dataset.pinMod)) list.push(cb.dataset.pinMod); }
+      else { const i = list.indexOf(cb.dataset.pinMod); if (i > -1) list.splice(i, 1); }
+      setPinned(list); renderPinnedToolbar();
+    });
+  });
+  $('settingsShortcuts').innerHTML = [
+    ['Ctrl+K', _('sc_search')], ['Ctrl+Enter', _('sc_format')], ['Esc', _('sc_close')], ['Ctrl+Shift+J', _('sc_bodyfmt')]
+  ].map(([k, d]) => `<div><kbd style="padding:1px 5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-size:10px;">${k}</kbd> ${d}</div>`).join('');
+  const pwaOk = 'serviceWorker' in navigator;
+  $('settingsPwaStatus').textContent = pwaOk ? _('pwa_ok') : _('pwa_no');
+}
+$('settingsExportBtn').addEventListener('click', () => {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('litools_')) data[k] = localStorage.getItem(k);
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'litools-settings.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(_('settingsExported'));
+});
+$('settingsImportBtn').addEventListener('click', () => $('settingsImportFile').click());
+$('settingsImportFile').addEventListener('change', () => {
+  const f = $('settingsImportFile').files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const data = JSON.parse(r.result);
+      let n = 0;
+      Object.entries(data).forEach(([k, v]) => { if (k.startsWith('litools_')) { localStorage.setItem(k, v); n++; } });
+      toast(_('settingsImported').replace('${n}', n));
+      renderPinnedToolbar();
+    } catch { toast(_('err_invalid_json'), 1); }
+  };
+  r.readAsText(f);
+  $('settingsImportFile').value = '';
+});
+renderPinnedToolbar();
+
+// ═══════════════════════════════════════
+//  📶 PWA 离线支持
+// ═══════════════════════════════════════
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('static/sw.js').catch(() => {});
+  });
+}
 
 </script>
 </body>
