@@ -808,13 +808,14 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- 计算器 -->
     <div class="sub-pane" data-sub="calc">
-      <div class="input-row" style="margin-bottom:8px;">
-        <input type="text" id="calcInput" placeholder="输入表达式，如 2**10 + sqrt(144)" spellcheck="false" style="flex:1;font-family:'Cascadia Code',monospace;font-size:14px;" data-lk-pl="pl_calcInput">
-        <button class="btn btn-primary btn-sm" id="calcBtn" data-lk="calcBtn">计算</button>
+      <input type="text" id="calcInput" placeholder="输入表达式，如 2**10 + sqrt(144)" spellcheck="false" style="width:100%;font-family:'Cascadia Code',monospace;font-size:15px;margin-bottom:6px;" data-lk-pl="pl_calcInput">
+      <div id="calcResult" style="font-size:22px;font-weight:700;color:var(--accent);padding:10px 0;min-height:44px;font-family:'Cascadia Code',monospace;border-bottom:1px solid var(--border);margin-bottom:10px;"></div>
+      <div id="calcPad" style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:10px;"></div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button class="btn btn-primary btn-sm" id="calcBtn" data-lk="calcBtn" style="flex:1;">= 计算</button>
         <button class="btn btn-sm" id="calcClearBtn" data-lk="calcClearBtn">清空</button>
       </div>
-      <div id="calcResult" style="font-size:20px;font-weight:700;color:var(--accent);padding:16px 0;min-height:48px;font-family:'Cascadia Code',monospace;"></div>
-      <div id="calcHistory" style="max-height:200px;overflow-y:auto;font-size:12px;color:var(--text-dim);"></div>
+      <div id="calcHistory" style="max-height:160px;overflow-y:auto;font-size:12px;color:var(--text-dim);"></div>
     </div>
   </div>
   <div class="tab-pane" id="p-text">
@@ -3469,6 +3470,32 @@ $('fmtClearBtn').addEventListener('click', () => { $('fmtInput').value = ''; $('
 //  🧮 计算器
 // ═══════════════════════════════════════
 const _calcHistory = [];
+const _calcPadBtns = [
+  ['sin','cos','tan','log','ln'],
+  ['asin','acos','atan','log2','log10'],
+  ['sqrt','cbrt','abs','ceil','floor'],
+  ['7','8','9','(',')'],
+  ['4','5','6','*','/'],
+  ['1','2','3','+','-'],
+  ['0','.','PI','E','^'],
+];
+function calcInsert(val) {
+  const inp = $('calcInput');
+  const s = inp.value;
+  const start = inp.selectionStart, end = inp.selectionEnd;
+  if (val === '×') val = '*'; else if (val === '÷') val = '/';
+  else if (val === '^') val = '**';
+  else if (val === 'ln') val = 'log';
+  inp.value = s.slice(0, start) + val + s.slice(end);
+  inp.focus();
+  const pos = start + val.length;
+  inp.setSelectionRange(pos, pos);
+}
+function calcBackspace() {
+  const inp = $('calcInput');
+  const s = inp.value, start = inp.selectionStart;
+  if (start > 0) { inp.value = s.slice(0, start - 1) + s.slice(start); inp.focus(); inp.setSelectionRange(start - 1, start - 1); }
+}
 function calcEval(expr) {
   const safe = expr.replace(/\s+/g, '').replace(/×/g, '*').replace(/÷/g, '/').replace(/，/g, ',');
   const fn = new Function(
@@ -3485,6 +3512,7 @@ function calcDo() {
     const result = calcEval(v);
     const display = typeof result === 'number' ? (Number.isFinite(result) ? result : String(result)) : result;
     $('calcResult').textContent = display;
+    $('calcResult').style.color = '';
     _calcHistory.unshift({ expr: v, result: display });
     if (_calcHistory.length > 20) _calcHistory.pop();
     $('calcHistory').innerHTML = _calcHistory.map(h => `<div style="padding:2px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="document.getElementById('calcInput').value='${h.expr.replace(/'/g,"\\'")}';calcDo();"><span style="color:var(--text-dim);">${escHtml(h.expr)} =</span> <span style="color:var(--accent);">${escHtml(String(h.result))}</span></div>`).join('');
@@ -3494,6 +3522,28 @@ function calcDo() {
     setTimeout(() => { $('calcResult').style.color = ''; }, 2000);
   }
 }
+// 生成键盘
+(function() {
+  const pad = $('calcPad');
+  if (!pad) return;
+  let html = '';
+  for (const row of _calcPadBtns) {
+    for (const btn of row) {
+      const isOp = ['sin','cos','tan','log','ln','asin','acos','atan','log2','log10','sqrt','cbrt','abs','ceil','floor'].includes(btn);
+      const bg = isOp ? 'var(--surface2)' : /[0-9.]/.test(btn) ? 'var(--surface)' : 'var(--accent-dim)';
+      html += `<button type="button" class="btn btn-sm calc-key" data-val="${btn}" style="padding:8px 2px;font-size:13px;background:${bg};min-width:0;">${btn}</button>`;
+    }
+  }
+  html += `<button type="button" class="btn btn-sm calc-key" data-val="backspace" style="padding:8px 2px;font-size:13px;background:var(--red);color:#fff;min-width:0;">⌫</button>`;
+  pad.innerHTML = html;
+  pad.querySelectorAll('.calc-key').forEach(b => {
+    b.addEventListener('click', () => {
+      const v = b.dataset.val;
+      if (v === 'backspace') calcBackspace();
+      else calcInsert(v);
+    });
+  });
+})();
 $('calcBtn').addEventListener('click', calcDo);
 $('calcInput').addEventListener('keydown', e => { if (e.key === 'Enter') calcDo(); });
 $('calcClearBtn').addEventListener('click', () => { $('calcInput').value = ''; $('calcResult').textContent = ''; $('calcHistory').innerHTML = ''; _calcHistory.length = 0; });
