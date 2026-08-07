@@ -2013,7 +2013,7 @@ function getByPath(obj, path) { let c = obj; for (const s of path) { if (c == nu
 function encPath(p) { return encodeURIComponent(JSON.stringify(p)); }
 function decPath(s) { return JSON.parse(decodeURIComponent(s)); }
 
-function jsonTree(val, path) {
+function jsonTree(val, path, lazy) {
   if (val === null) return `<span data-jpath="${encPath(path)}" style="color:var(--jt-null,#9c27b0);">null</span>`;
   if (typeof val === 'boolean') return `<span data-jpath="${encPath(path)}" style="color:var(--jt-bool,#d32f2f);">${val}</span>`;
   if (typeof val === 'number') return `<span data-jpath="${encPath(path)}" style="color:var(--jt-num,#1565c0);">${val}</span>`;
@@ -2023,6 +2023,10 @@ function jsonTree(val, path) {
   const keys = Object.keys(val);
   if (keys.length === 0) return isArr ? '<span style="color:#888;">[]</span>' : '<span style="color:#888;">{}</span>';
   const badge = `<span class="jt-badge">${isArr ? val.length + _('json_items') : keys.length + _('json_keys')}</span>`;
+  // 懒加载：折叠状态不渲染子节点，只保存数据路径
+  if (lazy) {
+    return `<span class="jt-toggle" data-jpath="${encPath(path)}" data-jpath-children="${encPath(path)}" data-jpath-type="${isArr?'array':'object'}"><span class="jt-fold-indicator">+</span><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="color:#888;">…</span><span class="jt-body" style="display:none;"></span><span class="jt-brace">${isArr?']':'}'}</span></span>`;
+  }
   return `<span class="jt-toggle" data-jpath="${encPath(path)}"><span class="jt-fold-indicator">-</span><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="display:none;color:#888;">…</span><span class="jt-body">${isArr
     ? val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('')
     : keys.map((k,i) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<keys.length-1?',':''}</div>`).join('')
@@ -2035,7 +2039,8 @@ function renderJSONResult(v, loose) {
     if (v.length > JSON_TREE_LIMIT) { const d = JSON.parse(v); $('jsonResult').textContent = JSON.stringify(d, null, 2); _jsonData = null; return; }
     const r = JSON.parse(loose ? looseTransform(v) : v);
     _jsonData = r;
-    $('jsonResult').innerHTML = `<div class="jt-root">${jsonTree(r, [])}</div>`;
+    // 使用懒加载：第一层展开，其余折叠
+    $('jsonResult').innerHTML = `<div class="jt-root">${jsonTree(r, [], true)}</div>`;
   } catch (e) {
     if (v.length > JSON_TREE_LIMIT) $('jsonResult').textContent = `⚠ ${e.message}`;
     else $('jsonResult').innerHTML = fmtJSONError(v, e);
@@ -2051,6 +2056,20 @@ document.addEventListener('click', e => {
   if (!t) return;
   const b = t.querySelector('.jt-body'), el = t.querySelector('.jt-ellipsis');
   const hide = b.style.display !== 'none';
+  // 懒加载：展开时如果子节点为空，动态加载
+  if (!hide && b.innerHTML === '' && t.dataset.jpathChildren && _jsonData) {
+    try {
+      const path = decPath(t.dataset.jpathChildren);
+      const val = getByPath(_jsonData, path);
+      const isArr = t.dataset.jpathType === 'array';
+      const keys = isArr ? val : Object.keys(val);
+      if (isArr) {
+        b.innerHTML = val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('');
+      } else {
+        b.innerHTML = keys.map((k,i) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<keys.length-1?',':''}</div>`).join('');
+      }
+    } catch(err) { console.error('lazy load error:', err); }
+  }
   b.style.display = hide ? 'none' : '';
   el.style.display = hide ? '' : 'none';
   indicator.textContent = hide ? '+' : '-';
@@ -2100,6 +2119,22 @@ ctxMenu.addEventListener('click', e => {
       copy(action === 'copy-val' ? (typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val)) : path.map(p => typeof p === 'number' ? `[${p}]` : `.${p}`).join('').replace(/^\./, ''));
     } catch(e2) { console.error('ctxmenu error:', e2); toast(_('clipboard_err'), 1); }
   } else if (action === 'expand-all') {
+    // 先加载所有懒加载节点
+    document.querySelectorAll('#jsonResult .jt-toggle[data-jpath-children]').forEach(t => {
+      const b = t.querySelector('.jt-body');
+      if (b && b.innerHTML === '' && t.dataset.jpathChildren && _jsonData) {
+        try {
+          const path = decPath(t.dataset.jpathChildren);
+          const val = getByPath(_jsonData, path);
+          const isArr = t.dataset.jpathType === 'array';
+          if (isArr) {
+            b.innerHTML = val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('');
+          } else {
+            b.innerHTML = Object.keys(val).map((k,i,a) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<a.length-1?',':''}</div>`).join('');
+          }
+        } catch(err) {}
+      }
+    });
     document.querySelectorAll('#jsonResult .jt-body').forEach(b => b.style.display = '');
     document.querySelectorAll('#jsonResult .jt-ellipsis').forEach(e => e.style.display = 'none');
     document.querySelectorAll('#jsonResult .jt-fold-indicator').forEach(i => i.textContent = '-');
@@ -2339,23 +2374,27 @@ $('jsonUnescapeBtn').addEventListener('click', () => {
 
 // 结果区搜索 + 点击高亮路径
 let _jsonSearchTimer;
+const JSON_SEARCH_LIMIT = 5000; // 搜索高亮节点上限
 $('jsonResultSearch').addEventListener('input', () => {
   clearTimeout(_jsonSearchTimer);
   _jsonSearchTimer = setTimeout(() => {
     const keyword = $('jsonResultSearch').value.trim();
     document.querySelectorAll('#jsonResult .jt-highlight').forEach(el => el.classList.remove('jt-highlight'));
     if (!keyword) return;
-    const walker = document.createTreeWalker($('jsonResult'), NodeFilter.SHOW_TEXT);
     const regex = new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    while (walker.nextNode()) {
+    const walker = document.createTreeWalker($('jsonResult'), NodeFilter.SHOW_TEXT);
+    let count = 0;
+    while (walker.nextNode() && count < JSON_SEARCH_LIMIT) {
       const node = walker.currentNode;
+      regex.lastIndex = 0;
       if (regex.test(node.textContent)) {
         const span = document.createElement('span');
         span.innerHTML = escHtml(node.textContent).replace(regex, m => `<span class="jt-highlight">${m}</span>`);
         node.parentNode.replaceChild(span, node);
+        count++;
       }
     }
-  }, 200);
+  }, 300);
 });
 
 // 点击显示路径
