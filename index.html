@@ -178,8 +178,11 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
   max-height: calc(100vh - 200px);
   overflow: auto;
 }
-.jt-toggle { cursor: pointer; }
-.jt-toggle:hover > .jt-brace { color: var(--accent); }
+.jt-toggle { cursor: default; position: relative; }
+.jt-fold-indicator { display:inline-flex; width:14px; height:14px; align-items:center; justify-content:center; font-size:12px; font-weight:bold; margin-left:4px; margin-right:2px; cursor:pointer; border-radius:3px; transition: all 0.15s; opacity:0; color:var(--text-dim); user-select:none; }
+.jt-toggle:hover > .jt-fold-indicator { opacity:1; }
+.jt-fold-indicator:hover { background:var(--accent-dim); color:var(--accent); }
+.jt-brace { cursor: text; }
 .jt-badge { font-size:11px; color:var(--text-dim); margin-left:4px; font-weight:400; }
 #srchEditor:empty:before, #rexEditor:empty:before { content:attr(data-lk-pl); color:var(--text-dim); pointer-events:none; }
 /* Sub-tabs */
@@ -479,7 +482,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
   <!-- { } JSON -->
   <div class="tab-pane active" id="p-json">
     <div id="jsonSplit" style="display:flex;gap:0;min-height:60vh;">
-      <div id="jsonLeft" style="display:flex;flex:1;min-width:200px;overflow:hidden;">
+      <div id="jsonLeft" style="display:flex;flex:0 0 35%;min-width:200px;overflow:hidden;">
         <div id="jsonLines" style="padding:9px 6px 9px 8px;background:var(--surface);border:1px solid var(--border);border-right:none;border-radius:var(--radius) 0 0 var(--radius);overflow:hidden;text-align:right;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.5;color:var(--text-dim);user-select:none;min-width:36px;"></div>
         <textarea id="jsonInput" rows="16" placeholder="粘贴 JSON" spellcheck="false" style="flex:1;min-height:70vh;border-radius:0 var(--radius) var(--radius) 0;" data-lk-pl="pl_jsonInput"></textarea>
       </div>
@@ -494,11 +497,11 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn" id="jsonLooseBtn" data-lk="jsonLooseBtn">宽松解析</button>
         <button class="btn" id="jsonYamlBtn" data-lk="jsonYamlBtn">→ YAML</button>
         <button class="btn" id="jsonXmlBtn" data-lk="jsonXmlBtn">→ XML</button>
-        <button class="btn" id="xmlJsonBtn" data-lk="xmlJsonBtn">XML →</button>
         <button class="btn" id="jsonCodeBtn" data-lk="jsonCodeBtn">→ Code</button>
         <button class="btn" id="jsonSchemaBtn" data-lk="jsonSchemaBtn">Schema</button>
         <button class="btn" id="jsonMergeBtn" data-lk="jsonMergeBtn">合并</button>
         <button class="btn" id="jsonDiffBtn" data-lk="jsonDiffBtn">对比</button>
+        <button class="btn" id="jsonUnescapeBtn" data-lk="jsonUnescapeBtn">去除转义</button>
         <button class="btn" id="jsonClearBtn" data-lk="jsonClearBtn">清空</button>
         <button class="btn" id="jsonFileBtn" data-lk="jsonFileBtn">📂 打开文件</button>
       </div>
@@ -1177,8 +1180,8 @@ const _L = {
   jsonResult:{zh:'结果',en:'Result'}, jsonFormatBtn:{zh:'格式化 (Ctrl+Enter)',en:'Format (Ctrl+Enter)'},
   jsonWorkerHint:{zh:'⏳ 正在后台 Worker 中处理大数据…',en:'⏳ Processing in background worker…'},
   jsonCompressBtn:{zh:'压缩',en:'Compact'}, jsonLooseBtn:{zh:'宽松解析',en:'Loose'},
-  jsonSchemaBtn:{zh:'Schema',en:'Schema'}, jsonMergeBtn:{zh:'合并',en:'Merge'}, jsonDiffBtn:{zh:'对比',en:'Diff'},
-  jsonXmlBtn:{zh:'→ XML',en:'→ XML'}, xmlJsonBtn:{zh:'XML →',en:'XML →'},   jsonCodeBtn:{zh:'→ Code',en:'→ Code'}, json_code_lang:{zh:'TypeScript / Python / Go?',en:'TypeScript / Python / Go?'}, json_code_invalid:{zh:'请输入 ts/python/go',en:'Enter ts/python/go'},
+  jsonSchemaBtn:{zh:'Schema',en:'Schema'}, jsonMergeBtn:{zh:'合并',en:'Merge'}, jsonDiffBtn:{zh:'对比',en:'Diff'}, jsonUnescapeBtn:{zh:'去除转义',en:'Unescape'},
+  jsonXmlBtn:{zh:'→ XML',en:'→ XML'}, jsonCodeBtn:{zh:'→ Code',en:'→ Code'}, json_code_lang:{zh:'TypeScript / Python / Go?',en:'TypeScript / Python / Go?'}, json_code_invalid:{zh:'请输入 ts/python/go',en:'Enter ts/python/go'},
   copy_val:{zh:'复制值',en:'Copy value'}, copy_path:{zh:'复制路径',en:'Copy path'},
   genTxt:{zh:'生成',en:'Create'}, genCount:{zh:'个',en:''},
   uuidUpper:{zh:'大写',en:'Uppercase'}, uuidNoDash:{zh:'无连字符',en:'No Dashes'},
@@ -1294,7 +1297,7 @@ const _L = {
   res_uuid:{zh:'结果',en:'Result'},
   // stat labels
   stat_file:{zh:'${n} 字符 · ${w} 词 · ${l} 行',en:'${n} chars · ${w} words · ${l} lines'},
-  copied:{zh:'已复制',en:'Copied'}, downloaded:{zh:'已下载',en:'Downloaded'}, no_content:{zh:'没有内容',en:'No content'},
+  copied:{zh:'已复制',en:'Copied'}, downloaded:{zh:'已下载',en:'Downloaded'}, no_content:{zh:'没有内容',en:'No content'}, done:{zh:'完成',en:'Done'},
   no_input:{zh:'请输入内容',en:'Enter content'}, no_match:{zh:'无匹配',en:'No match'},
   sent_search:{zh:'已发送到搜索',en:'Sent to Search'},
   sent_json:{zh:'已发送到 JSON',en:'Sent to JSON'},
@@ -2011,7 +2014,7 @@ function jsonTree(val, path) {
   const keys = Object.keys(val);
   if (keys.length === 0) return isArr ? '<span style="color:#888;">[]</span>' : '<span style="color:#888;">{}</span>';
   const badge = `<span class="jt-badge">${isArr ? val.length + _('json_items') : keys.length + _('json_keys')}</span>`;
-  return `<span class="jt-toggle" data-jpath="${encPath(path)}"><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="display:none;color:#888;">…</span><span class="jt-body">${isArr
+  return `<span class="jt-toggle" data-jpath="${encPath(path)}"><span class="jt-fold-indicator">-</span><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="display:none;color:#888;">…</span><span class="jt-body">${isArr
     ? val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('')
     : keys.map((k,i) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<keys.length-1?',':''}</div>`).join('')
   }</span><span class="jt-brace">${isArr?']':'}'}</span></span>`;
@@ -2032,12 +2035,16 @@ function renderJSONResult(v, loose) {
 }
 
 document.addEventListener('click', e => {
-  const t = e.target.closest('.jt-toggle');
+  // 只有点击 +/- 折叠指示器才触发折叠
+  const indicator = e.target.closest('.jt-fold-indicator');
+  if (!indicator) return;
+  const t = indicator.closest('.jt-toggle');
   if (!t) return;
   const b = t.querySelector('.jt-body'), el = t.querySelector('.jt-ellipsis');
   const hide = b.style.display !== 'none';
   b.style.display = hide ? 'none' : '';
   el.style.display = hide ? '' : 'none';
+  indicator.textContent = hide ? '+' : '-';
 });
 
 const ctxMenu = document.createElement('div');
@@ -2288,6 +2295,30 @@ $('jsonClearBtn').addEventListener('click', () => { $('jsonInput').value = ''; $
 $('jsonInput').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) renderJSONResult($('jsonInput').value, true); });
 setupFileInput({ btnId: 'jsonFileBtn', targetEl: $('jsonInput'), accept: '.json,.txt', onLoad: text => renderJSONResult(text, true) });
 
+// 去除转义
+$('jsonUnescapeBtn').addEventListener('click', () => {
+  const v = $('jsonInput').value;
+  if (!v.trim()) return;
+  try {
+    const obj = JSON.parse(v);
+    const str = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
+    // 对格式化后的字符串进行去转义处理
+    const unescaped = str.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
+    $('jsonInput').value = unescaped;
+    renderJSONResult(unescaped, true);
+    toast(_('done'));
+  } catch(e) {
+    // 如果不是合法 JSON，对原文进行去转义
+    let result = v;
+    result = result.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
+    result = result.replace(/\\"/g, '"');
+    result = result.replace(/\\\\/g, '\\');
+    $('jsonInput').value = result;
+    renderJSONResult(result, true);
+    toast(_('done'));
+  }
+});
+
 // JSON → XML
 function jsonToXml(obj, rootTag, indent) {
   indent = indent || 0;
@@ -2353,17 +2384,6 @@ function xmlToJson(xmlStr) {
   }
   return nodeToObj(doc.documentElement);
 }
-$('xmlJsonBtn').addEventListener('click', () => {
-  const v = $('jsonInput').value.trim();
-  if (!v) { toast(_('err_input_json'), 1); return; }
-  try {
-    const obj = xmlToJson(v);
-    const json = JSON.stringify(obj, null, 2);
-    $('jsonResult').textContent = json;
-    addHistory('json', 'XML→JSON', v.slice(0, 100));
-  } catch (e) { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">⚠ ${escHtml(e.message)}</div>`; }
-});
-
 // JSON → Code (TS/Python/Go)
 function guessType(v, name) {
   if (v === null) return 'null';
