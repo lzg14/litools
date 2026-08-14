@@ -308,11 +308,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 .toast.err { background: var(--red); }
 
 /* HTTP method colors */
-#httpMethod option[value="GET"] { color: #2e7d32; }
-#httpMethod option[value="POST"] { color: #1565c0; }
-#httpMethod option[value="PUT"] { color: #e65100; }
-#httpMethod option[value="PATCH"] { color: #7b1fa2; }
-#httpMethod option[value="DELETE"] { color: #c62828; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 /* Collapsible sections */
 .collapsible-header {
@@ -333,14 +328,12 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <h1 style="font-size:18px;font-weight:700;white-space:nowrap;flex-shrink:0;">🧰 litools</h1>
     <div class="tabs" id="tabs" style="flex:1;border:none;margin:0;min-width:0;">
     <div class="tab active" data-tab="json" data-lk="tab_json">{ } JSON</div>
-    <div class="tab" data-tab="http" data-lk="tab_http">🌐 HTTP</div>
     <div class="tab" data-tab="search" data-lk="tab_search">🔍 搜索</div>
     <div class="tab" data-tab="sql" data-lk="tab_sql">🗄️ SQL</div>
     <div class="tab" data-tab="encode" data-lk="tab_encode">🔐 编解码</div>
     <div class="tab" data-tab="gen" data-lk="tab_gen">🎲 生成</div>
     <div class="tab" data-tab="text" data-lk="tab_text">📝 文本</div>
     <div class="tab" data-tab="ts" data-lk="tab_ts">⏱ 时间</div>
-    <div class="tab" data-tab="screen" data-lk="tab_screen">🖥 屏幕</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
       <span id="themeToggle" style="cursor:pointer;font-size:16px;" title="切换主题" data-lk-tl="tl_themeToggle">🌙</span>
@@ -980,126 +973,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
   </div>
 
-  <!-- 🖥 屏幕检测 -->
-  <div class="tab-pane" id="p-screen">
-    <div class="btn-group" style="margin-bottom:12px;">
-      <button class="btn btn-primary" id="screenRefreshBtn" data-lk="screenRefreshBtn">🔄 刷新数据</button>
-      <button class="btn" id="screenDeadPixelBtn" style="background:var(--red);color:#fff;" data-lk="screenDeadPixelBtn">🔍 坏点检测</button>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px;" data-lk="screen_title_screen">🖥 屏幕</div>
-        <div class="result-item"><span class="label" data-lk="scrRes_label">逻辑分辨率</span><span class="value" id="scrRes">—</span><button class="copy-btn-sm" data-target="scrRes">📋</button></div>
-        <div class="result-item"><span class="label" data-lk="physRes_label">物理分辨率</span><span class="value" id="physRes">—</span><button class="copy-btn-sm" data-target="physRes">📋</button></div>
-        <div class="result-item"><span class="label" data-lk="scrAvail_label">可用空间</span><span class="value" id="scrAvail">—</span><button class="copy-btn-sm" data-target="scrAvail">📋</button></div>
-        <div class="result-item"><span class="label" data-lk="orientation_label">屏幕方向</span><span class="value" id="orientation">—</span><button class="copy-btn-sm" data-target="orientation">📋</button></div>
-        <div class="result-item"><span class="label" data-lk="dprDepth_label">像素比 / 深度</span><span class="value" id="dprDepth">—</span><button class="copy-btn-sm" data-target="dprDepth">📋</button></div>
-        <div class="result-item"><span class="label" data-lk="touchInfo_label">触摸</span><span class="value" id="touchInfo">—</span><button class="copy-btn-sm" data-target="touchInfo">📋</button></div>
-      </div>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px;" data-lk="screen_title_window">📐 窗口</div>
-        <div class="result-item"><span class="label" data-lk="winInner_label">视口（内）</span><span class="value" id="winInner">—</span><button class="copy-btn-sm" data-target="winInner">📋</button></div>
-        <div class="result-item"><span class="label" data-lk="winOuter_label">窗口（外）</span><span class="value" id="winOuter">—</span><button class="copy-btn-sm" data-target="winOuter">📋</button></div>
-        <div class="result-item"><span class="label" data-lk="winPos_label">屏幕位置</span><span class="value" id="winPos">—</span><button class="copy-btn-sm" data-target="winPos">📋</button></div>
-        <div class="result-item"><span class="label" data-lk="cssVp_label">CSS 视口</span><span class="value" id="cssVp">—</span><button class="copy-btn-sm" data-target="cssVp">📋</button></div>
-        <div class="result-item"><span class="label" data-lk="scrollPos_label">页面滚动</span><span class="value" id="scrollPos">—</span><button class="copy-btn-sm" data-target="scrollPos">📋</button></div>
-        <div class="result-item"><span class="label" data-lk="docSize_label">文档尺寸</span><span class="value" id="docSize">—</span><button class="copy-btn-sm" data-target="docSize">📋</button></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 🌐 HTTP -->
-  <div class="tab-pane" id="p-http">
-    <div class="input-row" style="align-items:stretch;">
-      <select id="httpMethod" style="width:70px;padding:6px 4px;flex:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;font-weight:600;">
-        <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>HEAD</option><option>OPTIONS</option>
-      </select>
-      <input type="text" id="httpUrl" placeholder="请求 URL 或粘贴 curl 命令" spellcheck="false" style="flex:1;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;" data-lk-pl="pl_httpUrl">
-      <button class="btn" id="httpCurlBtn" title="从 curl 解析" style="font-size:12px;padding:6px 10px;" data-lk-tl="tl_httpCurl">📋 curl</button>
-      <button class="btn" id="httpCollBtn" title="请求集合" style="font-size:12px;padding:6px 10px;" data-lk-tl="tl_httpColl">📁 集合</button>
-      <button class="btn" id="httpEnvBtn" title="环境变量" style="font-size:12px;padding:6px 10px;" data-lk-tl="tl_httpEnv">🔧 环境</button>
-      <button class="btn btn-primary" id="httpSendBtn" style="padding:6px 16px;font-weight:600;min-width:80px;" data-lk="httpSendBtn">发送</button>
-      <button class="btn" id="httpClearBtn" style="padding:6px 10px;" data-lk="httpClearBtn">清空</button>
-    </div>
-    <div id="httpCurlWrap" style="display:none;margin-bottom:6px;">
-      <textarea id="httpCurlInput" rows="4" placeholder="粘贴 curl 命令" spellcheck="false" style="width:100%;font-size:12px;" data-lk-pl="pl_httpCurl"></textarea>
-      <button class="btn btn-sm btn-primary" id="httpCurlParseBtn" style="margin-top:4px;" data-lk="httpCurlParseBtn">解析</button>
-    </div>
-    <!-- 请求集合面板 -->
-    <div id="httpCollWrap" style="display:none;margin-bottom:6px;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="font-weight:600;font-size:12px;" data-lk="httpColl_title">📁 请求集合</span>
-        <button class="btn btn-sm btn-primary" id="httpCollSaveBtn" data-lk="httpCollSaveBtn">保存当前</button>
-        <button class="btn btn-sm" id="httpCollCloseBtn" style="margin-left:auto;">✕</button>
-      </div>
-      <div id="httpCollList" style="max-height:200px;overflow-y:auto;font-size:12px;"></div>
-    </div>
-    <!-- 环境变量面板 -->
-    <div id="httpEnvWrap" style="display:none;margin-bottom:6px;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="font-weight:600;font-size:12px;" data-lk="httpEnv_title">🔧 环境变量</span>
-        <select id="httpEnvSelect" style="font-size:11px;padding:2px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);"></select>
-        <button class="btn btn-sm" id="httpEnvAddBtn" data-lk="httpEnvAddBtn">+ 添加</button>
-        <button class="btn btn-sm" id="httpEnvCloseBtn" style="margin-left:auto;">✕</button>
-      </div>
-      <div id="httpEnvList" style="max-height:150px;overflow-y:auto;font-size:12px;"></div>
-      <div style="margin-top:6px;font-size:11px;color:var(--text-dim);" data-lk="httpEnv_hint">在 URL/Headers/Body 中使用 {{变量名}} 语法</div>
-    </div>
-    <div class="collapsible-header" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed');">
-      <span class="arrow">▼</span> <span data-lk="httpConfig_header">请求配置</span>
-    </div>
-    <div class="collapsible-body" style="max-height:50vh;">
-    <div class="sub-tabs" style="margin-top:0;">
-      <div class="sub-tab active" data-sub="headers" data-lk="sub_headers">请求头</div>
-      <div class="sub-tab" data-sub="body" data-lk="sub_body">请求体</div>
-      <div class="sub-tab" data-sub="params" data-lk="sub_params">查询参数</div>
-      <div class="sub-tab" data-sub="cookies" data-lk="sub_cookies">Cookie</div>
-    </div>
-    <div class="sub-pane active" data-sub="headers">
-      <div style="display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap;">
-        <button class="btn btn-sm http-hdr-ins" data-val="Content-Type: application/json">JSON</button>
-        <button class="btn btn-sm http-hdr-ins" data-val="Content-Type: application/x-www-form-urlencoded">Form</button>
-        <button class="btn btn-sm http-hdr-ins" data-val="Authorization: Bearer ">Auth</button>
-        <button class="btn btn-sm http-hdr-ins" data-val="Accept: application/json">Accept JSON</button>
-      </div>
-      <textarea id="httpHeaders" rows="3" placeholder="Content-Type: application/json&#10;Authorization: Bearer token" spellcheck="false" style="width:100%;font-size:12px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="httpHeaders"></textarea>
-    </div>
-    <div class="sub-pane" data-sub="body">
-      <div style="display:flex;gap:4px;margin-bottom:4px;align-items:center;">
-        <button class="btn btn-sm" id="httpBodyFmtBtn" title="格式化 JSON (Ctrl+Shift+J)" data-lk-tl="tl_httpBodyFmt" data-lk="httpBodyFmtBtn">🔧 格式化</button>
-        <button class="btn btn-sm" id="httpBodyMinBtn" title="压缩 JSON" data-lk-tl="tl_httpBodyMin" data-lk="httpBodyMinBtn">📦 压缩</button>
-        <span style="font-size:11px;color:var(--text-dim);margin-left:auto;" id="httpBodyInfo"></span>
-      </div>
-      <textarea id="httpBody" rows="3" placeholder='{"key": "value"}' spellcheck="false" style="width:100%;font-size:12px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="pl_httpBody"></textarea>
-    </div>
-    <div class="sub-pane" data-sub="params">
-      <textarea id="httpParams" rows="3" placeholder="每行一个 Key: Value&#10;page: 1&#10;limit: 20" spellcheck="false" style="width:100%;font-size:12px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="httpParams"></textarea>
-    </div>
-    <div class="sub-pane" data-sub="cookies">
-      <textarea id="httpCookies" rows="3" placeholder="每行一个 Key: Value&#10;sessionId: abc123" spellcheck="false" style="width:100%;font-size:12px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="httpCookies"></textarea>
-    </div>
-    </div>
-    <!-- 响应区 -->
-    <div style="margin-top:8px;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">
-        <span style="font-size:12px;color:var(--text-dim);font-weight:500;" data-lk="httpTitle">响应</span>
-        <span id="httpStatus" style="font-size:12px;font-weight:600;"></span>
-        <span id="httpMeta" style="font-size:11px;color:var(--text-dim);"></span>
-        <div id="httpResActions" style="margin-left:auto;display:flex;gap:4px;"></div>
-      </div>
-      <div class="sub-tabs" style="margin-bottom:0;border-bottom-width:1px;">
-        <div class="sub-tab active" data-sub="resp-body" style="font-size:11px;padding:3px 10px;" data-lk="resp_body">响应体</div>
-        <div class="sub-tab" data-sub="resp-headers" style="font-size:11px;padding:3px 10px;" data-lk="resp_headers">响应头</div>
-      </div>
-      <div class="sub-pane active" data-sub="resp-body">
-        <div class="result-box" id="httpResult" style="min-height:25vh;max-height:50vh;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-all;overflow:auto;" data-lk="httpResult">等待请求<button class="copy-btn" data-lk="copy">复制</button></div>
-      </div>
-      <div class="sub-pane" data-sub="resp-headers">
-        <div id="httpRespHeaders" style="font-size:12px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;line-height:1.8;max-height:30vh;overflow:auto;padding:8px 0;"></div>
-      </div>
-      <div class="stat-line" id="httpStat"></div>
-    </div>
-  </div>
 
   <!-- 📋 CSV → 移入文本 tab -->
 
@@ -1146,9 +1019,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
   <div id="historyList" style="overflow-y:auto;max-height:calc(70vh - 44px);"></div>
 </div>
 
-<!-- 坏点检测全屏覆盖 -->
-<div id="deadPixelOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;cursor:pointer;"></div>
-
 <script>
 const $ = id => document.getElementById(id);
 
@@ -1157,7 +1027,7 @@ const _L = {
   tab_search:{zh:'🔍 搜索',en:'🔍 Search'}, tab_ts:{zh:'⏱ 时间',en:'⏱ Time'}, sub_ts_convert:{zh:'⏱ 时间戳',en:'⏱ Timestamp'}, sub_ts_calc:{zh:'🔢 日期计算',en:'🔢 Date Calc'}, sub_ts_timer:{zh:'⏱ 计时器',en:'⏱ Timer'},
   tab_encode:{zh:'🔐 编解码',en:'🔐 Encode/Decode'}, tab_gen:{zh:'🎲 生成',en:'🎲 Generate'},
   tab_text:{zh:'📝 文本',en:'📝 Text'}, tab_color:{zh:'🎨 颜色',en:'🎨 Color'}, tab_diff:{zh:'📑 Diff',en:'📑 Diff'},
-  tab_json:{zh:'{ } JSON',en:'{ } JSON'}, tab_http:{zh:'🌐 HTTP',en:'🌐 HTTP'},
+  tab_json:{zh:'{ } JSON',en:'{ } JSON'},
   tab_sql:{zh:'🗄️ SQL',en:'🗄️ SQL'},
   sub_sql_in:{zh:'🗄️ IN 生成',en:'🗄️ IN Generator'}, sub_sql_insert:{zh:'📋 INSERT 解析',en:'📋 INSERT Parser'}, sub_sql_fmt:{zh:'✨ SQL 格式化',en:'✨ SQL Formatter'},
   sub_bc:{zh:'🔢 进制',en:'🔢 Base Conv'}, sub_csv:{zh:'📋 CSV',en:'📋 CSV'}, sub_diff:{zh:'📑 Diff',en:'📑 Diff'}, sub_color:{zh:'🎨 颜色',en:'🎨 Color'},
@@ -1170,9 +1040,7 @@ const _L = {
   sub_rex:{zh:'◎ 正则速查',en:'◎ Regex Cheat'}, sub_cron:{zh:'⏰ Cron',en:'⏰ Cron'},   sub_fmt:{zh:'🔧 代码格式化',en:'🔧 Code Formatter'}, sub_calc:{zh:'🧮 计算器',en:'🧮 Calculator'},
   rexExplainBtn:{zh:'解释',en:'Explain'}, pl_rexExplainInput:{zh:'输入正则表达式，如 \\d{4}-\\d{2}-\\d{2}',en:'Enter regex, e.g. \\d{4}-\\d{2}-\\d{2}'},
   sub_proc:{zh:'📝 处理',en:'📝 Process'}, sub_stats:{zh:'📊 统计',en:'📊 Stats'},
-  sub_cc:{zh:'🀄 简繁',en:'🀄 Chinese'}, sub_case:{zh:'🔄 大小写',en:'🔄 Case'}, sub_headers:{zh:'请求头',en:'Headers'},
-  sub_body:{zh:'请求体',en:'Body'}, sub_params:{zh:'查询参数',en:'Params'},
-  sub_cookies:{zh:'Cookie',en:'Cookie'},
+  sub_cc:{zh:'🀄 简繁',en:'🀄 Chinese'}, sub_case:{zh:'🔄 大小写',en:'🔄 Case'},
   tsNowBtn:{zh:'当前',en:'Now'}, tsClearBtn:{zh:'清空',en:'Clear'},
   jsonPathBtn:{zh:'查询',en:'Query'}, jsonPathInput:{zh:'JSONPath 查询，如 $.store.book[*].title',en:'JSONPath e.g. $.store.book[*].title'},
   sqlResult:{zh:'结果',en:'Result'}, sqlGenBtn:{zh:'生成 IN',en:'Generate IN'}, sqlInsertParseBtn:{zh:'解析',en:'Parse'}, sql_insert_title:{zh:'INSERT 语句',en:'INSERT Statement'},
@@ -1299,17 +1167,11 @@ const _L = {
   pl_bintextInput:{zh:'输入文本或二进制（每字符 8 位，UTF-8 多字节）',en:'Enter text or binary (8-bit per char, UTF-8 multi-byte)'},
   pl_diffLeft:{zh:'原文本',en:'Original text'},
   pl_diffRight:{zh:'新文本',en:'New text'},
-  pl_httpUrl:{zh:'请求 URL 或粘贴 curl 命令',en:'URL or paste curl command'},
-  pl_httpCurl:{zh:'粘贴 curl 命令',en:'Paste curl command'},
-  pl_httpBody:{zh:'{"key": "value"}',en:'{"key": "value"}'},
   pl_csvInput:{zh:'粘贴 CSV 文本，或拖入 .csv 文件\\n自动检测分隔符（逗号/制表符）',en:'Paste CSV text or drop .csv file'},
   // titles
   tl_themeToggle:{zh:'切换主题',en:'Toggle theme'},
   tl_langToggle:{zh:'切换语言',en:'Toggle language'},
   tl_tabSearch:{zh:'搜索页签 (Ctrl+K)',en:'Search tabs (Ctrl+K)'},
-  tl_httpCurl:{zh:'从 curl 解析',en:'Parse from curl'},
-  tl_httpSearch:{zh:'🔍 搜索',en:'🔍 Search'},
-  tl_httpJson:{zh:'{ } JSON',en:'{ } JSON'},
   // result defaults (for static fallback)
   res_json:{zh:'结果',en:'Result'},
   res_uuid:{zh:'结果',en:'Result'},
@@ -1319,15 +1181,11 @@ const _L = {
   no_input:{zh:'请输入内容',en:'Enter content'}, no_match:{zh:'无匹配',en:'No match'},
   sent_search:{zh:'已发送到搜索',en:'Sent to Search'},
   sent_json:{zh:'已发送到 JSON',en:'Sent to JSON'},
-  waiting_result:{zh:'等待输入',en:'Waiting'}, waiting_http:{zh:'等待请求',en:'Waiting'},
-  jsonEmpty:{zh:'结果',en:'Result'}, httpWaiting:{zh:'等待请求',en:'Waiting'},
+  waiting_result:{zh:'等待输入',en:'Waiting'},
+  jsonEmpty:{zh:'结果',en:'Result'},
   copy:{zh:'复制',en:'Copy'},
   sqlEmpty:{zh:'结果',en:'Result'}, b64Empty:{zh:'结果',en:'Result'}, tpEmpty:{zh:'结果',en:'Result'},
-  httpColl_empty:{zh:'暂无请求，点击“保存当前”添加',en:'No requests. Click "Save" to add'},
-  httpColl_name:{zh:'请求名称:',en:'Request name:'},
   saved:{zh:'已保存',en:'Saved'},
-  httpEnv_hint:{zh:'在 URL/Headers/Body 中使用 {{变量名}} 语法',en:'Use {{variable}} syntax in URL/Headers/Body'},
-  httpEnv_default:{zh:'默认环境',en:'Default env'}, httpEnv_name:{zh:'变量名',en:'Name'}, httpEnv_value:{zh:'值',en:'Value'},
   parse_ok:{zh:'已解析: ',en:'Parsed: '}, input_url:{zh:'请输入 URL',en:'Enter URL'},
   sending:{zh:'发送中…',en:'Sending…'}, req_failed:{zh:'请求失败',en:'Request Failed'},
   invalid_curl:{zh:'无法解析 curl 命令',en:'Invalid curl command'},
@@ -1400,9 +1258,6 @@ const _L = {
   file_read_err:{zh:'读取失败',en:'Read failed'}, file_stream:{zh:'流式搜索 ${name}...',en:'Streaming ${name}...'},
   file_stream_done:{zh:'完成: ${n} 条匹配',en:'Done: ${n} matches'}, file_stream_err:{zh:'流式搜索出错',en:'Stream error'},
   // HTTP
-  http_timeout:{zh:'请求超时（30秒）',en:'Timeout (30s)'}, http_timeout_short:{zh:'请求超时',en:'Timeout'},
-  http_failed:{zh:'请求失败',en:'Failed'}, http_send_err:{zh:'发送失败',en:'Send failed'},
-  http_curl_parsed:{zh:'已解析 curl',en:'Parsed curl'}, http_curl_detected:{zh:'检测到 curl',en:'Curl detected'},
   // diff
   diff_large:{zh:'文本较大 (${la}×${lb} 行)，计算可能很慢，确定继续吗？',en:'Large text (${la}×${lb} lines), may be slow. Continue?'},
   diff_need_both:{zh:'请在两侧输入文本',en:'Enter text on both sides'},
@@ -1414,27 +1269,6 @@ const _L = {
   // misc
   clipboard_err:{zh:'复制出错',en:'Copy error'}, session_full:{zh:'会话保存失败（存储空间不足）',en:'Session save failed (storage full)'},
   copy_err:{zh:'复制出错',en:'Copy error'},
-  // screen
-  tab_screen:{zh:'🖥 屏幕',en:'🖥 Screen'},
-  screenRefreshBtn:{zh:'🔄 刷新数据',en:'🔄 Refresh'},
-  screenDeadPixelBtn:{zh:'🔍 坏点检测',en:'🔍 Dead Pixel'},
-  screen_title_screen:{zh:'🖥 屏幕',en:'🖥 Screen'},
-  screen_title_window:{zh:'📐 窗口',en:'📐 Window'},
-  scrRes_label:{zh:'逻辑分辨率',en:'Logical Res'},
-  physRes_label:{zh:'物理分辨率',en:'Physical Res'},
-  scrAvail_label:{zh:'可用空间',en:'Available'},
-  orientation_label:{zh:'屏幕方向',en:'Orientation'},
-  dprDepth_label:{zh:'像素比 / 深度',en:'DPR / Depth'},
-  touchInfo_label:{zh:'触摸',en:'Touch'},
-  winInner_label:{zh:'视口（内）',en:'Inner'},
-  winOuter_label:{zh:'窗口（外）',en:'Outer'},
-  winPos_label:{zh:'屏幕位置',en:'Position'},
-  cssVp_label:{zh:'CSS 视口',en:'CSS VP'},
-  scrollPos_label:{zh:'页面滚动',en:'Scroll'},
-  docSize_label:{zh:'文档尺寸',en:'Document'},
-  scr_portrait:{zh:'竖屏',en:'Portrait'}, scr_landscape:{zh:'横屏',en:'Landscape'},
-  scr_touch_yes:{zh:'支持',en:'Yes'}, scr_touch_no:{zh:'不支持',en:'No'},
-  screen_refreshed:{zh:'已刷新',en:'Refreshed'},
   // timestamp
   tl_historyToggle:{zh:'操作历史',en:'History'},
   tl_settingsToggle:{zh:'设置',en:'Settings'},
@@ -1443,7 +1277,7 @@ const _L = {
   settings_pin:{zh:'工具栏固定',en:'Pinned toolbar'}, settings_pin_hint:{zh:'勾选模块后将固定到顶部工具栏，一键跳转',en:'Pinned modules appear in the top toolbar'},
   settings_shortcuts:{zh:'快捷键',en:'Shortcuts'}, settings_pwa:{zh:'离线支持',en:'Offline support'},
   sc_search:{zh:'搜索页签',en:'Search tabs'}, sc_format:{zh:'格式化 JSON',en:'Format JSON'},
-  sc_close:{zh:'关闭',en:'Close'}, sc_bodyfmt:{zh:'格式化 HTTP Body',en:'Format HTTP body'},
+  sc_close:{zh:'关闭',en:'Close'},
   pwa_ok:{zh:'✅ 已启用离线缓存 (Service Worker)',en:'✅ Offline cache enabled (Service Worker)'},
   pwa_no:{zh:'⚠ 当前环境不支持 Service Worker（file:// 或非 HTTPS）',en:'⚠ Service Worker not supported here (file:// or non-HTTPS)'},
   settingsExported:{zh:'设置已导出',en:'Settings exported'},
@@ -1463,18 +1297,12 @@ const _L = {
   tsMs_label:{zh:'毫秒',en:'Millisecond'},
   tsRevSec_label:{zh:'秒',en:'Second'},
   tsRevMs_label:{zh:'毫秒',en:'Millisecond'},
-  // http
-  httpConfig_header:{zh:'请求配置',en:'Request Config'},
-  httpBodyFmtBtn:{zh:'🔧 格式化',en:'🔧 Format'},
-  httpBodyMinBtn:{zh:'📦 压缩',en:'📦 Minify'},
-  tl_httpBodyFmt:{zh:'格式化 JSON (Ctrl+Shift+J)',en:'Format JSON (Ctrl+Shift+J)'},
-  tl_httpBodyMin:{zh:'压缩 JSON',en:'Minify JSON'}, tl_expandAll:{zh:'全部展开',en:'Expand All'}, tl_collapseAll:{zh:'全部折叠',en:'Collapse All'},
+  tl_expandAll:{zh:'全部展开',en:'Expand All'}, tl_collapseAll:{zh:'全部折叠',en:'Collapse All'},
   // history
   historyPanel_title:{zh:'📋 操作历史',en:'📋 History'},
   historyClearAll:{zh:'清空',en:'Clear All'},
   historyEmpty:{zh:'暂无历史记录',en:'No history'},
   history_tab_json:{zh:'JSON',en:'JSON'},
-  history_tab_http:{zh:'HTTP',en:'HTTP'},
   history_tab_search:{zh:'搜索',en:'Search'},
   history_tab_ts:{zh:'时间戳',en:'Timestamp'},
   history_tab_sql:{zh:'SQL',en:'SQL'},
@@ -1483,7 +1311,6 @@ const _L = {
   history_tab_gen:{zh:'生成',en:'Generate'},
   history_tab_text:{zh:'文本',en:'Text'},
   history_tab_color:{zh:'颜色',en:'Color'},
-  history_tab_screen:{zh:'屏幕',en:'Screen'},
   // date calc
   tsCalc_totalDays:{zh:'总天数',en:'Total Days'},
   tsCalc_workDays:{zh:'工作日',en:'Work Days'},
@@ -1549,7 +1376,7 @@ function copy(text) {
 // ═══════════════════════════════════════
 // 结果持久化：保存/恢复各 tab 的结果
 const _resultBoxes = {
-  json: 'jsonResult', http: 'httpResult', encode: 'b64Result',
+  json: 'jsonResult', encode: 'b64Result',
   gen: 'uuidResult', text: 'tpResult', sql: 'sqlResult', 'sql-insert': 'sqlInsertResult'
 };
 let _activeTab = 'json';
@@ -1894,8 +1721,6 @@ function handleFileDrop(file) {
     } else if (subId === 'csv') {
       readDroppedFile(file).then(text => { if (text) { $('csvInput').value = text; renderCSV(text); } });
     } else { toast(`当前子页签不支持拖拽`, 1); }
-  } else if (id === 'p-http') {
-    readDroppedFile(file).then(text => { if (text) { $('httpBody').value = text; } });
   } else {
     toast(`当前 tab 不支持拖拽`, 1);
   }
@@ -3114,131 +2939,6 @@ $('srchFileBtn').addEventListener('click', () => {
 $('srchStreamStopBtn').addEventListener('click', () => { srchExitStream(true); toast(_('stopped')); });
 
 // ═══════════════════════════════════════
-//  🖥 屏幕检测
-// ═══════════════════════════════════════
-function getScreenInfo() {
-  const scr = screen;
-  const win = window;
-  const doc = document.documentElement;
-  const dpr = win.devicePixelRatio || 1;
-  
-  // screen.width/height 在高DPI屏下返回CSS像素，需乘以DPR得到物理像素
-  const physW = Math.round(scr.width * dpr);
-  const physH = Math.round(scr.height * dpr);
-  
-  // 基本信息
-  const info = {
-    scrWidth: scr.width,
-    scrHeight: scr.height,
-    physWidth: physW,
-    physHeight: physH,
-    scrAvailW: scr.availWidth,
-    scrAvailH: scr.availHeight,
-    winInnerW: win.innerWidth,
-    winInnerH: win.innerHeight,
-    winOuterW: win.outerWidth,
-    winOuterH: win.outerHeight,
-    winScreenX: win.screenX ?? win.screenLeft,
-    winScreenY: win.screenY ?? win.screenTop,
-    devPixelRatio: dpr,
-    colorDepth: scr.colorDepth,
-    pixelDepth: scr.pixelDepth,
-    orientation: scr.orientation?.type || (scr.width > scr.height ? 'landscape' : 'portrait'),
-    hasTouch: 'ontouchstart' in win,
-    maxTouchPoints: navigator.maxTouchPoints || 0,
-    cssWidth: doc.clientWidth,
-    cssHeight: doc.clientHeight,
-    scrollX: win.scrollX,
-    scrollY: win.scrollY,
-    docWidth: Math.max(doc.scrollWidth, doc.offsetWidth),
-    docHeight: Math.max(doc.scrollHeight, doc.offsetHeight),
-  };
-
-  return { basic: info };
-}
-
-function renderScreenBasic(info) {
-  const el = (id, val) => { const e = $(id); if (e) e.textContent = val; };
-  const L = (k) => _L[k]?.[_lang] || k;
-  
-  el('scrRes', info.scrWidth + ' × ' + info.scrHeight);
-  el('physRes', info.physWidth + ' × ' + info.physHeight);
-  el('scrAvail', info.scrAvailW + ' × ' + info.scrAvailH);
-  el('orientation', info.orientation === 'portrait' ? L('scr_portrait') : L('scr_landscape'));
-  el('dprDepth', info.devPixelRatio + 'x · ' + info.colorDepth + 'bit');
-  el('touchInfo', L('scr_touch_' + (info.hasTouch ? 'yes' : 'no')) + ' · ' + info.maxTouchPoints);
-  
-  el('winInner', info.winInnerW + ' × ' + info.winInnerH);
-  el('winOuter', info.winOuterW + ' × ' + info.winOuterH);
-  el('winPos', info.winScreenX + ', ' + info.winScreenY);
-  el('cssVp', info.cssWidth + ' × ' + info.cssHeight);
-  el('scrollPos', info.scrollX + ', ' + info.scrollY);
-  el('docSize', info.docWidth + ' × ' + info.docHeight);
-}
-
-function refreshScreenData() {
-  const { basic } = getScreenInfo();
-  renderScreenBasic(basic);
-}
-
-$('screenRefreshBtn').addEventListener('click', () => { refreshScreenData(); toast(_('screen_refreshed')); });
-
-// ═══════════════════════════════════════
-//  🔍 坏点检测
-// ═══════════════════════════════════════
-(function() {
-  const overlay = $('deadPixelOverlay');
-  const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffffff', '#000000'];
-  let idx = 0;
-  let active = false;
-
-  function startDeadPixel() {
-    idx = 0;
-    active = true;
-    overlay.style.display = 'block';
-    overlay.style.background = colors[0];
-    try { overlay.requestFullscreen?.(); } catch {}
-  }
-
-  function stopDeadPixel() {
-    active = false;
-    overlay.style.display = 'none';
-    overlay.style.background = '';
-    try { document.exitFullscreen?.(); } catch {}
-  }
-
-  overlay.addEventListener('click', () => {
-    if (!active) return;
-    idx = (idx + 1) % colors.length;
-    overlay.style.background = colors[idx];
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (!active) return;
-    if (e.key === 'Escape') { stopDeadPixel(); return; }
-    if (e.key === 'ArrowRight' || e.key === ' ') {
-      e.preventDefault();
-      idx = (idx + 1) % colors.length;
-      overlay.style.background = colors[idx];
-    }
-    if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      idx = (idx - 1 + colors.length) % colors.length;
-      overlay.style.background = colors[idx];
-    }
-  });
-
-  document.addEventListener('fullscreenchange', () => {
-    if (active && !document.fullscreenElement) stopDeadPixel();
-  });
-
-  $('screenDeadPixelBtn').addEventListener('click', startDeadPixel);
-})();
-
-// 初始化屏幕数据
-setTimeout(refreshScreenData, 100);
-
-// ═══════════════════════════════════════
 //  ◎ 正则
 // ═══════════════════════════════════════
 const rexEditor = $('rexEditor');
@@ -4346,853 +4046,6 @@ $('transClearBtn').addEventListener('click', () => { $('transInput').value = '';
 bindStats($('transInput'), 'transStat');
 
 // ═══════════════════════════════════════
-//  🌐 HTTP
-// ═══════════════════════════════════════
-function parseCurl(curl) {
-  curl = curl.trim();
-  if (!/^curl\s/i.test(curl)) return null;
-  // Remove shell line continuations: backslash followed by optional whitespace + newline
-  curl = curl.replace(/\\[\t ]*(?:\r?\n|\r)/g, ' ').replace(/\s+/g, ' ');
-  let r = { method: 'GET', url: '', headers: [], body: '', cookies: [] };
-  const tokens = curl.match(/(?:'[^']*'|"[^"]*"|\S)+/g) || [];
-  let i = 1;
-  while (i < tokens.length) {
-    const t = tokens[i];
-    if (t === '\\') { i++; continue; }
-    if (/^-X|--request$/i.test(t)) { r.method = (tokens[++i] || '').replace(/['"]/g, '').toUpperCase(); i++; }
-    else if (/^-(H|header)$/i.test(t)) {
-      const h = (tokens[++i] || '').replace(/['"]/g, '');
-      r.headers.push(h);
-      i++;
-    }
-    else if (/^-(b|cookie)$/i.test(t)) {
-      const c = (tokens[++i] || '').replace(/^['"]|['"]$/g, '');
-      c.split(';').forEach(p => {
-        const eq = p.indexOf('=');
-        if (eq > 0) r.cookies.push(`${p.slice(0, eq).trim()}: ${p.slice(eq + 1).trim()}`);
-      });
-      i++;
-    }
-    else if (/^-(d|data|data-binary|data-raw)$|^--data(-binary|-raw)?$/i.test(t)) {
-      r.method = 'POST';
-      const v = (tokens[++i] || '').replace(/^['"]|['"]$/g, '');
-      if (r.body) r.body += '&';
-      r.body += v;
-      i++;
-    }
-    else if (/^--data-urlencode$/i.test(t)) { r.method = 'POST'; i += 2; }
-    else if (t.startsWith('-')) { i += 2; }
-    else {
-      r.url = t.replace(/['"]/g, '');
-      i++;
-    }
-  }
-  return r;
-}
-$('httpCurlBtn').addEventListener('click', () => {
-  const w = $('httpCurlWrap');
-  w.style.display = w.style.display === 'none' ? '' : 'none';
-  if (w.style.display !== 'none') $('httpCurlInput').focus();
-});
-function kvParse(text) {
-  const r = {};
-  text.split('\n').filter(l => l.trim()).forEach(l => {
-    const idx = l.indexOf(':');
-    if (idx > 0) r[l.slice(0, idx).trim()] = l.slice(idx + 1).trim();
-  });
-  return r;
-}
-function kvStringify(obj) { return Object.entries(obj).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&'); }
-$('httpCurlParseBtn').addEventListener('click', () => {
-  const r = parseCurl($('httpCurlInput').value);
-  if (!r) { toast(_('err_curl_parse'), 1); return; }
-  $('httpUrl').value = r.url;
-  $('httpMethod').value = r.method;
-  $('httpHeaders').value = r.headers.join('\n');
-  $('httpBody').value = r.body;
-  $('httpCookies').value = r.cookies.join('\n');
-  // Parse URL query params into params textarea
-  try {
-    const u = new URL(r.url, location.origin);
-    if (u.search) {
-      const params = [];
-      u.searchParams.forEach((v, k) => params.push(`${k}: ${v}`));
-      $('httpParams').value = params.join('\n');
-      $('httpUrl').value = u.origin + u.pathname;
-    }
-  } catch {}
-  $('httpCurlWrap').style.display = 'none';
-  toast(`已解析: ${r.method} ${r.url}`);
-});
-$('httpUrl').addEventListener('paste', e => {
-  const text = (e.clipboardData || window.clipboardData).getData('text');
-  if (/^curl\s/i.test(text.trim())) {
-    e.preventDefault();
-    const r = parseCurl(text);
-    if (r) {
-      $('httpUrl').value = r.url;
-      $('httpMethod').value = r.method;
-      $('httpHeaders').value = r.headers.join('\n');
-      $('httpBody').value = r.body;
-      $('httpCookies').value = r.cookies.join('\n');
-      try {
-        const u = new URL(r.url, location.origin);
-        if (u.search) {
-          const params = [];
-          u.searchParams.forEach((v, k) => params.push(`${k}: ${v}`));
-          $('httpParams').value = params.join('\n');
-          $('httpUrl').value = u.origin + u.pathname;
-        }
-      } catch {}
-      toast(`已解析 curl: ${r.method} ${r.url}`);
-    }
-  }
-});
-
-// 请求集合 (Collections)
-function getHttpCollections() { try { return JSON.parse(localStorage.getItem('litools_http_collections') || '[]'); } catch { return []; } }
-function saveHttpCollections(list) { localStorage.setItem('litools_http_collections', JSON.stringify(list)); }
-function renderHttpCollections() {
-  const list = getHttpCollections();
-  const el = $('httpCollList');
-  if (!list.length) { el.innerHTML = `<div style="padding:12px;text-align:center;color:var(--text-dim);">${_('httpColl_empty')}</div>`; return; }
-  el.innerHTML = list.map((c, i) => `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--border);cursor:pointer;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><b>${escHtml(c.method)}</b> ${escHtml(c.url?.slice(0, 60))}</span>
-    <span style="color:var(--text-dim);font-size:11px;">${escHtml(c.name || '')}</span>
-    <button class="btn btn-sm" onclick="httpCollLoad(${i})" data-lk="httpColl_load">加载</button>
-    <button class="btn btn-sm" onclick="httpCollDelete(${i})" style="color:var(--red);" data-lk="httpColl_delete">删除</button>
-  </div>`).join('');
-}
-window.httpCollLoad = function(i) {
-  const c = getHttpCollections()[i]; if (!c) return;
-  $('httpMethod').value = c.method || 'GET';
-  $('httpUrl').value = c.url || '';
-  $('httpHeaders').value = c.headers || '';
-  $('httpBody').value = c.body || '';
-  $('httpParams').value = c.params || '';
-  $('httpCookies').value = c.cookies || '';
-  $('httpCollWrap').style.display = 'none';
-  toast(_('loaded'));
-};
-window.httpCollDelete = function(i) {
-  const list = getHttpCollections(); list.splice(i, 1); saveHttpCollections(list); renderHttpCollections();
-};
-$('httpCollBtn').addEventListener('click', () => {
-  const w = $('httpCollWrap'); w.style.display = w.style.display === 'none' ? '' : 'none';
-  if (w.style.display !== 'none') renderHttpCollections();
-});
-$('httpCollCloseBtn').addEventListener('click', () => { $('httpCollWrap').style.display = 'none'; });
-$('httpCollSaveBtn').addEventListener('click', () => {
-  const name = prompt(_('httpColl_name') || 'Request name:');
-  if (name === null) return;
-  const req = { name, method: $('httpMethod').value, url: $('httpUrl').value, headers: $('httpHeaders').value, body: $('httpBody').value, params: $('httpParams').value, cookies: $('httpCookies').value, ts: Date.now() };
-  const list = getHttpCollections(); list.unshift(req); if (list.length > 50) list.pop(); saveHttpCollections(list);
-  renderHttpCollections(); toast(_('saved'));
-});
-
-// 环境变量
-function getHttpEnvs() { try { return JSON.parse(localStorage.getItem('litools_http_envs') || '{}'); } catch { return {}; } }
-function saveHttpEnvs(envs) { localStorage.setItem('litools_http_envs', JSON.stringify(envs)); }
-function renderHttpEnvList() {
-  const envs = getHttpEnvs();
-  const envName = $('httpEnvSelect').value || 'default';
-  const vars = envs[envName] || {};
-  const el = $('httpEnvList');
-  const entries = Object.entries(vars);
-  if (!entries.length) { el.innerHTML = `<div style="padding:8px;text-align:center;color:var(--text-dim);">${_('httpEnv_hint')}</div>`; return; }
-  el.innerHTML = entries.map(([k, v]) => `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);">
-    <input type="text" value="${escHtml(k)}" class="http-env-key" style="flex:1;font-size:12px;padding:2px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);" data-lk-pl="httpEnv_name">
-    <input type="text" value="${escHtml(v)}" class="http-env-val" style="flex:1;font-size:12px;padding:2px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);" data-lk-pl="httpEnv_value">
-    <button class="btn btn-sm" onclick="httpEnvDelete('${escHtml(k)}')" style="color:var(--red);" data-lk="httpEnv_delete">删除</button>
-  </div>`).join('');
-}
-function renderHttpEnvSelect() {
-  const envs = getHttpEnvs();
-  const sel = $('httpEnvSelect');
-  sel.innerHTML = Object.keys(envs).map(k => `<option value="${escHtml(k)}">${escHtml(k)}</option>`).join('') + `<option value="default">${_('httpEnv_default')}</option>`;
-  if (!sel.value) sel.value = 'default';
-}
-window.httpEnvDelete = function(key) {
-  const envs = getHttpEnvs(); const envName = $('httpEnvSelect').value || 'default';
-  if (envs[envName]) { delete envs[envName][key]; saveHttpEnvs(envs); renderHttpEnvList(); }
-};
-function applyEnvVars(text) {
-  const envs = getHttpEnvs(); const envName = $('httpEnvSelect').value || 'default';
-  const vars = envs[envName] || {};
-  return text.replace(/\{\{(\w+)\}\}/g, (_, k) => k in vars ? vars[k] : `{{${k}}}`);
-}
-$('httpEnvBtn').addEventListener('click', () => {
-  const w = $('httpEnvWrap'); w.style.display = w.style.display === 'none' ? '' : 'none';
-  if (w.style.display !== 'none') { renderHttpEnvSelect(); renderHttpEnvList(); }
-});
-$('httpEnvCloseBtn').addEventListener('click', () => { $('httpEnvWrap').style.display = 'none'; });
-$('httpEnvAddBtn').addEventListener('click', () => {
-  const envs = getHttpEnvs(); const envName = $('httpEnvSelect').value || 'default';
-  if (!envs[envName]) envs[envName] = {};
-  const key = prompt(_('httpEnv_name') || 'Variable name:'); if (!key) return;
-  const val = prompt(_('httpEnv_value') || 'Value:'); if (val === null) return;
-  envs[envName][key] = val; saveHttpEnvs(envs); renderHttpEnvList();
-});
-$('httpEnvSelect').addEventListener('change', renderHttpEnvList);
-
-$('httpSendBtn').addEventListener('click', async () => {
-  let url = applyEnvVars($('httpUrl').value.trim());
-  if (!url) { toast(_('input_url'), 1); return; }
-  const method = $('httpMethod').value;
-  const headers = kvParse(applyEnvVars($('httpHeaders').value));
-  const params = kvParse(applyEnvVars($('httpParams').value));
-  const paramsStr = kvStringify(params);
-  if (paramsStr) url += (url.includes('?') ? '&' : '?') + paramsStr;
-  const cookies = kvParse(applyEnvVars($('httpCookies').value));
-  const cookieStr = Object.entries(cookies).map(([k, v]) => `${k}=${v}`).join('; ');
-  if (cookieStr) headers['Cookie'] = cookieStr;
-  const body = ['POST','PUT','PATCH'].includes(method) ? (applyEnvVars($('httpBody').value || '') || undefined) : undefined;
-  $('httpSendBtn').innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite;">⏳</span> ' + _('sending');
-  $('httpSendBtn').disabled = true;
-  $('httpStatus').textContent = '';
-  $('httpMeta').textContent = '';
-  $('httpRespHeaders').innerHTML = '';
-  const httpAbort = new AbortController();
-  const httpTimer = setTimeout(() => httpAbort.abort(), 30000);
-  const t0 = performance.now();
-  try {
-    const res = await fetch(url, { method, headers, body, credentials: 'same-origin', signal: httpAbort.signal });
-    const elapsed = Math.round(performance.now() - t0);
-    const ct = res.headers.get('content-type') || '';
-    let bodyText;
-    try {
-      bodyText = ct.includes('json') ? JSON.stringify(await res.json(), null, 2) : await res.text();
-    } catch { bodyText = await res.text(); }
-    const size = new TextEncoder().encode(bodyText).length;
-    const sizeStr = size > 1024 ? (size / 1024).toFixed(1) + ' KB' : size + ' B';
-    // Status badge
-    const sc = res.status;
-    const scColor = sc < 300 ? 'var(--jt-str)' : sc < 400 ? 'var(--accent)' : sc < 500 ? 'var(--orange)' : 'var(--red)';
-    $('httpStatus').textContent = `${sc} ${res.statusText}`;
-    $('httpStatus').style.color = scColor;
-    $('httpMeta').textContent = `${elapsed}ms · ${sizeStr} · ${ct.split(';')[0] || 'unknown'}`;
-    // Response headers
-    const hdrHtml = [];
-    res.headers.forEach((v, k) => { hdrHtml.push(`<div style="padding:1px 0;"><span style="color:var(--accent);">${escHtml(k)}</span>: <span style="color:var(--text);">${escHtml(v)}</span></div>`); });
-    $('httpRespHeaders').innerHTML = hdrHtml.join('');
-    // Body
-    $('httpResult').textContent = bodyText;
-    const cb2 = document.createElement('button');
-    cb2.className = 'copy-btn'; cb2.textContent = _L.copy ? _L.copy[_lang] : 'Copy'; cb2.dataset.lk = 'copy';
-    cb2.addEventListener('click', () => copy(bodyText));
-    $('httpResult').appendChild(cb2);
-    // Download with smart filename
-    const extMap = { 'application/json': '.json', 'text/html': '.html', 'text/css': '.css', 'text/javascript': '.js', 'application/xml': '.xml', 'text/xml': '.xml', 'image/png': '.png', 'image/jpeg': '.jpg', 'image/gif': '.gif', 'image/svg+xml': '.svg', 'application/pdf': '.pdf' };
-    const ext = extMap[ct.split(';')[0].trim()] || (ct.includes('json') ? '.json' : '.txt');
-    let dlName = 'response' + ext;
-    try { const u = new URL(url); const path = u.pathname.split('/').filter(Boolean).pop(); if (path && path.includes('.')) dlName = path; } catch {}
-    const dl2 = document.createElement('button');
-    dl2.className = 'copy-btn download-btn'; dl2.textContent = '⬇';
-    dl2.title = `${_L.download?.[_lang] || 'Download'} ${dlName} (${sizeStr})`;
-    dl2.addEventListener('click', () => downloadText(bodyText, dlName));
-    $('httpResult').appendChild(dl2);
-    // Action buttons
-    $('httpResActions').innerHTML = `<button class="btn btn-sm" id="httpToSearchBtn" style="font-size:11px;padding:2px 8px;" data-lk-tl="tl_httpSearch">🔍 搜索</button> <button class="btn btn-sm" id="httpToJsonBtn" style="font-size:11px;padding:2px 8px;" data-lk-tl="tl_httpJson">{ } JSON</button> <button class="btn btn-sm" id="httpSaveBtn" style="font-size:11px;padding:2px 8px;">💾 保存</button>`;
-    $('httpToSearchBtn').addEventListener('click', () => {
-      const se = $('srchEditor');
-      se.textContent = bodyText;
-      se.dataset.lkPl = '';
-      se.contentEditable = 'true';
-      const tab = document.querySelector('.tab[data-tab="search"]');
-      if (tab) tab.click();
-      const st = document.querySelector('#p-search .sub-tab[data-sub="search"]');
-      if (st) st.click();
-      toast(_('sent_to_search'));
-    });
-    $('httpToJsonBtn').addEventListener('click', () => {
-      $('jsonInput').value = bodyText;
-      const tab = document.querySelector('.tab[data-tab="json"]');
-      if (tab) tab.click();
-      renderJSONResult(bodyText);
-      toast(_('sent_to_json'));
-    });
-    $('httpSaveBtn').addEventListener('click', () => downloadText(bodyText, dlName));
-    toast(`${sc} ${res.statusText} · ${elapsed}ms`);
-  } catch (e) {
-    clearTimeout(httpTimer);
-    if (e.name === 'AbortError') {
-      $('httpStatus').textContent = _('http_timeout');
-      $('httpStatus').style.color = 'var(--red)';
-      $('httpResult').textContent = '❌ ' + _('err_timeout_30');
-    } else {
-      $('httpStatus').textContent = _('http_failed');
-      $('httpStatus').style.color = 'var(--red)';
-      $('httpResult').textContent = '❌ ' + _('err_request_failed');
-    }
-  }
-  clearTimeout(httpTimer);
-  $('httpSendBtn').textContent = _('sending');
-  $('httpSendBtn').disabled = false;
-});
-$('httpClearBtn').addEventListener('click', () => {
-  $('httpUrl').value = '';
-  $('httpHeaders').value = '';
-  $('httpBody').value = '';
-  $('httpParams').value = '';
-  $('httpCookies').value = '';
-  $('httpResult').textContent = _('waiting_http');
-  $('httpStatus').textContent = '';
-  $('httpMeta').textContent = '';
-  $('httpRespHeaders').innerHTML = '';
-  $('httpResActions').innerHTML = '';
-  $('httpCurlWrap').style.display = 'none';
-});
-$('httpUrl').addEventListener('keydown', e => { if (e.key === 'Enter') $('httpSendBtn').click(); });
-
-// Header quick insert
-document.querySelectorAll('.http-hdr-ins').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const ta = $('httpHeaders');
-    const val = btn.dataset.val;
-    const cur = ta.value.trim();
-    if (cur) ta.value = cur + '\n' + val;
-    else ta.value = val;
-    ta.focus();
-    ta.setSelectionRange(ta.value.length, ta.value.length);
-  });
-});
-  // Body format / minify
-$('httpBodyFmtBtn').addEventListener('click', () => {
-  try {
-    const v = $('httpBody').value.trim();
-    if (!v) return;
-    $('httpBody').value = JSON.stringify(JSON.parse(v), null, 2);
-    toast(_('err_formatting'));
-  } catch { toast(_('err_invalid_json'), 1); }
-});
-
-// Response visualization
-function renderJsonTree(obj, indent, parentId) {
-  let html = '';
-  const id = parentId + '_' + Math.random().toString(36).substr(2, 9);
-  if (Array.isArray(obj)) {
-    html += `<div style="padding-left:${indent*8}px;"><span style="color:var(--jt-bracket);">}</span> <span style="color:var(--jt-accent);">Array</span> <span style="color:var(--jt-bracket);">(</span>`;
-    obj.forEach((item, i) => {
-      html += `<div style="margin-top:2px;"><span style="color:var(--jt-bracket);">(</span><span style="color:var(--jt-number);">${i}</span><span style="color:var(--jt-bracket);">)</span> ${renderJsonTreeItem(item, indent + 1, id + '_' + i)}</div>`;
-    });
-    html += `<div style="padding-left:${indent*8}px;"><span style="color:var(--jt-bracket);">}</span></div>`;
-  } else if (obj !== null && typeof obj === 'object') {
-    const keys = Object.keys(obj);
-    html += `<div style="padding-left:${indent*8}px;"><span style="color:var(--jt-bracket);">}</span> <span style="color:var(--jt-accent);">Object</span> <span style="color:var(--jt-bracket);">{</span>`;
-    keys.forEach((k, i) => {
-      const val = obj[k];
-      const isLast = i === keys.length - 1;
-      const prefix = isLast ? '└─' : '├─';
-      html += `<div style="margin-top:2px;"><span style="color:var(--jt-bracket);">${prefix}</span><span style="color:var(--jt-key);">${escHtml(k)}</span>: ${renderJsonTreeItem(val, indent + 1, id + '_' + k)}</div>`;
-    });
-    html += `<div style="padding-left:${indent*8}px;"><span style="color:var(--jt-bracket);">}</span></div>`;
-  } else {
-    return renderJsonLeaf(obj, indent, id);
-  }
-  return html;
-}
-
-function renderJsonTreeItem(val, indent, id) {
-  if (val === null) return `<span style="color:var(--jt-null);">null</span>`;
-  if (typeof val === 'boolean') return `<span style="color:var(--jt-boolean);">${val}</span>`;
-  if (typeof val === 'number') return `<span style="color:var(--jt-number);">${val}</span>`;
-  if (typeof val === 'string') return `<span style="color:var(--jt-str);">"${escHtml(val)}"</span>`;
-  if (Array.isArray(val)) return renderJsonTree(val, indent, id);
-  return renderJsonTree(val, indent, id);
-}
-
-function renderJsonLeaf(val, indent, id) {
-  if (val === null) return `<span style="color:var(--jt-null);">null</span>`;
-  if (typeof val === 'boolean') return `<span style="color:var(--jt-boolean);">${val}</span>`;
-  if (typeof val === 'number') return `<span style="color:var(--jt-number);">${val}</span>`;
-  if (typeof val === 'string') {
-    if (val === '') return `<span style="color:var(--jt-str);">""</span>`;
-    if (/^https?:\/\//.test(val)) return `<a href="${val}" target="_blank" style="color:var(--accent);text-decoration:none;">${escHtml(val)}</a>`;
-    return `<span style="color:var(--jt-str);">"${escHtml(val)}"</span>`;
-  }
-  return `<span>${val}</span>`;
-}
-
-// Response preview panel (sidebar)
-const respPreview = document.createElement('div');
-respPreview.style.cssText = `
-  position: absolute;
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
-  width: 300px;
-  max-height: 80vh;
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  padding: 12px;
-  box-shadow: -2px 0 8px rgba(0,0,0,0.1);
-  overflow: auto;
-  display: none;
-  z-index: 200;
-`;
-document.body.appendChild(respPreview);
-
-// Toggle response preview
-function toggleRespPreview() {
-  if (respPreview.style.display === 'none') {
-    renderRespPreview();
-    respPreview.style.display = 'block';
-  } else {
-    respPreview.style.display = 'none';
-  }
-}
-
-// Render response preview
-function renderRespPreview() {
-  const bodyText = $('httpResult').textContent;
-  const ct = ($('httpMeta').textContent || '').split(' · ')[2] || '';
-  
-  let preview = '';
-  if (ct.includes('json')) {
-    try {
-      const obj = JSON.parse(bodyText);
-      preview += `<div style="font-size:12px;font-family:'Cascadia Code',monospace;">
-        <div style="color:var(--text-dim);margin-bottom:8px;">JSON 结构:</div>
-        ${renderJsonTree(obj, 0, 'root')}
-      </div>`;
-    } catch {
-      preview += `<div style="color:var(--text-dim);font-size:12px;">无效的 JSON</div>`;
-    }
-  } else if (ct.includes('image')) {
-    preview += `<div style="text-align:center;">
-      <div style="color:var(--text-dim);margin-bottom:8px;font-size:12px;">图片预览</div>
-      <img src="data:${ct};base64," + btoa(unescape(encodeURIComponent(bodyText))) style="max-width:100%;border-radius:4px;" onerror="this.style.display='none'" />
-      <div style="margin-top:8px;font-size:11px;color:var(--text-dim);">大小: ${(new TextEncoder().encode(bodyText).length / 1024).toFixed(2)} KB</div>
-    </div>`;
-  } else if (ct.includes('html')) {
-    preview += `<div style="font-size:12px;font-family:'Cascadia Code',monospace;">
-      <div style="color:var(--text-dim);margin-bottom:8px;">HTML 结构:</div>
-      <div style="background:var(--surface2);padding:8px;border-radius:4px;overflow:auto;max-height:200px;">
-        <div style="color:var(--jt-tag);">&lt;html&gt;</div>
-        <div style="padding-left:16px;color:var(--jt-comment);">... HTML 内容 ...</div>
-        <div style="color:var(--jt-tag);">&lt;/html&gt;</div>
-      </div>
-    </div>`;
-  } else if (ct.includes('text') || ct.includes('plain')) {
-    const lines = bodyText.split('\n').length;
-    preview += `<div style="font-family:'Cascadia Code',monospace;font-size:12px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;color:var(--text-dim);">
-        <span>文本内容</span>
-        <span>${lines} 行</span>
-      </div>
-      <div style="background:var(--surface2);padding:8px;border-radius:4px;overflow:auto;max-height:200px;">
-        ${bodyText.split('\n').slice(0, 10).map((line, i) => `<div style="color:var(--text);">${i+1}. ${escHtml(line)}</div>`).join('')}
-        ${bodyText.split('\n').length > 10 ? '<div style="color:var(--text-dim);text-align:center;">...</div>' : ''}
-      </div>
-    </div>`;
-  } else {
-    preview += `<div style="text-align:center;color:var(--text-dim);font-size:12px;padding:40px;">
-      <div style="margin-bottom:8px;">🆕 ${ct || '未知'} 内容</div>
-      <div>大小: ${(new TextEncoder().encode(bodyText).length / 1024).toFixed(2)} KB</div>
-    </div>`;
-  }
-  
-  respPreview.innerHTML = preview;
-}
-
-// Update response preview when response changes
-function updateRespPreview() {
-  if (respPreview.style.display === 'block') {
-    renderRespPreview();
-  }
-}
-
-// Save response to history
-function saveRespToHistory() {
-  const bodyText = $('httpResult').textContent;
-  const sc = ($('httpStatus').textContent || '').split(' ')[0];
-  const ct = ($('httpMeta').textContent || '').split(' · ')[2] || '';
-  if (bodyText.includes('❌') || bodyText.includes('⚠')) return; // Skip error responses
-  
-  const history = JSON.parse(localStorage.getItem('litools_http_history') || '[]');
-  history.unshift({
-    ts: Date.now(),
-    url: $('httpUrl').value,
-    method: $('httpMethod').value,
-    status: sc,
-    statusText: ($('httpStatus').textContent || '').split(' ').slice(1).join(' '),
-    contentType: ct,
-    size: new TextEncoder().encode(bodyText).length,
-    body: bodyText
-  });
-  if (history.length > 50) history.pop();
-  localStorage.setItem('litools_http_history', JSON.stringify(history));
-  renderRespHistory();
-}
-
-// Render response history (in sidebar)
-function renderRespHistory() {
-  const history = JSON.parse(localStorage.getItem('litools_http_history') || '[]');
-  const html = history.map((item, i) => `
-    <div class="resp-history-item" onclick="loadRespHistory(${i})" style="display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid var(--border);cursor:pointer;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-      <div style="width:40px;text-align:center;">
-        <div style="font-size:11px;color:${item.status < 300 ? 'var(--jt-str)' : item.status < 400 ? 'var(--accent)' : item.status < 500 ? 'var(--orange)' : 'var(--red)'};">${item.status}</div>
-        <div style="font-size:9px;color:var(--text-dim);">${new Date(item.ts).toLocaleTimeString()}</div>
-      </div>
-      <div style="flex:1;overflow:hidden;">
-        <div style="font-size:12px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;">${item.method} ${item.url}</div>
-        <div style="font-size:11px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;">${item.contentType}</div>
-      </div>
-      <div style="text-align:right;">
-        <div style="font-size:11px;">${(item.size / 1024).toFixed(2)} KB</div>
-      </div>
-    </div>
-  `).join('');
-  
-  const historyPanel = document.getElementById('respHistoryPanel') || document.createElement('div');
-  if (!document.getElementById('respHistoryPanel')) {
-    historyPanel.id = 'respHistoryPanel';
-    historyPanel.style.cssText = `
-      position: absolute;
-      top: 50%;
-      right: 300px;
-      transform: translateY(-50%);
-      width: 300px;
-      max-height: 80vh;
-      background: var(--surface);
-      border-left: 1px solid var(--border);
-      padding: 12px;
-      box-shadow: -2px 0 8px rgba(0,0,0,0.1);
-      overflow: auto;
-      display: none;
-      z-index: 199;
-    `;
-    historyPanel.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:8px;">
-        <span style="font-weight:600;font-size:13px;">📊 请求历史</span>
-        <button id="closeRespHistory" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;">✕</button>
-      </div>
-      <div id="respHistoryList" style="font-size:12px;">
-        ${html}
-      </div>
-    `;
-    document.body.appendChild(historyPanel);
-    
-    document.getElementById('closeRespHistory').addEventListener('click', () => {
-      historyPanel.style.display = 'none';
-    });
-  } else {
-    document.getElementById('respHistoryList').innerHTML = html;
-  }
-}
-
-window.loadRespHistory = function(i) {
-  const history = JSON.parse(localStorage.getItem('litools_http_history') || '[]');
-  const item = history[i];
-  if (!item) return;
-  
-  $('httpMethod').value = item.method;
-  $('httpUrl').value = item.url;
-  $('httpResult').textContent = item.body;
-  $('httpStatus').textContent = `${item.status} ${item.statusText}`;
-  const scColor = item.status < 300 ? 'var(--jt-str)' : item.status < 400 ? 'var(--accent)' : item.status < 500 ? 'var(--orange)' : 'var(--red)';
-  $('httpStatus').style.color = scColor;
-  $('httpMeta').textContent = `${new Date(item.ts).toLocaleString()} · ${item.size} B · ${item.contentType}`;
-  
-  // Hide preview and history panels
-  respPreview.style.display = 'none';
-  document.getElementById('respHistoryPanel').style.display = 'none';
-  
-  toast(_('loaded_resp_history'));
-};
-
-// Update statistics
-function updateRespStats() {
-  const history = JSON.parse(localStorage.getItem('litools_http_history') || '[]');
-  const statsPanel = document.getElementById('respStatsPanel') || document.createElement('div');
-  if (!document.getElementById('respStatsPanel')) {
-    statsPanel.id = 'respStatsPanel';
-    statsPanel.style.cssText = `
-      position: absolute;
-      top: 50%;
-      right: 600px;
-      transform: translateY(-50%);
-      width: 300px;
-      max-height: 80vh;
-      background: var(--surface);
-      border-left: 1px solid var(--border);
-      padding: 12px;
-      box-shadow: -2px 0 8px rgba(0,0,0,0.1);
-      overflow: auto;
-      display: none;
-      z-index: 198;
-    `;
-    statsPanel.innerHTML = `
-      <div style="font-weight:600;font-size:13px;margin-bottom:12px;">📈 统计分析</div>
-      <div id="respStatsContent">
-        ${renderRespStats(history)}
-      </div>
-    `;
-    document.body.appendChild(statsPanel);
-  } else {
-    document.getElementById('respStatsContent').innerHTML = renderRespStats(history);
-  }
-}
-
-function renderRespStats(history) {
-  if (!history.length) {
-    return `<div style="text-align:center;color:var(--text-dim);padding:40px;font-size:12px;">暂无历史数据</div>`;
-  }
-  
-  const last24h = history.filter(item => Date.now() - item.ts < 24 * 60 * 60 * 1000);
-  const successRate = last24h.length ? (last24h.filter(item => item.status < 300).length / last24h.length * 100).toFixed(1) : 0;
-  const avgTime = last24h.length ? last24h.reduce((sum, item) => sum + (item.ts - new Date(item.ts).getTime()), 0) / last24h.length / 1000 : 0;
-  
-  const statusCounts = {};
-  history.forEach(item => {
-    statusCounts[item.status] = (statusCounts[item.status] || 0) + 1;
-  });
-  
-  return `
-    <div style="display:grid;gap:8px;font-size:12px;">
-      <div style="display:flex;justify-content:space-between;padding:6px;background:var(--surface2);border-radius:4px;">
-        <span>今日请求:</span>
-        <span style="font-weight:600;">${last24h.length}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:6px;background:var(--surface2);border-radius:4px;">
-        <span>成功率:</span>
-        <span style="font-weight:600;color:var(--jt-str);">${successRate}%</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:6px;background:var(--surface2);border-radius:4px;">
-        <span>平均响应时间:</span>
-        <span style="font-weight:600;">${avgTime.toFixed(0)}ms</span>
-      </div>
-      <div style="margin-top:8px;">
-        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">状态码分布</div>
-        ${Object.entries(statusCounts).map(([code, count]) => `
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <div style="width:40px;font-size:11px;">${code}</div>
-            <div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;">
-              <div style="height:100%;background:${code < 300 ? 'var(--jt-str)' : code < 400 ? 'var(--accent)' : code < 500 ? 'var(--orange)' : 'var(--red)'};width:${(count / history.length * 100).toFixed(1)}%;"></div>
-            </div>
-            <div style="width:30px;text-align:right;font-size:11px;">${count}</div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-}
-
-// Toggle response statistics
-function toggleRespStats() {
-  const statsPanel = document.getElementById('respStatsPanel');
-  if (statsPanel.style.display === 'none') {
-    updateRespStats();
-    statsPanel.style.display = 'block';
-  } else {
-    statsPanel.style.display = 'none';
-  }
-}
-
-// Action buttons for response preview/history/stats
-$('httpResActions').innerHTML = `
-  <button class="btn btn-sm" id="showRespPreviewBtn" style="font-size:11px;padding:2px 8px;" data-lk-tl="tl_respPreview">👁️ 预览</button>
-  <button class="btn btn-sm" id="showRespHistoryBtn" style="font-size:11px;padding:2px 8px;" data-lk-tl="tl_respHistory">📊 历史</button>
-  <button class="btn btn-sm" id="showRespStatsBtn" style="font-size:11px;padding:2px 8px;" data-lk-tl="tl_respStats">📈 统计</button>
-`;
-
-$('showRespPreviewBtn').addEventListener('click', toggleRespPreview);
-$('showRespHistoryBtn').addEventListener('click', () => {
-  const historyPanel = document.getElementById('respHistoryPanel');
-  if (historyPanel.style.display === 'none') {
-    renderRespHistory();
-    historyPanel.style.display = 'block';
-  } else {
-    historyPanel.style.display = 'none';
-  }
-});
-$('showRespStatsBtn').addEventListener('click', toggleRespStats);
-
-// Save response to history when response is received
-$('httpSendBtn').addEventListener('click', async () => {
-  // ... existing code ...
-  
-  // After successful response
-  saveRespToHistory();
-  updateRespPreview();
-});
-
-// Translation keys for new features
-if (!_L.respPreview) _L.respPreview = { zh: '👁️ 预览', en: '👁️ Preview' };
-if (!_L.respHistory) _L.respHistory = { zh: '📊 历史', en: '📊 History' };
-if (!_L.respStats) _L.respStats = { zh: '📈 统计', en: '📈 Stats' };
-if (!_L.loaded_resp_history) _L.loaded_resp_history = { zh: '已加载历史记录', en: 'Loaded response history' };
-
-// Add CSS for preview animations
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes slideInRight {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
-  }
-  @keyframes slideOutRight {
-    from { transform: translateX(0); }
-    to { transform: translateX(100%); }
-  }
-  .resp-history-item {
-    transition: all 0.2s ease;
-  }
-`;
-document.head.appendChild(style);
-
-// Add CSS variable for status colors if not defined
-if (!document.documentElement.style.getPropertyValue('--jt-str')) {
-  document.documentElement.style.setProperty('--jt-str', '#2e7d32');
-}
-if (!document.documentElement.style.getPropertyValue('--jt-null')) {
-  document.documentElement.style.setProperty('--jt-null', '#d32f2f');
-}
-if (!document.documentElement.style.getPropertyValue('--jt-boolean')) {
-  document.documentElement.style.setProperty('--jt-boolean', '#1976d2');
-}
-if (!document.documentElement.style.getPropertyValue('--jt-number')) {
-  document.documentElement.style.setProperty('--jt-number', '#ed6c02');
-}
-if (!document.documentElement.style.getPropertyValue('--jt-key')) {
-  document.documentElement.style.setProperty('--jt-key', '#9c27b0');
-}
-if (!document.documentElement.style.getPropertyValue('--jt-accent')) {
-  document.documentElement.style.setProperty('--jt-accent', '#1976d2');
-}
-if (!document.documentElement.style.getPropertyValue('--jt-bracket')) {
-  document.documentElement.style.setProperty('--jt-bracket', '#757575');
-}
-if (!document.documentElement.style.getPropertyValue('--jt-comment')) {
-  document.documentElement.style.setProperty('--jt-comment', '#757575');
-}
-if (!document.documentElement.style.getPropertyValue('--orange')) {
-  document.documentElement.style.setProperty('--orange', '#ed6c02');
-}
-if (!document.documentElement.style.getPropertyValue('--red')) {
-  document.documentElement.style.setProperty('--red', '#d32f2f');
-}
-if (!document.documentElement.style.getPropertyValue('--accent')) {
-  document.documentElement.style.setProperty('--accent', '#1976d2');
-}
-if (!document.documentElement.style.getPropertyValue('--accent-dim')) {
-  document.documentElement.style.setProperty('--accent-dim', '#1565c0');
-}
-if (!document.documentElement.style.getPropertyValue('--surface')) {
-  document.documentElement.style.setProperty('--surface', '#fafafa');
-}
-if (!document.documentElement.style.getPropertyValue('--surface2')) {
-  document.documentElement.style.setProperty('--surface2', '#f5f5f5');
-}
-if (!document.documentElement.style.getPropertyValue('--surface3')) {
-  document.documentElement.style.setProperty('--surface3', '#eeeeee');
-}
-if (!document.documentElement.style.getPropertyValue('--border')) {
-  document.documentElement.style.setProperty('--border', '#e0e0e0');
-}
-if (!document.documentElement.style.getPropertyValue('--text')) {
-  document.documentElement.style.setProperty('--text', '#212121');
-}
-if (!document.documentElement.style.getPropertyValue('--text-dim')) {
-  document.documentElement.style.setProperty('--text-dim', '#757575');
-}
-document.head.appendChild(style);
-
-// Add response preview/history/stats toggle buttons to HTTP panel header
-const httpHeader = document.querySelector('#p-http > div > div');
-if (httpHeader) {
-  const respToggleBtn = document.createElement('button');
-  respToggleBtn.className = 'btn';
-  respToggleBtn.id = 'respToggleBtn';
-  respToggleBtn.title = '显示/隐藏响应面板';
-  respToggleBtn.innerHTML = '📊';
-  respToggleBtn.style.marginLeft = 'auto';
-  respToggleBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const statsPanel = document.getElementById('respStatsPanel');
-    if (statsPanel.style.display === 'block' || respPreview.style.display === 'block') {
-      statsPanel.style.display = 'none';
-      respPreview.style.display = 'none';
-      document.getElementById('respHistoryPanel').style.display = 'none';
-    } else {
-      statsPanel.style.display = 'block';
-      respPreview.style.display = 'block';
-      document.getElementById('respHistoryPanel').style.display = 'block';
-    }
-  });
-  httpHeader.insertBefore(respToggleBtn, httpHeader.firstChild);
-}
-
-// Update translation when language changes
-function updateRespUITranslation() {
-  if (respPreview.style.display === 'block') {
-    renderRespPreview();
-  }
-  const historyPanel = document.getElementById('respHistoryPanel');
-  if (historyPanel && historyPanel.style.display === 'block') {
-    renderRespHistory();
-  }
-  const statsPanel = document.getElementById('respStatsPanel');
-  if (statsPanel && statsPanel.style.display === 'block') {
-    updateRespStats();
-  }
-}
-
-// Apply language changes
-const originalApplyLang = applyLang;
-applyLang = function(lang) {
-  originalApplyLang(lang);
-  updateRespUITranslation();
-};
-
-// Add title translations to _L object
-_L.tl_respPreview = {zh: '👁️ 预览', en: '👁️ Preview'};
-_L.tl_respHistory = {zh: '📊 历史', en: '📊 History'};
-_L.tl_respStats = {zh: '📈 统计', en: '📈 Stats'};
-
-// Add CSS variable for the color scheme
-const root = document.documentElement;
-root.style.setProperty('--jt-str', '#2e7d32');
-root.style.setProperty('--jt-null', '#d32f2f');
-root.style.setProperty('--jt-boolean', '#1976d2');
-root.style.setProperty('--jt-number', '#ed6c02');
-root.style.setProperty('--jt-key', '#9c27b0');
-root.style.setProperty('--jt-accent', '#1976d2');
-root.style.setProperty('--jt-bracket', '#757575');
-root.style.setProperty('--jt-comment', '#757575');
-root.style.setProperty('--orange', '#ed6c02');
-root.style.setProperty('--red', '#d32f2f');
-root.style.setProperty('--accent', '#1976d2');
-root.style.setProperty('--accent-dim', '#1565c0');
-root.style.setProperty('--surface', '#fafafa');
-root.style.setProperty('--surface2', '#f5f5f5');
-root.style.setProperty('--surface3', '#eeeeee');
-root.style.setProperty('--border', '#e0e0e0');
-root.style.setProperty('--text', '#212121');
-root.style.setProperty('--text-dim', '#757575');
-$('httpBodyMinBtn').addEventListener('click', () => {
-  try {
-    const v = $('httpBody').value.trim();
-    if (!v) return;
-    $('httpBody').value = JSON.stringify(JSON.parse(v));
-    toast(_('err_compacted'));
-  } catch { toast(_('err_invalid_json'), 1); }
-});
-// Body char count
-$('httpBody').addEventListener('input', () => {
-  const v = $('httpBody').value;
-  const el = $('httpBodyInfo');
-  if (!v) { el.textContent = ''; return; }
-  const bytes = new TextEncoder().encode(v).length;
-  el.textContent = bytes > 1024 ? `${(bytes/1024).toFixed(1)} KB` : `${bytes} B`;
-});
-// Ctrl+Shift+J: format body
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'J') {
-    if (document.activeElement?.id === 'httpBody') { e.preventDefault(); $('httpBodyFmtBtn').click(); }
-  }
-});
-
-// ═══════════════════════════════════════
 //  🔐 JWT
 // ═══════════════════════════════════════
 function decodeJWT(token) {
@@ -5302,7 +4155,7 @@ document.addEventListener('click', e => {
     clone.querySelector('.copy-btn')?.remove();
     clone.querySelector('.download-btn')?.remove();
     const t = clone.textContent.trim();
-    const dflts = [_('res_json'), _('waiting_result'), _('waiting_http'), _('res_json'),_('waiting_result'),_('waiting_http'),'Result','Waiting'];
+    const dflts = [_('res_json'), _('waiting_result'), 'Result','Waiting'];
     if (t && !dflts.includes(t)) {
       copy(t);
       cpBtn.textContent = '✓';
@@ -5317,7 +4170,7 @@ document.addEventListener('click', e => {
     const clone = box.cloneNode(true);
     clone.querySelectorAll('button').forEach(b => b.remove());
     const t = clone.textContent.trim();
-    const dflts2 = [_('res_json'), _('waiting_result'), _('waiting_http'), _('res_json'),_('waiting_result'),_('waiting_http'),'Result','Waiting'];
+    const dflts2 = [_('res_json'), _('waiting_result'), 'Result','Waiting'];
     if (t && !dflts2.includes(t)) downloadText(t, (box.id || 'output') + '.txt');
     else toast(_('no_content'), 1);
     return;
@@ -5434,7 +4287,6 @@ function renderHistory() {
 function restoreHistory(h) {
   switchTab(h.tab);
   if (h.tab === 'json') { $('jsonInput').value = h.data; renderJSONResult(h.data); }
-  else if (h.tab === 'http') { $('httpUrl').value = h.data; }
   else if (h.tab === 'search') { const se = $('srchEditor'); se.textContent = h.data; se.dataset.lkPl = ''; se.contentEditable = 'true'; applyHighlights(); }
   else if (h.tab === 'sql') { $('sqlInput').value = h.data; }
   else if (h.tab === 'encode') { $('b64Input').value = h.data; }
@@ -5458,12 +4310,11 @@ const _origJsonFormat = $('jsonFormatBtn')?.addEventListener;
 function autoRecordHistory() {
   const observers = [
     { box: 'jsonResult', tab: 'json', getInput: () => $('jsonInput').value?.slice(0, 100) },
-    { box: 'httpResult', tab: 'http', getInput: () => $('httpUrl').value?.slice(0, 100) },
     { box: 'sqlResult', tab: 'sql', getInput: () => $('sqlInput').value?.slice(0, 100) },
     { box: 'b64Result', tab: 'encode', getInput: () => $('b64Input').value?.slice(0, 100) },
     { box: 'tpResult', tab: 'text', getInput: () => $('tpInput').value?.slice(0, 100) },
   ];
-  const emptyTexts = new Set([_('jsonEmpty'), _('httpWaiting'), _('sqlEmpty'), _('b64Empty'), _('tpEmpty')]);
+  const emptyTexts = new Set([_('jsonEmpty'), _('sqlEmpty'), _('b64Empty'), _('tpEmpty')]);
   observers.forEach(({ box, tab, getInput }) => {
     const el = $(box);
     if (!el) return;
@@ -5493,7 +4344,7 @@ const n = new Date();
 $('tsRevInput').value = `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())} ${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
 // Session persistence
 (function(){
-const KEYS = ['jsonInput','b64Input','urlInput','uuidCount','tpInput','bcInput','htmlInput','sqlInput','hashInput','colorInput','statsInput','jwtInput','csvInput','ccInput','httpUrl','httpHeaders','httpBody','httpMethod','httpCurlInput','httpParams','httpCookies'];
+const KEYS = ['jsonInput','b64Input','urlInput','uuidCount','tpInput','bcInput','htmlInput','sqlInput','hashInput','colorInput','statsInput','jwtInput','csvInput','ccInput'];
 const SAVE = () => {
   const d = {};
   KEYS.forEach(id => { const el = $(id); if (el && el.value) d[id] = el.value; });
@@ -5582,14 +4433,12 @@ applyLang(_lang);
 
 const tabMeta = [
   {tab:'json', name:'{ } JSON', kw:'json 格式化 树形'},
-  {tab:'http', name:'🌐 HTTP', kw:'http 请求 curl api'},
   {tab:'search', name:'🔍 搜索', kw:'查找 替换 正则 regex'},
   {tab:'sql', name:'🗄️ SQL', sub:[{id:'sql-in',n:'IN 生成'},{id:'sql-insert',n:'INSERT 解析'},{id:'sql-fmt',n:'SQL 格式化'}], kw:'sql 数据库 insert 值 列 格式化'},
   {tab:'encode', name:'🔐 编解码', sub:[{id:'b64',n:'Base64'},{id:'url',n:'URL'},{id:'html',n:'HTML'},{id:'jwt',n:'JWT'},{id:'bc',n:'进制'},{id:'morse',n:'Morse'},{id:'caesar',n:'Caesar'},{id:'bintext',n:'二进制文本'}], kw:'编码 解码 base64 url html jwt 进制 hex bin oct morse caesar 凯撒 二进制'},
   {tab:'gen', name:'🎲 生成', sub:[{id:'uuid',n:'UUID'},{id:'hash',n:'Hash'},{id:'color',n:'颜色'},{id:'passwd',n:'密码'},{id:'lorem',n:'Lorem'},{id:'rex',n:'正则速查'},{id:'cron',n:'Cron'},{id:'fmt',n:'代码格式化'},{id:'calc',n:'计算器'}], kw:'生成 uuid hash sha 颜色 色值 密码 lorem cron 正则速查 代码格式化 beautify minify js css html 计算器 calc 计算'},
   {tab:'text', name:'📝 文本', sub:[{id:'proc',n:'处理'},{id:'stats',n:'统计'},{id:'cc',n:'简繁'},{id:'case',n:'大小写'},{id:'trans',n:'翻译'},{id:'csv',n:'CSV'},{id:'diff',n:'Diff'},{id:'markdown',n:'Markdown'}], kw:'排序 去重 统计 简繁 大小写 camel snake kebab 翻译 csv 表格 diff 比较 markdown 预览'},
   {tab:'ts', name:'⏱ 时间', sub:[{id:'ts-convert',n:'时间戳'},{id:'ts-calc',n:'日期计算'},{id:'ts-timer',n:'计时器'}], kw:'时间 日期 毫秒 秒 时间戳 计时 倒计时'},
-  {tab:'screen', name:'🖥 屏幕', kw:'屏幕 screen 分辨率 视口 触摸 坏点'},
 ];
 const $tsi = $('tabSearchInput'), $tsr = $('tabSearchResults'), $tsIcon = $('tabSearchIcon');
 function tsOpen() { $tsi.style.display = ''; $tsi.focus(); $tsi.select(); }
@@ -5638,9 +4487,9 @@ $('settingsClose').addEventListener('click', () => settingsPanel.style.display =
 document.addEventListener('click', e => { if (!e.target.closest('#settingsPanel') && !e.target.closest('#settingsToggle')) settingsPanel.style.display = 'none'; });
 
 const ALL_MODULES = [
-  {id:'json', name:'JSON'}, {id:'http', name:'HTTP'}, {id:'search', name:'🔍 搜索'},
+  {id:'json', name:'JSON'}, {id:'search', name:'🔍 搜索'},
   {id:'sql', name:'SQL'}, {id:'encode', name:'🔐 编解码'}, {id:'gen', name:'🎲 生成'},
-  {id:'text', name:'📝 文本'}, {id:'ts', name:'⏱ 时间'}, {id:'screen', name:'🖥 屏幕'}
+  {id:'text', name:'📝 文本'}, {id:'ts', name:'⏱ 时间'}
 ];
 function getPinned() { try { return JSON.parse(localStorage.getItem('litools_pinned') || '[]'); } catch { return []; } }
 function setPinned(list) { localStorage.setItem('litools_pinned', JSON.stringify(list)); }
@@ -5672,7 +4521,7 @@ function renderSettings() {
     });
   });
   $('settingsShortcuts').innerHTML = [
-    ['Ctrl+K', _('sc_search')], ['Ctrl+Enter', _('sc_format')], ['Esc', _('sc_close')], ['Ctrl+Shift+J', _('sc_bodyfmt')]
+    ['Ctrl+K', _('sc_search')], ['Ctrl+Enter', _('sc_format')], ['Esc', _('sc_close')]
   ].map(([k, d]) => `<div><kbd style="padding:1px 5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-size:10px;">${k}</kbd> ${d}</div>`).join('');
   const pwaOk = 'serviceWorker' in navigator;
   $('settingsPwaStatus').textContent = pwaOk ? _('pwa_ok') : _('pwa_no');

@@ -23,7 +23,6 @@
 | 模块 | 功能 |
 |------|------|
 | **{ } JSON** | 格式化 / 压缩 / 转义 / 树形展示 / JSONPath 查询 / 智能修复（转义、toString、单引号等自动纠正）/ 键排序 / 保留转义 / 节点统计 / 粘贴即格式化 |
-| **🌐 HTTP** | 发送请求 / 解析 curl / Headers / Params / Cookies |
 | **🔍 搜索** | 多关键词高亮 / 替换 / 过滤 / 流式搜索大文件（50MB+） |
 | **⏱ 时间戳** | 秒/毫秒/微秒互转 / 多时区显示 / 相对时间 |
 | **🗄️ SQL IN** | 快速生成 `IN ('a','b','c')` 语句 / 切换引号 |
@@ -66,7 +65,7 @@
 ## 技术栈
 
 - HTML5 + CSS3 + Vanilla JavaScript
-- `fetch` API（仅翻译和 HTTP 模块使用）
+- `fetch` API（仅翻译模块使用）
 - `crypto.subtle`（Hash 计算，需 HTTPS 或 localhost）
 - Web APIs: `FileReader`, `TextEncoder`, `navigator.clipboard`
 
