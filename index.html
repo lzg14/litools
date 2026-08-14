@@ -490,8 +490,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-sm" id="srchReplaceBtn" data-lk="srchReplaceBtn">替换</button>
         <button class="btn btn-sm" id="srchReplaceAllBtn" data-lk="srchReplaceAllBtn">全部替换</button>
         <button class="btn btn-sm" id="srchClearHighBtn" data-lk="srchClearHighBtn">清除</button>
-        <button class="btn btn-sm btn-orange" id="srchFilterBtn" data-lk="srchFilterBtn">过滤</button>
-        <button class="btn btn-sm" id="srchRestoreBtn" style="display:none;">↩</button>
+        <button class="btn btn-sm btn-orange" id="srchFilterBtn" data-lk="srchFilterBtn">只留命中行</button>
+        <button class="btn btn-sm" id="srchRestoreBtn" data-lk-tl="tl_srchRestore" title="恢复原文" style="display:none;">↩ 恢复</button>
         <button class="btn btn-sm" id="srchClearBtn" data-lk="srchClearBtn">清空</button>
         <button class="btn btn-sm" id="srchFileBtn">📂</button>
       </div>
@@ -870,7 +870,8 @@ const _L = {
   srchTerm:{zh:'搜索词',en:'Search'}, srchReplace:{zh:'替换为',en:'Replace with'},
   srchAddBtn:{zh:'添加',en:'Add'}, srchReplaceBtn:{zh:'替换',en:'Replace'},
   srchReplaceAllBtn:{zh:'全部替换',en:'Replace All'}, srchClearHighBtn:{zh:'清除',en:'Clear'},
-  srchFilterBtn:{zh:'过滤',en:'Filter'}, srchClearBtn:{zh:'清空',en:'Clear'},
+  srchFilterBtn:{zh:'只留命中行',en:'Matches Only'}, srchClearBtn:{zh:'清空',en:'Clear'},
+  tl_srchRestore:{zh:'恢复原文',en:'Restore original'},
   srchStreamStopBtn:{zh:'停止',en:'Stop'},
   searchEndBtn:{zh:'结束',en:'End'},
   tsTitle:{zh:'时间戳',en:'Timestamp'}, tsResult:{zh:'等待输入',en:'Waiting'}, tsCopySec:{zh:'复制秒',en:'Copy sec'},
