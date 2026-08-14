@@ -1823,7 +1823,12 @@ function jsonStats(root) {
   return { nodes, depth, arrays, keys };
 }
 
+// 结果区搜索状态（提前声明：renderJSONResult 初始化时 finally 会触发 applyJsonSearch）
+let _jsonSearchIdx = -1;
+const JSON_SEARCH_LIMIT = 5000; // 搜索高亮节点上限
+const JSON_NODE_TEXT_MAX = 100000; // 单文本节点超此长度跳过高亮（防超大纯文本卡顿）
 function renderJSONResult(v) {
+  try { // finally 统一重放搜索：任何路径重建结果区后，搜索框有关键词即自动重新高亮
   if (!v || !v.trim()) { $('jsonResult').innerHTML = _('jsonResult'); _jsonData = null; _jsonRepairedText = null; return; }
   if (v.length > JSON_TREE_LIMIT) { // >10MB：纯文本展示，不做修复（性能保护）
     try { const d = JSON.parse(v); $('jsonResult').textContent = JSON.stringify(d, null, 2); }
@@ -1846,6 +1851,7 @@ function renderJSONResult(v) {
     ? `<div class="jt-root">${jsonTree(r.value, [], false)}</div>`
     : `<div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">${_('json_large_hint')}</div><div class="jt-root">${jsonTree(r.value, [], true)}</div>`;
   $('jsonResult').innerHTML = note + statsLine + tree;
+  } finally { applyJsonSearch(); }
 }
 
 document.addEventListener('click', e => {
@@ -1869,6 +1875,7 @@ document.addEventListener('click', e => {
         b.innerHTML = keys.map((k,i) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<keys.length-1?',':''}</div>`).join('');
       }
     } catch(err) { console.error('lazy load error:', err); }
+    if ($('jsonResultSearch').value.trim()) applyJsonSearch(); // 展开的子节点也参与搜索高亮
   }
   b.style.display = hide ? 'none' : '';
   el.style.display = hide ? '' : 'none';
@@ -2068,34 +2075,49 @@ $('jsonUnescapeBtn').addEventListener('click', () => {
 
 // 结果区搜索 + 点击高亮路径
 let _jsonSearchTimer;
-const JSON_SEARCH_LIMIT = 5000; // 搜索高亮节点上限
+function unwrapInJsonResult(sel) {
+  document.querySelectorAll('#jsonResult ' + sel).forEach(el => {
+    const parent = el.parentNode;
+    if (!parent) return;
+    while (el.firstChild) parent.insertBefore(el.firstChild, el);
+    parent.removeChild(el);
+  });
+}
+function clearJsonSearch() {
+  // 还原上次的包裹 span 并合并碎片文本节点，保证改词重搜能跨旧边界匹配
+  unwrapInJsonResult('.jt-search-wrap');
+  unwrapInJsonResult('.jt-highlight'); // 兼容历史残留结构
+  $('jsonResult').normalize();
+}
+function applyJsonSearch() {
+  clearJsonSearch();
+  _jsonSearchIdx = -1;
+  const keyword = $('jsonResultSearch').value.trim();
+  if (!keyword) { $('jsonSearchCount').textContent = '0/0'; return; }
+  const regex = new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  const walker = document.createTreeWalker($('jsonResult'), NodeFilter.SHOW_TEXT);
+  let count = 0;
+  while (walker.nextNode() && count < JSON_SEARCH_LIMIT) {
+    const node = walker.currentNode;
+    if (node.textContent.length > JSON_NODE_TEXT_MAX) continue;
+    regex.lastIndex = 0;
+    if (regex.test(node.textContent)) {
+      const span = document.createElement('span');
+      span.className = 'jt-search-wrap';
+      span.innerHTML = escHtml(node.textContent).replace(regex, m => `<span class="jt-highlight">${m}</span>`);
+      node.parentNode.replaceChild(span, node);
+      count++;
+    }
+  }
+  if (count) focusJsonSearchHit(1); // 搜索完成自动聚焦第一个命中
+  else $('jsonSearchCount').textContent = '0/0';
+}
 $('jsonResultSearch').addEventListener('input', () => {
   clearTimeout(_jsonSearchTimer);
-  _jsonSearchTimer = setTimeout(() => {
-    const keyword = $('jsonResultSearch').value.trim();
-    document.querySelectorAll('#jsonResult .jt-highlight').forEach(el => el.classList.remove('jt-highlight'));
-    _jsonSearchIdx = -1;
-    if (!keyword) { $('jsonSearchCount').textContent = '0/0'; return; }
-    const regex = new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    const walker = document.createTreeWalker($('jsonResult'), NodeFilter.SHOW_TEXT);
-    let count = 0;
-    while (walker.nextNode() && count < JSON_SEARCH_LIMIT) {
-      const node = walker.currentNode;
-      regex.lastIndex = 0;
-      if (regex.test(node.textContent)) {
-        const span = document.createElement('span');
-        span.innerHTML = escHtml(node.textContent).replace(regex, m => `<span class="jt-highlight">${m}</span>`);
-        node.parentNode.replaceChild(span, node);
-        count++;
-      }
-    }
-    if (count) focusJsonSearchHit(1); // 搜索完成自动聚焦第一个命中
-    else $('jsonSearchCount').textContent = '0/0';
-  }, 300);
+  _jsonSearchTimer = setTimeout(applyJsonSearch, 300);
 });
 
 // 🔍 搜索命中导航：上一个/下一个/计数，Enter / Shift+Enter 跳转
-let _jsonSearchIdx = -1;
 function focusJsonSearchHit(dir) {
   const hits = document.querySelectorAll('#jsonResult .jt-highlight');
   if (!hits.length) { $('jsonSearchCount').textContent = '0/0'; return; }
