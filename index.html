@@ -800,8 +800,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-sm" id="tpUnique" data-lk="tpUnique">去重</button>
         <button class="btn btn-sm" id="tpReverse" data-lk="tpReverse">反转行</button>
         <button class="btn btn-sm" id="tpShuffle" data-lk="tpShuffle">打乱</button>
-        <button class="btn btn-sm" id="tpUpper" data-lk="tpUpper">大写</button>
-        <button class="btn btn-sm" id="tpLower" data-lk="tpLower">小写</button>
         <button class="btn btn-sm" id="tpTrim" data-lk="tpTrim">去首尾空格</button>
         <button class="btn btn-sm" id="tpClearEmpty" data-lk="tpClearEmpty">删空行</button>
         <button class="btn btn-sm" id="tpFileBtn" data-lk="tpFileBtn">📂 打开文件</button>
@@ -844,6 +842,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <div class="result-box" id="caseResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="caseResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
       <div class="btn-group" style="margin-top:8px;">
+        <button class="btn btn-sm" id="caseUpperBtn" data-lk="caseUpperBtn">大写</button>
+        <button class="btn btn-sm" id="caseLowerBtn" data-lk="caseLowerBtn">小写</button>
         <button class="btn btn-primary btn-sm" id="caseCamelBtn" data-lk="caseCamelBtn">camelCase</button>
         <button class="btn btn-sm" id="casePascalBtn" data-lk="casePascalBtn">PascalCase</button>
         <button class="btn btn-sm" id="caseSnakeBtn" data-lk="caseSnakeBtn">snake_case</button>
@@ -1000,8 +1000,7 @@ const _L = {
   hashCalcBtn:{zh:'计算',en:'Calc'}, hashClearBtn:{zh:'清空',en:'Clear'},
   tpSortAsc:{zh:'排序 A→Z',en:'Sort A→Z'}, tpSortDesc:{zh:'排序 Z→A',en:'Sort Z→A'},
   tpUnique:{zh:'去重',en:'Unique'}, tpReverse:{zh:'反转行',en:'Reverse'},
-  tpShuffle:{zh:'打乱',en:'Shuffle'}, tpUpper:{zh:'大写',en:'UPPER'},
-  tpLower:{zh:'小写',en:'lower'}, tpTrim:{zh:'去首尾空格',en:'Trim'},
+  tpShuffle:{zh:'打乱',en:'Shuffle'}, tpTrim:{zh:'去首尾空格',en:'Trim'},
   tpClearEmpty:{zh:'删空行',en:'Rm Empty'}, tpFileBtn:{zh:'📂 打开文件',en:'📂 Open File'},
   tpRegexBtn:{zh:'正则替换',en:'Regex Replace'}, tpRegexClearBtn:{zh:'清空',en:'Clear'}, tpRegexFlags:{zh:'gi',en:'gi'},
   pl_tpRegexPattern:{zh:'正则表达式',en:'Regex pattern'},
@@ -1013,7 +1012,7 @@ const _L = {
   statsChars:{zh:'字数',en:'Chars'}, statsCharsWS:{zh:'字符（含空格）',en:'Chars (w/ space)'},
   statsLines:{zh:'行数',en:'Lines'}, statsWords:{zh:'单词',en:'Words'},
   statsParas:{zh:'段落',en:'Paras'}, statsBytes:{zh:'字节',en:'Bytes'},
-  caseResult:{zh:'结果',en:'Result'}, caseCamelBtn:{zh:'camelCase',en:'camelCase'}, casePascalBtn:{zh:'PascalCase',en:'PascalCase'},
+  caseResult:{zh:'结果',en:'Result'}, caseUpperBtn:{zh:'大写',en:'UPPER'}, caseLowerBtn:{zh:'小写',en:'lower'}, caseCamelBtn:{zh:'camelCase',en:'camelCase'}, casePascalBtn:{zh:'PascalCase',en:'PascalCase'},
   caseSnakeBtn:{zh:'snake_case',en:'snake_case'}, caseKebabBtn:{zh:'kebab-case',en:'kebab-case'}, caseScreamingBtn:{zh:'SCREAMING_SNAKE',en:'SCREAMING_SNAKE'}, caseClearBtn:{zh:'清空',en:'Clear'},
   pl_caseInput:{zh:'输入文本，如 hello_world / HELLO WORLD / helloWorld',en:'Enter text, e.g. hello_world / HELLO WORLD / helloWorld'},
   resp_body:{zh:'响应体',en:'Body'}, resp_headers:{zh:'响应头',en:'Headers'},
@@ -3298,8 +3297,6 @@ $('tpSortDesc').addEventListener('click', () => linesTP(lines => lines.sort().re
 $('tpUnique').addEventListener('click', () => linesTP(lines => [...new Set(lines)]));
 $('tpReverse').addEventListener('click', () => linesTP(lines => lines.reverse()));
 $('tpShuffle').addEventListener('click', () => linesTP(lines => { const a = [...lines]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }));
-$('tpUpper').addEventListener('click', () => { const t = getTP(); if (!t) { toast(_('err_input_text'), 1); return; } setTP(t.toUpperCase()); });
-$('tpLower').addEventListener('click', () => { const t = getTP(); if (!t) { toast(_('err_input_text'), 1); return; } setTP(t.toLowerCase()); });
 $('tpTrim').addEventListener('click', () => { const t = getTP(); if (!t) { toast(_('err_input_text'), 1); return; } setTP(t.split('\n').map(l => l.trim()).join('\n')); });
 $('tpClearEmpty').addEventListener('click', () => { const t = getTP(); if (!t) { toast(_('err_input_text'), 1); return; } setTP(t.split('\n').filter(l => l.trim()).join('\n')); });
 function applyRegexReplace() {
@@ -3775,6 +3772,8 @@ function caseConvert(fn) {
   if (!v.trim()) { toast(_('tpEmpty') || 'Enter text', 1); return; }
   $('caseResult').textContent = fn(v);
 }
+$('caseUpperBtn').addEventListener('click', () => caseConvert(t => t.toUpperCase()));
+$('caseLowerBtn').addEventListener('click', () => caseConvert(t => t.toLowerCase()));
 $('caseCamelBtn').addEventListener('click', () => caseConvert(toCamel));
 $('casePascalBtn').addEventListener('click', () => caseConvert(toPascal));
 $('caseSnakeBtn').addEventListener('click', () => caseConvert(toSnake));
