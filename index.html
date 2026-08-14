@@ -3781,27 +3781,44 @@ $('sqlQuoteBtn').addEventListener('click', () => {
 $('sqlClearBtn').addEventListener('click', () => { $('sqlInput').value = ''; $('sqlResult').textContent = _('res_json'); $('sqlStatOld').textContent = ''; });
 
 // INSERT 解析
+// 扫描 VALUES 后第一组平衡括号并分割值；bsEscape=true 按 MySQL 转义（\' 与 ''），false 按字面量（\ 无特殊含义）
+function scanSQLGroup(sql, start, bsEscape) {
+  let depth = 0, inStr = false, strCh = '', escaped = false;
+  const vals = [];
+  let cur = '';
+  for (let i = start; i < sql.length; i++) {
+    const c = sql[i];
+    if (inStr) {
+      cur += c;
+      if (bsEscape && escaped) { escaped = false; continue; }
+      if (bsEscape && c === '\\') { escaped = true; continue; }
+      if (c === strCh) { if (sql[i + 1] === strCh) { cur += sql[++i]; continue; } inStr = false; } // '' 转义
+      continue;
+    }
+    if (c === "'" || c === '"') { inStr = true; strCh = c; cur += c; continue; }
+    if (c === '(') { depth++; if (depth > 1) cur += c; continue; }
+    if (c === ')') {
+      if (depth === 1) { vals.push(cur.trim()); return { end: i, vals }; } // 第一组结束（批量 INSERT 只取第一组）
+      depth--; cur += c; continue;
+    }
+    if (c === ',' && depth === 1) { vals.push(cur.trim()); cur = ''; continue; }
+    if (depth >= 1) cur += c;
+  }
+  return null; // 字符串/括号未闭合
+}
 function parseInsertSQL(sql) {
   sql = sql.trim().replace(/;$/, '');
-  // Match: INSERT INTO table (col1, col2, ...) VALUES (val1, val2, ...)
-  const m = sql.match(/INSERT\s+INTO\s+\S+\s*\(([^)]+)\)\s*VALUES\s*\((.+)\)/is);
+  // Match: INSERT INTO table (col1, col2, ...) VALUES (...  （列名不含括号）
+  const m = sql.match(/INSERT\s+INTO\s+\S+\s*\(([^)]+)\)\s*VALUES\s*\(/is);
   if (!m) return null;
-  const cols = m[1].split(',').map(c => c.trim().replace(/^`|^"|^'|"$|'$|`$/g, ''));
-  // Parse values respecting quotes and nesting
-  const raw = m[2];
-  const vals = [];
-  let depth = 0, inStr = false, strCh = '', cur = '';
-  for (let i = 0; i < raw.length; i++) {
-    const c = raw[i];
-    if (inStr) { cur += c; if (c === strCh && raw[i-1] !== '\\') inStr = false; continue; }
-    if (c === "'" || c === '"') { inStr = true; strCh = c; cur += c; continue; }
-    if (c === '(') { depth++; cur += c; continue; }
-    if (c === ')') { depth--; cur += c; continue; }
-    if (c === ',' && depth === 0) { vals.push(cur.trim()); cur = ''; continue; }
-    cur += c;
-  }
-  if (cur.trim()) vals.push(cur.trim());
-  return cols.map((col, i) => ({ col, val: vals[i] || '—', idx: i }));
+  const cols = m[1].split(',').map(c => c.trim().replace(/^[`"']|[`"']$/g, ''));
+  const start = m.index + m[0].length - 1; // 指向 VALUES 后第一个 '('
+  // 先按 MySQL 转义语义解析；失败（如 Windows 路径 'C:\temp\' 的 \' 被当转义导致未闭合）再按字面量语义重试
+  let g = scanSQLGroup(sql, start, true);
+  if (!g) g = scanSQLGroup(sql, start, false);
+  if (!g) return null;
+  const vals = g.vals;
+  return cols.map((col, i) => ({ col, val: i < vals.length ? (vals[i] === '' ? '(空)' : vals[i]) : '—', idx: i }));
 }
 function renderInsertResult(pairs, filter) {
   const el = $('sqlInsertResult');
@@ -3814,7 +3831,7 @@ function renderInsertResult(pairs, filter) {
     const bg = match ? 'background:rgba(0,120,212,0.12);' : (p.idx % 2 === 0 ? '' : 'background:var(--surface2);');
     const colHL = match ? `color:var(--accent);font-weight:600;` : '';
     const valHL = match ? `color:var(--accent);font-weight:600;` : '';
-    html += `<tr style="border-bottom:1px solid var(--border);${bg}"><td style="padding:5px 10px;color:var(--text-dim);">${p.idx + 1}</td><td style="padding:5px 10px;${colHL}">${escHtml(p.col)}</td><td style="padding:5px 10px;${valHL}">${escHtml(p.val)}</td></tr>`;
+    html += `<tr style="border-bottom:1px solid var(--border);${bg}"><td style="padding:5px 10px;color:var(--text-dim);">${p.idx + 1}</td><td style="padding:5px 10px;${colHL}">${escHtml(p.col)}</td><td style="padding:5px 10px;${valHL}white-space:pre-wrap;word-break:break-all;max-width:0;">${escHtml(p.val)}</td></tr>`;
   }
   html += '</table>';
   el.innerHTML = html;
