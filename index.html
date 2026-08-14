@@ -215,6 +215,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 .jt-root div { margin:0; padding:0; }
 /* { } JSON 智能修复提示条 */
 .json-repair-note { display:flex; align-items:center; flex-wrap:wrap; gap:6px; background:var(--surface2); border:1px solid var(--accent-dim); border-radius:var(--radius); padding:5px 10px; margin-bottom:8px; font-size:12px; color:var(--text); }
+.json-stats { font-size:11px; color:var(--text-dim); margin-bottom:6px; }
 .result-box .copy-btn {
   position: sticky; top: 0; float: right;
   background: var(--surface2); border: 1px solid var(--border);
@@ -514,6 +515,10 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn" id="jsonMergeBtn" data-lk="jsonMergeBtn">合并</button>
         <button class="btn" id="jsonDiffBtn" data-lk="jsonDiffBtn">对比</button>
         <button class="btn" id="jsonUnescapeBtn" data-lk="jsonUnescapeBtn">去除转义</button>
+        <button class="btn" id="jsonEscapeBtn" data-lk="jsonEscapeBtn">转义</button>
+        <button class="btn" id="jsonSortAscBtn" data-lk="jsonSortAscBtn">排序 A→Z</button>
+        <button class="btn" id="jsonSortDescBtn" data-lk="jsonSortDescBtn">排序 Z→A</button>
+        <button class="btn" id="jsonKeepEscBtn" data-lk="jsonKeepEscBtn">保留转义</button>
         <button class="btn" id="jsonClearBtn" data-lk="jsonClearBtn">清空</button>
         <button class="btn" id="jsonFileBtn" data-lk="jsonFileBtn">📂 打开文件</button>
       </div>
@@ -1194,6 +1199,9 @@ const _L = {
   jsonWorkerHint:{zh:'⏳ 正在后台 Worker 中处理大数据…',en:'⏳ Processing in background worker…'},
   jsonCompressBtn:{zh:'压缩',en:'Compact'},
   jsonSchemaBtn:{zh:'Schema',en:'Schema'}, jsonMergeBtn:{zh:'合并',en:'Merge'}, jsonDiffBtn:{zh:'对比',en:'Diff'}, jsonUnescapeBtn:{zh:'去除转义',en:'Unescape'},
+  jsonEscapeBtn:{zh:'转义',en:'Escape'}, jsonSortAscBtn:{zh:'排序 A→Z',en:'Sort A→Z'}, jsonSortDescBtn:{zh:'排序 Z→A',en:'Sort Z→A'}, jsonKeepEscBtn:{zh:'保留转义',en:'Keep escapes'},
+  json_escape_done:{zh:'已转义并写入结果区',en:'Escaped into result area'}, json_sorted_toast:{zh:'已按键排序',en:'Keys sorted'},
+  stat_nodes:{zh:'节点',en:'nodes'}, stat_depth:{zh:'深度',en:'depth'}, stat_arrays:{zh:'数组',en:'arrays'}, stat_keys:{zh:'键',en:'keys'},
   jsonRepaired:{zh:'已自动修复',en:'Auto-repaired'},
   rp_unwrap:{zh:'解包字符串',en:'Unwrapped string'}, rp_unescape:{zh:'还原转义',en:'Unescaped'}, rp_comment:{zh:'去除注释',en:'Removed comments'},
   rp_trailing:{zh:'去除尾逗号',en:'Removed trailing commas'}, rp_java:{zh:'toString 转换',en:'toString → JSON'}, rp_single:{zh:'单引号→双引号',en:'Single→double quotes'},
@@ -2236,6 +2244,7 @@ function fmtJSONError(text, e) {
 }
 
 let _jsonData = null;
+let _jsonKeepEscape = false; // 👓 保留转义：开启后树形中字符串以源码形式显示（\n 不还原）
 function getByPath(obj, path) { let c = obj; for (const s of path) { if (c == null) return; c = c[s]; } return c; }
 function encPath(p) { return encodeURIComponent(JSON.stringify(p)); }
 function decPath(s) { return JSON.parse(decodeURIComponent(s)); }
@@ -2247,7 +2256,10 @@ function jsonTree(val, path, lazy) {
   if (val === null) return `<span data-jpath="${encPath(path)}" style="color:var(--jt-null,#9c27b0);">null</span>`;
   if (typeof val === 'boolean') return `<span data-jpath="${encPath(path)}" style="color:var(--jt-bool,#d32f2f);">${val}</span>`;
   if (typeof val === 'number') return `<span data-jpath="${encPath(path)}" style="color:var(--jt-num,#1565c0);">${val}</span>`;
-  if (typeof val === 'string') return `<span data-jpath="${encPath(path)}" style="color:var(--jt-str,#2e7d32);">"${escHtml(val)}"</span>`;
+  if (typeof val === 'string') {
+    const s = _jsonKeepEscape ? JSON.stringify(val).slice(1, -1) : val; // 保留转义：\n \t 等以源码形式显示
+    return `<span data-jpath="${encPath(path)}" style="color:var(--jt-str,#2e7d32);">"${escHtml(s)}"</span>`;
+  }
   if (!val || typeof val !== 'object') return escHtml(String(val));
   const isArr = Array.isArray(val);
   const keys = Object.keys(val);
@@ -2271,15 +2283,17 @@ function repairStepsText(steps) {
   steps.forEach(s => { counts[s] = (counts[s] || 0) + 1; });
   return Object.keys(counts).map(s => _(RP_LABELS[s] || s) + (counts[s] > 1 ? ` ×${counts[s]}` : '')).join(' · ');
 }
-function countJsonNodes(v, cap) {
-  let n = 0; const stack = [v];
+// 🧮 统计：节点数/最大深度/数组数/键数（迭代遍历，大文档无递归栈风险）
+function jsonStats(root) {
+  let nodes = 0, depth = 0, arrays = 0, keys = 0;
+  const stack = [[root, 1]];
   while (stack.length) {
-    const cur = stack.pop();
-    n++;
-    if (n > cap) return n;
-    if (cur && typeof cur === 'object') { const ks = Object.keys(cur); for (let i = 0; i < ks.length; i++) stack.push(cur[ks[i]]); }
+    const pair = stack.pop(), cur = pair[0], d = pair[1];
+    nodes++; if (d > depth) depth = d;
+    if (Array.isArray(cur)) { arrays++; for (let i = 0; i < cur.length; i++) stack.push([cur[i], d + 1]); }
+    else if (cur && typeof cur === 'object') { const ks = Object.keys(cur); keys += ks.length; for (let i = 0; i < ks.length; i++) stack.push([cur[ks[i]], d + 1]); }
   }
-  return n;
+  return { nodes, depth, arrays, keys };
 }
 
 function renderJSONResult(v) {
@@ -2298,11 +2312,13 @@ function renderJSONResult(v) {
   const note = r.steps.length
     ? `<div class="json-repair-note">⚡ ${_('jsonRepaired')}: ${repairStepsText(r.steps)}<button class="copy-btn-sm" id="jsonWriteBackBtn" style="margin-left:auto;">${_('jsonWriteBackBtn')}</button></div>`
     : '';
-  // 小文档全展开渲染；大文档懒加载折叠 + 提示
-  const tree = countJsonNodes(r.value, JSON_EXPAND_LIMIT) <= JSON_EXPAND_LIMIT
+  // 🧮 统计行 + 小文档全展开渲染；大文档懒加载折叠 + 提示
+  const st = jsonStats(r.value);
+  const statsLine = `<div class="json-stats">ⓘ ${st.nodes} ${_('stat_nodes')} · ${_('stat_depth')} ${st.depth} · ${_('stat_arrays')} ${st.arrays} · ${_('stat_keys')} ${st.keys}</div>`;
+  const tree = st.nodes <= JSON_EXPAND_LIMIT
     ? `<div class="jt-root">${jsonTree(r.value, [], false)}</div>`
     : `<div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">${_('json_large_hint')}</div><div class="jt-root">${jsonTree(r.value, [], true)}</div>`;
-  $('jsonResult').innerHTML = note + tree;
+  $('jsonResult').innerHTML = note + statsLine + tree;
 }
 
 document.addEventListener('click', e => {
@@ -2436,6 +2452,44 @@ $('jsonCompressBtn').addEventListener('click', () => {
   const v = $('jsonInput').value.trim();
   if (!v) { toast(_('err_input_json'), 1); return; }
   try { $('jsonResult').textContent = JSON.stringify(JSON.parse(v)); } catch(e) { $('jsonResult').innerHTML = fmtJSONError(v, e); }
+});
+// 🔁 转义：把 JSON 压成单行并转义成字符串字面量，与"去除转义"互逆
+$('jsonEscapeBtn').addEventListener('click', () => {
+  const v = $('jsonInput').value;
+  if (!v.trim()) { toast(_('err_input_json'), 1); return; }
+  let oneLine;
+  if (v.length <= JSON_TREE_LIMIT) { const r = smartRepairJSON(v); if (r.ok) oneLine = JSON.stringify(r.value); }
+  if (oneLine === undefined) oneLine = v.trim(); // 非 JSON 文本：按原文转义
+  $('jsonResult').textContent = JSON.stringify(oneLine);
+  _jsonData = null; _jsonRepairedText = null;
+  toast(_('json_escape_done'));
+});
+// 🔤 键排序：递归按 key 自然排序（数字感知，key1 < key2 < key10）
+function sortJsonKeys(v, desc) {
+  if (Array.isArray(v)) return v.map(x => sortJsonKeys(x, desc));
+  if (v && typeof v === 'object') {
+    const ks = Object.keys(v).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }) * (desc ? -1 : 1));
+    const o = {}; for (const k of ks) o[k] = sortJsonKeys(v[k], desc);
+    return o;
+  }
+  return v;
+}
+function doJsonSort(desc) {
+  const v = $('jsonInput').value;
+  if (!v.trim()) { toast(_('err_input_json'), 1); return; }
+  const r = smartRepairJSON(v);
+  if (!r.ok) { $('jsonResult').innerHTML = fmtJSONError(v, r.error); return; }
+  $('jsonInput').value = JSON.stringify(sortJsonKeys(r.value, desc), null, 2);
+  renderJSONResult($('jsonInput').value);
+  toast(_('json_sorted_toast'));
+}
+$('jsonSortAscBtn').addEventListener('click', () => doJsonSort(false));
+$('jsonSortDescBtn').addEventListener('click', () => doJsonSort(true));
+// 👓 保留转义开关：树形中字符串以源码形式显示
+$('jsonKeepEscBtn').addEventListener('click', () => {
+  _jsonKeepEscape = !_jsonKeepEscape;
+  $('jsonKeepEscBtn').classList.toggle('btn-primary', _jsonKeepEscape);
+  if ($('jsonInput').value.trim()) renderJSONResult($('jsonInput').value);
 });
 // JSON → YAML 转换
 function jsonToYaml(obj, indent) {
