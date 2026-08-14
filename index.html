@@ -179,7 +179,10 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
   overflow: auto;
 }
 .jt-toggle { cursor: default; position: relative; }
-.jt-fold-indicator { display:inline-flex; width:14px; height:14px; align-items:center; justify-content:center; font-size:12px; font-weight:bold; margin-left:4px; margin-right:2px; cursor:pointer; border-radius:3px; transition: all 0.15s; opacity:0; color:var(--text-dim); user-select:none; }
+.jt-fold-indicator { display:inline-flex; width:16px; height:14px; align-items:center; justify-content:center; font-size:12px; font-weight:bold; margin-left:2px; cursor:pointer; border-radius:3px; transition: all 0.15s; opacity:0; color:var(--text-dim); user-select:none; }
+.jt-slot { display:inline-block; width:18px; } /* 数组叶子元素占位槽：与折叠指示器等宽，保证与容器元素对齐 */
+.jt-close { padding-left:18px; } /* 闭合括号对齐子内容列 */
+.jt-toggle.collapsed > .jt-close { padding-left:0; } /* 折叠态 { … } 连贯显示 */
 .jt-toggle:hover > .jt-fold-indicator { opacity:1; }
 .jt-fold-indicator:hover { background:var(--accent-dim); color:var(--accent); }
 .jt-brace { cursor: text; }
@@ -2237,6 +2240,9 @@ function getByPath(obj, path) { let c = obj; for (const s of path) { if (c == nu
 function encPath(p) { return encodeURIComponent(JSON.stringify(p)); }
 function decPath(s) { return JSON.parse(decodeURIComponent(s)); }
 
+// 数组叶子元素占位槽：与折叠指示器等宽（18px），保证数组内容器元素与叶子元素对齐
+function _jtSlot(v) { return (v === null || typeof v !== 'object' || Object.keys(v).length === 0) ? '<span class="jt-slot"></span>' : ''; }
+
 function jsonTree(val, path, lazy) {
   if (val === null) return `<span data-jpath="${encPath(path)}" style="color:var(--jt-null,#9c27b0);">null</span>`;
   if (typeof val === 'boolean') return `<span data-jpath="${encPath(path)}" style="color:var(--jt-bool,#d32f2f);">${val}</span>`;
@@ -2249,12 +2255,12 @@ function jsonTree(val, path, lazy) {
   const badge = `<span class="jt-badge">${isArr ? val.length + _('json_items') : keys.length + _('json_keys')}</span>`;
   // 懒加载：折叠状态不渲染子节点，只保存数据路径
   if (lazy) {
-    return `<span class="jt-toggle" data-jpath="${encPath(path)}" data-jpath-children="${encPath(path)}" data-jpath-type="${isArr?'array':'object'}"><span class="jt-fold-indicator">+</span><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="color:#888;">…</span><span class="jt-body" style="display:none;"></span><span class="jt-brace">${isArr?']':'}'}</span></span>`;
+    return `<span class="jt-toggle collapsed" data-jpath="${encPath(path)}" data-jpath-children="${encPath(path)}" data-jpath-type="${isArr?'array':'object'}"><span class="jt-fold-indicator">+</span><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="color:#888;">…</span><span class="jt-body" style="display:none;"></span><span class="jt-brace jt-close">${isArr?']':'}'}</span></span>`;
   }
   return `<span class="jt-toggle" data-jpath="${encPath(path)}"><span class="jt-fold-indicator">-</span><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="display:none;color:#888;">…</span><span class="jt-body">${isArr
-    ? val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('')
+    ? val.map((v,i) => `<div style="padding-left:18px;">${_jtSlot(v)}${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('')
     : keys.map((k,i) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<keys.length-1?',':''}</div>`).join('')
-  }</span><span class="jt-brace">${isArr?']':'}'}</span></span>`;
+  }</span><span class="jt-brace jt-close">${isArr?']':'}'}</span></span>`;
 }
 
 const JSON_EXPAND_LIMIT = 2000; // 节点数低于该值时默认全展开渲染，超过则懒加载折叠（右键可全部展开）
@@ -2315,7 +2321,7 @@ document.addEventListener('click', e => {
       const isArr = t.dataset.jpathType === 'array';
       const keys = isArr ? val : Object.keys(val);
       if (isArr) {
-        b.innerHTML = val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('');
+        b.innerHTML = val.map((v,i) => `<div style="padding-left:18px;">${_jtSlot(v)}${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('');
       } else {
         b.innerHTML = keys.map((k,i) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<keys.length-1?',':''}</div>`).join('');
       }
@@ -2324,6 +2330,7 @@ document.addEventListener('click', e => {
   b.style.display = hide ? 'none' : '';
   el.style.display = hide ? '' : 'none';
   indicator.textContent = hide ? '+' : '-';
+  t.classList.toggle('collapsed', hide); // 折叠态 { … } 连贯显示
 });
 
 const ctxMenu = document.createElement('div');
@@ -2379,7 +2386,7 @@ ctxMenu.addEventListener('click', e => {
           const val = getByPath(_jsonData, path);
           const isArr = t.dataset.jpathType === 'array';
           if (isArr) {
-            b.innerHTML = val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('');
+            b.innerHTML = val.map((v,i) => `<div style="padding-left:18px;">${_jtSlot(v)}${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('');
           } else {
             b.innerHTML = Object.keys(val).map((k,i,a) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<a.length-1?',':''}</div>`).join('');
           }
@@ -2389,10 +2396,12 @@ ctxMenu.addEventListener('click', e => {
     document.querySelectorAll('#jsonResult .jt-body').forEach(b => b.style.display = '');
     document.querySelectorAll('#jsonResult .jt-ellipsis').forEach(e => e.style.display = 'none');
     document.querySelectorAll('#jsonResult .jt-fold-indicator').forEach(i => i.textContent = '-');
+    document.querySelectorAll('#jsonResult .jt-toggle').forEach(t => t.classList.remove('collapsed'));
   } else if (action === 'collapse-all') {
     document.querySelectorAll('#jsonResult .jt-body').forEach(b => b.style.display = 'none');
     document.querySelectorAll('#jsonResult .jt-ellipsis').forEach(e => e.style.display = '');
     document.querySelectorAll('#jsonResult .jt-fold-indicator').forEach(i => i.textContent = '+');
+    document.querySelectorAll('#jsonResult .jt-toggle').forEach(t => t.classList.add('collapsed'));
   }
   ctxMenu.style.display = 'none';
 });
