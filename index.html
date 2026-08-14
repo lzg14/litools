@@ -508,16 +508,9 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div class="btn-group" style="margin-bottom:0;">
         <button class="btn btn-primary" id="jsonFormatBtn" data-lk="jsonFormatBtn">格式化 (Ctrl+Enter)</button>
         <button class="btn" id="jsonCompressBtn" data-lk="jsonCompressBtn">压缩</button>
-        <button class="btn" id="jsonYamlBtn" data-lk="jsonYamlBtn">→ YAML</button>
-        <button class="btn" id="jsonXmlBtn" data-lk="jsonXmlBtn">→ XML</button>
-        <button class="btn" id="jsonCodeBtn" data-lk="jsonCodeBtn">→ Code</button>
-        <button class="btn" id="jsonSchemaBtn" data-lk="jsonSchemaBtn">Schema</button>
-        <button class="btn" id="jsonMergeBtn" data-lk="jsonMergeBtn">合并</button>
-        <button class="btn" id="jsonDiffBtn" data-lk="jsonDiffBtn">对比</button>
         <button class="btn" id="jsonUnescapeBtn" data-lk="jsonUnescapeBtn">去除转义</button>
         <button class="btn" id="jsonEscapeBtn" data-lk="jsonEscapeBtn">转义</button>
-        <button class="btn" id="jsonSortAscBtn" data-lk="jsonSortAscBtn">排序 A→Z</button>
-        <button class="btn" id="jsonSortDescBtn" data-lk="jsonSortDescBtn">排序 Z→A</button>
+        <button class="btn" id="jsonSortBtn" data-lk="jsonSortBtn">排序 ▾</button>
         <button class="btn" id="jsonKeepEscBtn" data-lk="jsonKeepEscBtn">保留转义</button>
         <button class="btn" id="jsonClearBtn" data-lk="jsonClearBtn">清空</button>
         <button class="btn" id="jsonFileBtn" data-lk="jsonFileBtn">📂 打开文件</button>
@@ -1198,16 +1191,15 @@ const _L = {
   jsonResult:{zh:'结果',en:'Result'}, jsonFormatBtn:{zh:'格式化 (Ctrl+Enter)',en:'Format (Ctrl+Enter)'},
   jsonWorkerHint:{zh:'⏳ 正在后台 Worker 中处理大数据…',en:'⏳ Processing in background worker…'},
   jsonCompressBtn:{zh:'压缩',en:'Compact'},
-  jsonSchemaBtn:{zh:'Schema',en:'Schema'}, jsonMergeBtn:{zh:'合并',en:'Merge'}, jsonDiffBtn:{zh:'对比',en:'Diff'}, jsonUnescapeBtn:{zh:'去除转义',en:'Unescape'},
-  jsonEscapeBtn:{zh:'转义',en:'Escape'}, jsonSortAscBtn:{zh:'排序 A→Z',en:'Sort A→Z'}, jsonSortDescBtn:{zh:'排序 Z→A',en:'Sort Z→A'}, jsonKeepEscBtn:{zh:'保留转义',en:'Keep escapes'},
-  json_escape_done:{zh:'已转义并写入结果区',en:'Escaped into result area'}, json_sorted_toast:{zh:'已按键排序',en:'Keys sorted'},
+  jsonUnescapeBtn:{zh:'去除转义',en:'Unescape'},
+  jsonEscapeBtn:{zh:'转义',en:'Escape'}, jsonSortBtn:{zh:'排序 ▾',en:'Sort ▾'}, jsonKeepEscBtn:{zh:'保留转义',en:'Keep escapes'},
+  json_escape_done:{zh:'已转义并写入结果区',en:'Escaped into result area'}, json_sorted_toast:{zh:'已按键排序',en:'Keys sorted'}, sortAscItem:{zh:'🔤 A → Z（升序）',en:'🔤 A → Z (asc)'}, sortDescItem:{zh:'🔤 Z → A（降序）',en:'🔤 Z → A (desc)'},
   stat_nodes:{zh:'节点',en:'nodes'}, stat_depth:{zh:'深度',en:'depth'}, stat_arrays:{zh:'数组',en:'arrays'}, stat_keys:{zh:'键',en:'keys'},
   jsonRepaired:{zh:'已自动修复',en:'Auto-repaired'},
   rp_unwrap:{zh:'解包字符串',en:'Unwrapped string'}, rp_unescape:{zh:'还原转义',en:'Unescaped'}, rp_comment:{zh:'去除注释',en:'Removed comments'},
   rp_trailing:{zh:'去除尾逗号',en:'Removed trailing commas'}, rp_java:{zh:'toString 转换',en:'toString → JSON'}, rp_single:{zh:'单引号→双引号',en:'Single→double quotes'},
   rp_key:{zh:'补全键引号',en:'Quoted keys'}, rp_value:{zh:'补全值引号',en:'Quoted values'}, rp_extract:{zh:'提取 JSON 片段',en:'Extracted JSON'},
   jsonWriteBackBtn:{zh:'写回输入框',en:'Write back'}, json_large_hint:{zh:'文档较大已折叠显示，右键可全部展开',en:'Large document collapsed; right-click → Expand all'},
-  jsonXmlBtn:{zh:'→ XML',en:'→ XML'}, jsonCodeBtn:{zh:'→ Code',en:'→ Code'}, json_code_lang:{zh:'TypeScript / Python / Go?',en:'TypeScript / Python / Go?'}, json_code_invalid:{zh:'请输入 ts/python/go',en:'Enter ts/python/go'},
   copy_val:{zh:'复制值',en:'Copy value'}, copy_path:{zh:'复制路径',en:'Copy path'},
   genTxt:{zh:'生成',en:'Create'}, genCount:{zh:'个',en:''},
   uuidUpper:{zh:'大写',en:'Uppercase'}, uuidNoDash:{zh:'无连字符',en:'No Dashes'},
@@ -1345,12 +1337,6 @@ const _L = {
   filtered:{zh:'已过滤',en:'Filtered'},
   // toast messages
   err_input_json:{zh:'请输入 JSON',en:'Enter JSON'},   err_input_url:{zh:'请输入 URL',en:'Enter URL'}, loaded:{zh:'已加载',en:'Loaded'}, loaded_resp_history:{zh:'已加载历史记录',en:'Loaded response history'},
-  json_schema_prompt:{zh:'请输入 JSON Schema:',en:'Enter JSON Schema:'},
-  json_schema_valid:{zh:'✅ Schema 校验通过',en:'✅ Schema validation passed'},
-  json_schema_errors:{zh:'个校验错误',en:'validation errors'},
-  json_merge_prompt:{zh:'请输入 Patch JSON:',en:'Enter Patch JSON:'},
-  json_diff_prompt:{zh:'请输入第二个 JSON 进行对比:',en:'Enter second JSON to compare:'},
-  json_diff_equal:{zh:'✅ 两个 JSON 完全相同',en:'✅ JSONs are identical'},
   err_input_text:{zh:'请输入文本',en:'Enter text'}, err_input_jwt:{zh:'请输入 JWT token',en:'Enter JWT token'},
   err_empty:{zh:'内容为空',en:'Empty'},
   passwdNoSet:{zh:'至少选择一种字符类型',en:'Select at least one charset'},
@@ -2418,7 +2404,8 @@ ctxMenu.addEventListener('click', e => {
     document.querySelectorAll('#jsonResult .jt-ellipsis').forEach(e => e.style.display = '');
     document.querySelectorAll('#jsonResult .jt-fold-indicator').forEach(i => i.textContent = '+');
     document.querySelectorAll('#jsonResult .jt-toggle').forEach(t => t.classList.add('collapsed'));
-  }
+  } else if (action === 'json-sort-asc') { doJsonSort(false); }
+  else if (action === 'json-sort-desc') { doJsonSort(true); }
   ctxMenu.style.display = 'none';
 });
 // JSON 分栏拖拽
@@ -2483,177 +2470,20 @@ function doJsonSort(desc) {
   renderJSONResult($('jsonInput').value);
   toast(_('json_sorted_toast'));
 }
-$('jsonSortAscBtn').addEventListener('click', () => doJsonSort(false));
-$('jsonSortDescBtn').addEventListener('click', () => doJsonSort(true));
+// 排序下拉：点击在按钮下方弹出菜单（复用 ctxMenu）
+$('jsonSortBtn').addEventListener('click', e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  ctxMenu.innerHTML = `<div class="ctx-item" data-action="json-sort-asc">${_('sortAscItem')}</div><div class="ctx-item" data-action="json-sort-desc">${_('sortDescItem')}</div>`;
+  ctxMenu.style.left = r.left + 'px';
+  ctxMenu.style.top = (r.bottom + 4) + 'px';
+  ctxMenu.style.display = 'block';
+  e.stopPropagation(); // 防止触发 document 级关闭逻辑
+});
 // 👓 保留转义开关：树形中字符串以源码形式显示
 $('jsonKeepEscBtn').addEventListener('click', () => {
   _jsonKeepEscape = !_jsonKeepEscape;
   $('jsonKeepEscBtn').classList.toggle('btn-primary', _jsonKeepEscape);
   if ($('jsonInput').value.trim()) renderJSONResult($('jsonInput').value);
-});
-// JSON → YAML 转换
-function jsonToYaml(obj, indent) {
-  indent = indent || 0;
-  const pad = '  '.repeat(indent);
-  if (obj === null) return 'null';
-  if (obj === undefined) return '~';
-  if (typeof obj === 'boolean') return obj.toString();
-  if (typeof obj === 'number') return obj.toString();
-  if (typeof obj === 'string') {
-    if (obj.includes('\n')) return '|\n' + obj.split('\n').map(l => pad + '  ' + l).join('\n');
-    if (/[:{}\[\],&*?|>!%@`#'"\n]/.test(obj) || obj.trim() !== obj || obj === '') return `"${obj.replace(/\\/g,'\\\\').replace(/"/g,'\\"')}"`;
-    return obj;
-  }
-  if (Array.isArray(obj)) {
-    if (obj.length === 0) return '[]';
-    return obj.map(item => {
-      const val = jsonToYaml(item, indent + 1);
-      if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
-        const firstLine = val.split('\n')[0];
-        const rest = val.split('\n').slice(1).join('\n');
-        return `\n${pad}- ${firstLine}${rest ? '\n' + rest : ''}`;
-      }
-      return `\n${pad}- ${val}`;
-    }).join('');
-  }
-  if (typeof obj === 'object') {
-    const keys = Object.keys(obj);
-    if (keys.length === 0) return '{}';
-    return keys.map(k => {
-      const v = jsonToYaml(obj[k], indent + 1);
-      if (typeof obj[k] === 'object' && obj[k] !== null && (Array.isArray(obj[k]) ? obj[k].length > 0 : Object.keys(obj[k]).length > 0)) {
-        const lines = v.split('\n');
-        return `${pad}${k}:${lines[0]}\n${lines.slice(1).join('\n')}`;
-      }
-      return `${pad}${k}: ${v}`;
-    }).join('\n');
-  }
-  return String(obj);
-}
-$('jsonYamlBtn').addEventListener('click', () => {
-  const v = $('jsonInput').value.trim();
-  if (!v) { toast(_('err_input_json'), 1); return; }
-  try {
-    const obj = JSON.parse(v);
-    const yaml = jsonToYaml(obj).trim();
-    $('jsonResult').textContent = yaml;
-    addHistory('json', 'JSON → YAML', $('jsonInput').value.slice(0, 100));
-  } catch(e) { $('jsonResult').innerHTML = fmtJSONError(v, e); }
-});
-
-// JSON Schema 校验
-function validateSchema(obj, schema, path) {
-  path = path || '$';
-  const errors = [];
-  if (!schema || typeof schema !== 'object') return errors;
-  if (schema.type) {
-    const actual = Array.isArray(obj) ? 'array' : typeof obj;
-    if (schema.type === 'array') { if (!Array.isArray(obj)) errors.push({ path, msg: `expected array, got ${actual}` }); }
-    else if (schema.type === 'null') { if (obj !== null) errors.push({ path, msg: `expected null, got ${actual}` }); }
-    else if (schema.type === 'integer') { if (typeof obj !== 'number' || !Number.isInteger(obj)) errors.push({ path, msg: `expected integer, got ${actual}` }); }
-    else if (actual !== schema.type) errors.push({ path, msg: `expected ${schema.type}, got ${actual}` });
-  }
-  if (schema.required && typeof obj === 'object' && !Array.isArray(obj)) {
-    schema.required.forEach(k => { if (!(k in obj)) errors.push({ path: `${path}.${k}`, msg: `required property missing` }); });
-  }
-  if (schema.properties && typeof obj === 'object' && !Array.isArray(obj)) {
-    Object.entries(schema.properties).forEach(([k, s]) => { if (k in obj) errors.push(...validateSchema(obj[k], s, `${path}.${k}`)); });
-  }
-  if (schema.items && Array.isArray(obj)) {
-    obj.forEach((item, i) => errors.push(...validateSchema(item, schema.items, `${path}[${i}]`)));
-  }
-  if (schema.minimum != null && typeof obj === 'number' && obj < schema.minimum) errors.push({ path, msg: `value < ${schema.minimum}` });
-  if (schema.maximum != null && typeof obj === 'number' && obj > schema.maximum) errors.push({ path, msg: `value > ${schema.maximum}` });
-  if (schema.minLength != null && typeof obj === 'string' && obj.length < schema.minLength) errors.push({ path, msg: `length < ${schema.minLength}` });
-  if (schema.maxLength != null && typeof obj === 'string' && obj.length > schema.maxLength) errors.push({ path, msg: `length > ${schema.maxLength}` });
-  if (schema.enum && !schema.enum.includes(obj)) errors.push({ path, msg: `value not in enum` });
-  return errors;
-}
-$('jsonSchemaBtn').addEventListener('click', () => {
-  const v = $('jsonInput').value.trim();
-  if (!v) { toast(_('err_input_json'), 1); return; }
-  try {
-    const obj = JSON.parse(v);
-    const schemaStr = prompt(_('json_schema_prompt') || 'Enter JSON Schema:');
-    if (!schemaStr) return;
-    const schema = JSON.parse(schemaStr);
-    const errors = validateSchema(obj, schema);
-    if (errors.length === 0) { $('jsonResult').innerHTML = `<div style="color:var(--green);padding:8px;">✅ ${_('json_schema_valid') || 'Schema validation passed'}</div><pre style="margin-top:8px;">${escHtml(JSON.stringify(obj, null, 2))}</pre>`; }
-    else { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">❌ ${errors.length} ${_('json_schema_errors') || 'validation errors'}:</div><div style="padding:4px 8px;font-size:12px;">${errors.map(e => `<div style="padding:2px 0;border-bottom:1px solid var(--border);"><code>${escHtml(e.path)}</code>: ${escHtml(e.msg)}</div>`).join('')}</div>`; }
-  } catch(e) { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">⚠ ${escHtml(e.message)}</div>`; }
-});
-
-// JSON 合并 (RFC 7396 Merge Patch)
-function jsonMerge(base, patch) {
-  if (patch === null || typeof patch !== 'object' || Array.isArray(patch)) return patch;
-  if (base === null || typeof base !== 'object' || Array.isArray(base)) return patch;
-  const result = { ...base };
-  Object.keys(patch).forEach(k => {
-    if (patch[k] === null) delete result[k];
-    else if (typeof patch[k] === 'object' && !Array.isArray(patch[k]) && typeof result[k] === 'object' && !Array.isArray(result[k])) result[k] = jsonMerge(result[k], patch[k]);
-    else result[k] = patch[k];
-  });
-  return result;
-}
-$('jsonMergeBtn').addEventListener('click', () => {
-  const v = $('jsonInput').value.trim();
-  if (!v) { toast(_('err_input_json'), 1); return; }
-  try {
-    const base = JSON.parse(v);
-    const patchStr = prompt(_('json_merge_prompt') || 'Enter Patch JSON:');
-    if (!patchStr) return;
-    const patch = JSON.parse(patchStr);
-    const merged = jsonMerge(base, patch);
-    $('jsonResult').textContent = JSON.stringify(merged, null, 2);
-    addHistory('json', 'JSON Merge', $('jsonInput').value.slice(0, 100));
-  } catch(e) { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">⚠ ${escHtml(e.message)}</div>`; }
-});
-
-// JSON 对比
-function jsonDiff(a, b, path) {
-  path = path || '$';
-  const diffs = [];
-  if (a === b) return diffs;
-  if (a === null || b === null || typeof a !== typeof b || Array.isArray(a) !== Array.isArray(b)) {
-    diffs.push({ path, type: 'change', old: a, new: b });
-    return diffs;
-  }
-  if (typeof a === 'object' && !Array.isArray(a)) {
-    const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
-    allKeys.forEach(k => {
-      if (!(k in a)) diffs.push({ path: `${path}.${k}`, type: 'add', new: b[k] });
-      else if (!(k in b)) diffs.push({ path: `${path}.${k}`, type: 'remove', old: a[k] });
-      else diffs.push(...jsonDiff(a[k], b[k], `${path}.${k}`));
-    });
-  } else if (Array.isArray(a)) {
-    const maxLen = Math.max(a.length, b.length);
-    for (let i = 0; i < maxLen; i++) {
-      if (i >= a.length) diffs.push({ path: `${path}[${i}]`, type: 'add', new: b[i] });
-      else if (i >= b.length) diffs.push({ path: `${path}[${i}]`, type: 'remove', old: a[i] });
-      else diffs.push(...jsonDiff(a[i], b[i], `${path}[${i}]`));
-    }
-  } else if (a !== b) {
-    diffs.push({ path, type: 'change', old: a, new: b });
-  }
-  return diffs;
-}
-$('jsonDiffBtn').addEventListener('click', () => {
-  const v = $('jsonInput').value.trim();
-  if (!v) { toast(_('err_input_json'), 1); return; }
-  try {
-    const a = JSON.parse(v);
-    const bStr = prompt(_('json_diff_prompt') || 'Enter second JSON to compare:');
-    if (!bStr) return;
-    const b = JSON.parse(bStr);
-    const diffs = jsonDiff(a, b);
-    if (diffs.length === 0) { $('jsonResult').innerHTML = `<div style="color:var(--green);padding:8px;">✅ ${_('json_diff_equal') || 'JSONs are identical'}</div>`; }
-    else {
-      const colors = { add: 'var(--green)', remove: 'var(--red)', change: 'var(--orange)' };
-      const labels = { add: '+', remove: '-', change: '~' };
-      $('jsonResult').innerHTML = `<div style="padding:8px;font-size:12px;">${diffs.map(d => `<div style="padding:3px 0;border-bottom:1px solid var(--border);"><span style="color:${colors[d.type]};font-weight:bold;margin-right:6px;">[${labels[d.type]}]</span><code style="color:var(--accent);">${escHtml(d.path)}</code>${d.type === 'add' ? `: ${escHtml(JSON.stringify(d.new))}` : d.type === 'remove' ? `: ${escHtml(JSON.stringify(d.old))}` : `: ${escHtml(JSON.stringify(d.old))} → ${escHtml(JSON.stringify(d.new))}`}</div>`).join('')}</div>`;
-    }
-    addHistory('json', 'JSON Diff', $('jsonInput').value.slice(0, 100));
-  } catch(e) { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">⚠ ${escHtml(e.message)}</div>`; }
 });
 
 $('jsonClearBtn').addEventListener('click', () => { $('jsonInput').value = ''; $('jsonResult').innerHTML = (_L.res_json ? _L.res_json[_lang] : 'Result') + '<button class=\"copy-btn\" data-lk=\"copy\">' + (_L.copy?_L.copy[_lang]:'Copy') + '</button>'; _jsonData = null; updateJsonLines(); });
@@ -2733,38 +2563,6 @@ $('jsonResult').addEventListener('click', e => {
   } catch(e2) {}
 });
 
-// JSON → XML
-function jsonToXml(obj, rootTag, indent) {
-  indent = indent || 0;
-  rootTag = rootTag || 'root';
-  const pad = '  '.repeat(indent);
-  let xml = '';
-  if (Array.isArray(obj)) {
-    xml += pad + '<' + rootTag + '>\n';
-    obj.forEach(item => { xml += jsonToXml(item, 'item', indent + 1); });
-    xml += pad + '</' + rootTag + '>\n';
-  } else if (obj !== null && typeof obj === 'object') {
-    xml += pad + '<' + rootTag + '>\n';
-    for (const [k, v] of Object.entries(obj)) {
-      const safeTag = k.replace(/[^a-zA-Z0-9_-]/g, '_');
-      xml += jsonToXml(v, safeTag, indent + 1);
-    }
-    xml += pad + '</' + rootTag + '>\n';
-  } else {
-    xml += pad + '<' + rootTag + '>' + escHtml(String(obj ?? '')) + '</' + rootTag + '>\n';
-  }
-  return xml;
-}
-$('jsonXmlBtn').addEventListener('click', () => {
-  const v = $('jsonInput').value.trim();
-  if (!v) { toast(_('err_input_json'), 1); return; }
-  try {
-    const obj = JSON.parse(v);
-    const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' + jsonToXml(obj, 'root', 0);
-    $('jsonResult').textContent = xml;
-    addHistory('json', 'JSON→XML', v.slice(0, 100));
-  } catch (e) { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">⚠ ${escHtml(e.message)}</div>`; }
-});
 // XML → JSON
 function xmlToJson(xmlStr) {
   const parser = new DOMParser();
@@ -2798,95 +2596,6 @@ function xmlToJson(xmlStr) {
   }
   return nodeToObj(doc.documentElement);
 }
-// JSON → Code (TS/Python/Go)
-function guessType(v, name) {
-  if (v === null) return 'null';
-  if (Array.isArray(v)) {
-    if (v.length === 0) return 'unknown[]';
-    const inner = guessType(v[0], name);
-    return inner.endsWith('[]') ? inner + '[]' : inner + '[]';
-  }
-  if (typeof v === 'object') return 'object';
-  return typeof v;
-}
-function jsonToTs(obj, indent) {
-  indent = indent || 0;
-  const pad = '  '.repeat(indent);
-  const lines = [];
-  for (const [k, v] of Object.entries(obj)) {
-    if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
-      lines.push(pad + k + ': {');
-      lines.push(jsonToTs(v, indent + 1));
-      lines.push(pad + '};');
-    } else if (Array.isArray(v)) {
-      const t = v.length > 0 ? guessType(v[0]) : 'unknown[]';
-      lines.push(pad + k + ': ' + t + ';');
-    } else {
-      lines.push(pad + k + ': ' + guessType(v) + ';');
-    }
-  }
-  return lines.join('\n');
-}
-function jsonToPy(obj, indent) {
-  indent = indent || 0;
-  const pad = '  '.repeat(indent);
-  const lines = [];
-  for (const [k, v] of Object.entries(obj)) {
-    if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
-      lines.push(pad + k + ':');
-      lines.push(jsonToPy(v, indent + 1));
-    } else if (Array.isArray(v)) {
-      lines.push(pad + k + ': list[' + (v.length > 0 ? guessType(v[0]) : 'Any') + ']');
-    } else {
-      const t = guessType(v);
-      const pyMap = { string: 'str', number: 'float | int', boolean: 'bool', null: 'None' };
-      lines.push(pad + k + ': ' + (pyMap[t] || t));
-    }
-  }
-  return lines.join('\n');
-}
-function jsonToGo(obj, indent) {
-  indent = indent || 0;
-  const pad = '  '.repeat(indent);
-  const lines = [];
-  for (const [k, v] of Object.entries(obj)) {
-    const goName = k.charAt(0).toUpperCase() + k.slice(1).replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-    if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
-      lines.push(pad + goName + ' struct {');
-      lines.push(jsonToGo(v, indent + 1));
-      lines.push(pad + '} `json:"' + k + '"`');
-    } else if (Array.isArray(v)) {
-      const t = v.length > 0 ? guessType(v[0]) : 'interface{}';
-      const goArrMap = { string: 'string', number: 'float64', boolean: 'bool', object: 'map[string]interface{}' };
-      lines.push(pad + goName + ' []' + (goArrMap[t] || 'interface{}') + ' `json:"' + k + '"`');
-    } else {
-      const goMap = { string: 'string', number: 'float64', boolean: 'bool', null: 'interface{}' };
-      lines.push(pad + goName + ' ' + (goMap[guessType(v)] || 'interface{}') + ' `json:"' + k + '"`');
-    }
-  }
-  return lines.join('\n');
-}
-$('jsonCodeBtn').addEventListener('click', () => {
-  const v = $('jsonInput').value.trim();
-  if (!v) { toast(_('err_input_json'), 1); return; }
-  try {
-    const obj = JSON.parse(v);
-    const lang = prompt(_('json_code_lang') || 'TypeScript / Python / Go?');
-    if (!lang) return;
-    let code = '';
-    if (/ts|typescript/i.test(lang)) {
-      code = 'interface Response {\n' + jsonToTs(obj, 1) + '\n}';
-    } else if (/py|python/i.test(lang)) {
-      code = 'class Response:\n' + jsonToPy(obj, 1);
-    } else if (/go/i.test(lang)) {
-      code = 'type Response struct {\n' + jsonToGo(obj, 1) + '\n}';
-    } else {
-      toast(_('json_code_invalid'), 1); return;
-    }
-    $('jsonResult').textContent = code;
-    addHistory('json', 'JSON→Code', v.slice(0, 100));
-  } catch (e) { $('jsonResult').innerHTML = `<div style="color:var(--red);padding:8px;">⚠ ${escHtml(e.message)}</div>`; }
-});
 
 // JSONPath query
 function resolveJsonPath(obj, path) {
