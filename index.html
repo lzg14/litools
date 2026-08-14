@@ -274,28 +274,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 .diff-editor .da { background: #e6ffed; }
 .diff-editor .dp { background: #f6f8fa; color: #ccc; }
 
-/* Timezone picker */
-.tz-picker { position: relative; }
-.tz-picker input {
-  width:100%; padding:6px 8px; background:var(--surface); border:1px solid var(--border);
-  border-radius:var(--radius); color:var(--text); font-size:12px; cursor:pointer;
-}
-.tz-picker input:focus { border-color:var(--accent-dim); }
-.tz-list {
-  position:absolute; top:100%; left:0; right:0; z-index:50;
-  max-height:200px; overflow-y:auto;
-  background:var(--surface); border:1px solid var(--border); border-top:none;
-  border-radius:0 0 var(--radius) var(--radius);
-  display:none;
-}
-.tz-list.open { display:block; }
-.tz-list .tz-item {
-  padding:4px 8px; font-size:12px; cursor:pointer;
-  border-bottom:1px solid var(--border);
-}
-.tz-list .tz-item:last-child { border-bottom:none; }
-.tz-list .tz-item:hover { background:var(--surface2); }
-.tz-list .tz-item.active { color:var(--accent); font-weight:500; }
 
 /* Toast */
 .toast {
@@ -356,7 +334,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
   <div class="tab-pane" id="p-ts">
     <div class="sub-tabs">
       <div class="sub-tab active" data-sub="ts-convert" data-lk="sub_ts_convert">⏱ 时间戳</div>
-      <div class="sub-tab" data-sub="ts-calc" data-lk="sub_ts_calc">🔢 日期计算</div>
       <div class="sub-tab" data-sub="ts-timer" data-lk="sub_ts_timer">⏱ 计时器</div>
     </div>
     <!-- 时间戳转换 -->
@@ -374,18 +351,11 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
             <button class="btn btn-primary" id="tsCopySec" data-lk="tsCopySec">复制秒</button>
             <button class="btn" id="tsCopyMs" data-lk="tsCopyMs">复制毫秒</button>
           </div>
-          <div class="input-row" style="margin-top:8px;">
-            <div class="tz-picker" id="tzPicker" style="flex:1;">
-              <input type="text" id="tzSearch" placeholder="搜索时区..." autocomplete="off" data-lk-pl="pl_tzSearch">
-              <div class="tz-list" id="tzList"></div>
-            </div>
-          </div>
           <div>
             <div class="result-item"><span class="label">UTC</span><span class="value" id="tsUtc">—</span><button class="copy-btn-sm" data-target="tsUtc">📋</button></div>
             <div class="result-item"><span class="label">RFC 2822</span><span class="value" id="tsRfc">—</span><button class="copy-btn-sm" data-target="tsRfc">📋</button></div>
             <div class="result-item"><span class="label" data-lk="tsRel_label">相对</span><span class="value" id="tsRel">—</span></div>
             <div class="result-item"><span class="label" data-lk="tsMs_label">毫秒</span><span class="value" id="tsMs">—</span><button class="copy-btn-sm" data-target="tsMs">📋</button></div>
-            <div class="result-item"><span class="label" id="tzLabel" data-lk="tzLabel">时区</span><span class="value" id="tsTz">—</span><button class="copy-btn-sm" data-target="tsTz">📋</button></div>
           </div>
         </div>
         <div style="padding-left:12px;">
@@ -398,30 +368,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
           <div class="result-item"><span class="label" data-lk="tsRevMs_label">毫秒</span><span class="value" id="tsRevMs">—</span><button class="copy-btn-sm" data-target="tsRevMs">📋</button></div>
         </div>
       </div>
-    </div>
-    <!-- 日期计算 -->
-    <div class="sub-pane" data-sub="ts-calc">
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:start;">
-        <div>
-          <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;" data-lk="tsCalcFrom_label">起始日期</div>
-          <input type="datetime-local" id="tsCalcFrom" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;">
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:20px;">
-          <button class="btn btn-sm" id="tsCalcSwap">⇄</button>
-        </div>
-        <div>
-          <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;" data-lk="tsCalcTo_label">结束日期</div>
-          <input type="datetime-local" id="tsCalcTo" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;">
-        </div>
-      </div>
-      <div class="btn-group" style="margin-top:8px;">
-        <button class="btn btn-primary" id="tsCalcBtn" data-lk="tsCalcBtn">计算差值</button>
-        <button class="btn" id="tsCalcAddBtn" data-lk="tsCalcAddBtn">+ 加减天数</button>
-        <input type="number" id="tsCalcDays" value="1" style="width:60px;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;text-align:center;">
-        <span style="font-size:12px;color:var(--text-dim);line-height:28px;" data-lk="tsCalcDays_unit">天</span>
-        <button class="btn" id="tsCalcClearBtn" data-lk="tsCalcClearBtn">清空</button>
-      </div>
-      <div id="tsCalcResult" style="margin-top:8px;"></div>
     </div>
     <!-- 计时器 -->
     <div class="sub-pane" data-sub="ts-timer">
@@ -992,7 +938,7 @@ const $ = id => document.getElementById(id);
 
 let _lang = localStorage.getItem('lang') || 'zh';
 const _L = {
-  tab_search:{zh:'🔍 搜索',en:'🔍 Search'}, tab_regex:{zh:'◎ 正则',en:'◎ Regex'}, tab_ts:{zh:'⏱ 时间',en:'⏱ Time'}, sub_ts_convert:{zh:'⏱ 时间戳',en:'⏱ Timestamp'}, sub_ts_calc:{zh:'🔢 日期计算',en:'🔢 Date Calc'}, sub_ts_timer:{zh:'⏱ 计时器',en:'⏱ Timer'},
+  tab_search:{zh:'🔍 搜索',en:'🔍 Search'}, tab_regex:{zh:'◎ 正则',en:'◎ Regex'}, tab_ts:{zh:'⏱ 时间',en:'⏱ Time'}, sub_ts_convert:{zh:'⏱ 时间戳',en:'⏱ Timestamp'}, sub_ts_timer:{zh:'⏱ 计时器',en:'⏱ Timer'},
   tab_encode:{zh:'🔐 编解码',en:'🔐 Encode/Decode'}, tab_gen:{zh:'🎲 生成',en:'🎲 Generate'},
   tab_text:{zh:'📝 文本',en:'📝 Text'}, tab_color:{zh:'🎨 颜色',en:'🎨 Color'}, tab_diff:{zh:'📑 Diff',en:'📑 Diff'},
   tab_json:{zh:'{ } JSON',en:'{ } JSON'},
@@ -1022,7 +968,7 @@ const _L = {
   srchStreamStopBtn:{zh:'停止',en:'Stop'},
   searchEndBtn:{zh:'结束',en:'End'},
   tsTitle:{zh:'时间戳',en:'Timestamp'}, tsResult:{zh:'等待输入',en:'Waiting'}, tsCopySec:{zh:'复制秒',en:'Copy sec'},
-  tsCopyMs:{zh:'复制毫秒',en:'Copy ms'}, tzLabel:{zh:'时区',en:'Timezone'},
+  tsCopyMs:{zh:'复制毫秒',en:'Copy ms'},
   tsRevSec:{zh:'秒',en:'Sec'}, tsRevMs:{zh:'毫秒',en:'ms'},
   jsonResult:{zh:'结果',en:'Result'}, jsonFormatBtn:{zh:'格式化 (Ctrl+Enter)',en:'Format (Ctrl+Enter)'},
   jsonWorkerHint:{zh:'⏳ 正在后台 Worker 中处理大数据…',en:'⏳ Processing in background worker…'},
@@ -1076,7 +1022,7 @@ const _L = {
   caseSnakeBtn:{zh:'snake_case',en:'snake_case'}, caseKebabBtn:{zh:'kebab-case',en:'kebab-case'}, caseScreamingBtn:{zh:'SCREAMING_SNAKE',en:'SCREAMING_SNAKE'}, caseClearBtn:{zh:'清空',en:'Clear'},
   pl_caseInput:{zh:'输入文本，如 hello_world / HELLO WORLD / helloWorld',en:'Enter text, e.g. hello_world / HELLO WORLD / helloWorld'},
   resp_body:{zh:'响应体',en:'Body'}, resp_headers:{zh:'响应头',en:'Headers'},
-  pl_tabSearch:{zh:'搜索页签…',en:'Search tabs…'}, pl_tzSearch:{zh:'搜索时区...',en:'Search timezone...'},
+  pl_tabSearch:{zh:'搜索页签…',en:'Search tabs…'},
   pl_sqlInsert:{zh:'粘贴 INSERT 语句，自动解析列名与值的对应关系',en:'Paste INSERT statement to parse column-value mapping'},
   pl_sqlInsertSearch:{zh:'🔍 搜索值定位列名...',en:'🔍 Search value to locate column...'},
   pl_b64Input:{zh:'输入文本或 Base64',en:'Enter text or Base64'},
@@ -1243,12 +1189,7 @@ const _L = {
   pwa_no:{zh:'⚠ 当前环境不支持 Service Worker（file:// 或非 HTTPS）',en:'⚠ Service Worker not supported here (file:// or non-HTTPS)'},
   settingsExported:{zh:'设置已导出',en:'Settings exported'},
   settingsImported:{zh:'已导入 ${n} 项设置',en:'Imported ${n} settings'},
-  tsCalcFrom_label:{zh:'起始日期',en:'Start Date'},
-  tsCalcTo_label:{zh:'结束日期',en:'End Date'},
-  tsCalcBtn:{zh:'计算差值',en:'Calculate'},
-  tsCalcAddBtn:{zh:'加减天数',en:'Add Days'},
-  tsCalcDays_unit:{zh:'天',en:'days'},
-  tsCalcClearBtn:{zh:'清空',en:'Clear'},
+
   timerStartBtn:{zh:'▶ 开始',en:'▶ Start'},
   timerLapBtn:{zh:'📍 计次',en:'📍 Lap'},
   timerResetBtn:{zh:'↺ 重置',en:'↺ Reset'},
@@ -1273,13 +1214,6 @@ const _L = {
   history_tab_text:{zh:'文本',en:'Text'},
   history_tab_color:{zh:'颜色',en:'Color'},
   // date calc
-  tsCalc_totalDays:{zh:'总天数',en:'Total Days'},
-  tsCalc_workDays:{zh:'工作日',en:'Work Days'},
-  tsCalc_hms:{zh:'时分秒',en:'HMS'},
-  tsCalc_totalSec:{zh:'总秒数',en:'Total Sec'},
-  tsCalc_totalMs:{zh:'总毫秒',en:'Total Ms'},
-  tsCalc_needTwo:{zh:'请选择两个日期',en:'Select two dates'},
-  tsCalc_needFrom:{zh:'请先选择起始日期',en:'Select start date first'},
 };
 const _ = k => _L[k]?.[_lang] || k;
 
@@ -1401,15 +1335,6 @@ document.querySelectorAll('.sub-tab').forEach(stab => {
 function pad(n) { return String(n).padStart(2, '0'); }
 function fmtUTC(d) { return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`; }
 function fmtLocal(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
-function fmtInTz(d, tz) {
-  try {
-    const s = d.toLocaleString('zh-CN', { timeZone: tz, hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const off = tzOffset(tz);
-    const sign = off >= 0 ? '+' : '-';
-    const absH = Math.floor(Math.abs(off) / 60);
-    return s.replace(/\//g, '-') + ` (UTC${sign}${absH})`;
-  } catch { return '—'; }
-}
 function fmtRfc(d) {
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -1448,17 +1373,11 @@ function renderTs(r) {
   $('tsResult').innerHTML = r && !r.err
     ? `<div style="font-size:20px;font-weight:500;">${r.local}</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px;">${Intl.DateTimeFormat().resolvedOptions().timeZone}</div>`
     : (r ? `<span style="color:var(--red)">⚠ ${r.err}</span>` : _('waiting_result'));
-  ['tsUtc','tsRfc','tsRel','tsMs','tsTz'].forEach((id, i) => {
+  ['tsUtc','tsRfc','tsRel','tsMs'].forEach((id, i) => {
     const el = $(id);
-    if (r && !r.err) {
-      const vals = [r.utc, r.rfc, r.rel, String(r.ms)];
-      if (id === 'tsTz') {
-        vals.push(tzSelected ? fmtInTz(r.d, tzSelected) : '—');
-      }
-      el.textContent = vals[i];
-    } else el.textContent = '—';
+    if (r && !r.err) el.textContent = [r.utc, r.rfc, r.rel, String(r.ms)][i];
+    else el.textContent = '—';
   });
-  $('tzLabel').textContent = tzSelected ? tzSelected.split('/').pop().replace(/_/g, ' ') : _('tzLabel');
 }
 $('tsInput').addEventListener('input', () => renderTs(parseTs($('tsInput').value)));
 $('tsInput').addEventListener('keydown', e => {
@@ -1490,49 +1409,6 @@ $('tsRevNowBtn').addEventListener('click', () => {
 $('tsRevClearBtn').addEventListener('click', () => { $('tsRevInput').value = ''; renderTsRev(); });
 $('tsCopySec').addEventListener('click', () => { const r = parseTs($('tsInput').value); if (r && !r.err) copy(String(r.sec)); else toast(_('err_no_result'), 1); });
 $('tsCopyMs').addEventListener('click', () => { const r = parseTs($('tsInput').value); if (r && !r.err) copy(String(r.ms)); else toast(_('err_no_result'), 1); });
-
-// 日期计算
-$('tsCalcBtn').addEventListener('click', () => {
-  const from = new Date($('tsCalcFrom').value);
-  const to = new Date($('tsCalcTo').value);
-  if (isNaN(from) || isNaN(to)) { toast(_('tsCalc_needTwo'), 1); return; }
-  const diff = Math.abs(to - from);
-  const days = Math.floor(diff / 86400000);
-  const hours = Math.floor((diff % 86400000) / 3600000);
-  const mins = Math.floor((diff % 3600000) / 60000);
-  const secs = Math.floor((diff % 60000) / 1000);
-  // 工作日计算
-  let workdays = 0, d = new Date(Math.min(from, to)), end = new Date(Math.max(from, to));
-  while (d <= end) { if (d.getDay() !== 0 && d.getDay() !== 6) workdays++; d.setDate(d.getDate() + 1); }
-  const L = (k) => _L[k]?.[_lang] || k;
-  $('tsCalcResult').innerHTML = `
-    <div class="result-item"><span class="label">${L('tsCalc_totalDays')}</span><span class="value">${days} ${L('tsCalcDays_unit')}</span></div>
-    <div class="result-item"><span class="label">${L('tsCalc_workDays')}</span><span class="value">${workdays} ${L('tsCalcDays_unit')}</span></div>
-    <div class="result-item"><span class="label">${L('tsCalc_hms')}</span><span class="value">${hours}h ${mins}m ${secs}s</span></div>
-    <div class="result-item"><span class="label">${L('tsCalc_totalSec')}</span><span class="value">${Math.floor(diff / 1000).toLocaleString()} s</span></div>
-    <div class="result-item"><span class="label">${L('tsCalc_totalMs')}</span><span class="value">${diff.toLocaleString()} ms</span></div>`;
-});
-$('tsCalcAddBtn').addEventListener('click', () => {
-  const from = new Date($('tsCalcFrom').value);
-  if (isNaN(from)) { toast(_('tsCalc_needFrom'), 1); return; }
-  const days = parseInt($('tsCalcDays').value) || 0;
-  const result = new Date(from.getTime() + days * 86400000);
-  $('tsCalcTo').value = result.toISOString().slice(0, 16);
-  $('tsCalcBtn').click();
-});
-$('tsCalcSwap').addEventListener('click', () => {
-  const tmp = $('tsCalcFrom').value;
-  $('tsCalcFrom').value = $('tsCalcTo').value;
-  $('tsCalcTo').value = tmp;
-});
-$('tsCalcClearBtn').addEventListener('click', () => {
-  $('tsCalcFrom').value = '';
-  $('tsCalcTo').value = '';
-  $('tsCalcResult').innerHTML = '';
-  $('tsCalcDays').value = '1';
-});
-// 默认填入当前时间
-$('tsCalcFrom').value = new Date().toISOString().slice(0, 16);
 
 // 计时器
 let timerRunning = false, timerStart = 0, timerElapsed = 0, timerLaps = [], timerRAF = null;
@@ -4058,61 +3934,6 @@ document.querySelectorAll('.result-box .copy-btn:not(.download-btn)').forEach(bt
 });
 
 // ═══════════════════════════════════════
-//  ⏱ 时区选择器
-// ═══════════════════════════════════════
-let tzData = [];
-let tzFiltered = [];
-let tzSelected = '';
-function tzOffset(tz) {
-  const d = new Date();
-  const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
-  const p = fmt.formatToParts(d);
-  const get = (t) => +p.find(x=>x.type===t)?.value;
-  const tzMs = Date.UTC(get('year'), get('month')-1, get('day'), get('hour'), get('minute'), get('second'));
-  return Math.round((tzMs - Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds())) / 60000);
-}
-function tzLabel(tz) {
-  try {
-    const off = tzOffset(tz);
-    const sign = off >= 0 ? '+' : '-';
-    const absH = Math.floor(Math.abs(off) / 60);
-    const city = tz.split('/').pop().replace(/_/g, ' ');
-    return `${city} (UTC${sign}${absH})`;
-  } catch { return tz.replace(/_/g, ' '); }
-}
-const tzAll = (() => {
-  const common = ['Asia/Shanghai','Asia/Tokyo','Asia/Singapore','Asia/Hong_Kong','Asia/Seoul','Asia/Taipei','America/New_York','America/Chicago','America/Denver','America/Los_Angeles','Europe/London','Europe/Paris','Europe/Berlin','Europe/Moscow','Australia/Sydney','Pacific/Auckland'];
-  try { return [...common, ...Intl.supportedValuesOf('timeZone').filter(t => !common.includes(t))]; }
-  catch { return common; }
-})();
-tzData = tzAll.map(tz => ({ tz, label: tzLabel(tz) }));
-tzFiltered = [...tzData];
-
-function renderTzList(filter) {
-  const list = $('tzList');
-  filter = filter.toLowerCase().trim();
-  tzFiltered = filter ? tzData.filter(d => d.tz.toLowerCase().includes(filter) || d.label.toLowerCase().includes(filter)) : [...tzData];
-  list.innerHTML = tzFiltered.length
-    ? tzFiltered.map((d, i) => `<div class="tz-item${d.tz === tzSelected ? ' active' : ''}" data-idx="${i}">${d.label}</div>`).join('')
-    : '<div class="tz-item" style="color:var(--text-dim);">' + _('no_match') + '</div>';
-}
-$('tzSearch').addEventListener('focus', () => { $('tzList').classList.add('open'); renderTzList($('tzSearch').value); });
-$('tzSearch').addEventListener('input', () => renderTzList($('tzSearch').value));
-$('tzList').addEventListener('click', e => {
-  const item = e.target.closest('.tz-item');
-  if (!item || !('idx' in item.dataset)) return;
-  const d = tzFiltered[+item.dataset.idx];
-  if (!d) return;
-  tzSelected = d.tz;
-  $('tzSearch').value = d.label;
-  $('tzList').classList.remove('open');
-  renderTs(parseTs($('tsInput').value));
-});
-document.addEventListener('click', e => {
-  if (!$('tzPicker').contains(e.target)) $('tzList').classList.remove('open');
-});
-
-// ═══════════════════════════════════════
 //  操作历史
 // ═══════════════════════════════════════
 const HISTORY_KEY = 'litools_history';
@@ -4305,7 +4126,7 @@ const tabMeta = [
   {tab:'encode', name:'🔐 编解码', sub:[{id:'b64',n:'Base64'},{id:'url',n:'URL'},{id:'html',n:'HTML'},{id:'jwt',n:'JWT'},{id:'bc',n:'进制'},{id:'morse',n:'Morse'},{id:'caesar',n:'Caesar'},{id:'bintext',n:'二进制文本'}], kw:'编码 解码 base64 url html jwt 进制 hex bin oct morse caesar 凯撒 二进制'},
   {tab:'gen', name:'🎲 生成', sub:[{id:'uuid',n:'UUID'},{id:'hash',n:'Hash'},{id:'color',n:'颜色'},{id:'passwd',n:'密码'},{id:'lorem',n:'Lorem'},{id:'cron',n:'Cron'},{id:'fmt',n:'代码格式化'},{id:'calc',n:'计算器'}], kw:'生成 uuid hash sha 颜色 色值 密码 lorem cron 代码格式化 beautify minify js css html 计算器 calc 计算'},
   {tab:'text', name:'📝 文本', sub:[{id:'proc',n:'处理'},{id:'stats',n:'统计'},{id:'case',n:'大小写'},{id:'csv',n:'CSV'},{id:'diff',n:'Diff'}], kw:'排序 去重 统计 大小写 camel snake kebab csv 表格 diff 比较'},
-  {tab:'ts', name:'⏱ 时间', sub:[{id:'ts-convert',n:'时间戳'},{id:'ts-calc',n:'日期计算'},{id:'ts-timer',n:'计时器'}], kw:'时间 日期 毫秒 秒 时间戳 计时 倒计时'},
+  {tab:'ts', name:'⏱ 时间', sub:[{id:'ts-convert',n:'时间戳'},{id:'ts-timer',n:'计时器'}], kw:'时间 日期 毫秒 秒 时间戳 计时 倒计时'},
 ];
 const $tsi = $('tabSearchInput'), $tsr = $('tabSearchResults'), $tsIcon = $('tabSearchIcon');
 function tsOpen() { $tsi.style.display = ''; $tsi.focus(); $tsi.select(); }
