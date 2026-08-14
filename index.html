@@ -840,12 +840,9 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <div class="sub-tabs">
       <div class="sub-tab active" data-sub="proc" data-lk="sub_proc">📝 处理</div>
       <div class="sub-tab" data-sub="stats" data-lk="sub_stats">📊 统计</div>
-      <div class="sub-tab" data-sub="cc" data-lk="sub_cc">🀄 简繁</div>
       <div class="sub-tab" data-sub="case" data-lk="sub_case">🔄 大小写</div>
-      <div class="sub-tab" data-sub="trans" data-lk="sub_trans">🌐 翻译</div>
       <div class="sub-tab" data-sub="csv" data-lk="sub_csv">📋 CSV</div>
       <div class="sub-tab" data-sub="diff" data-lk="sub_diff">📑 Diff</div>
-      <div class="sub-tab" data-sub="markdown" data-lk="sub_markdown">📝 Markdown</div>
     </div>
     <!-- 文本处理 -->
     <div class="sub-pane active" data-sub="proc">
@@ -899,18 +896,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <div class="result-item"><span class="label" data-lk="statsBytes">字节</span><span class="value" id="stBytes">0</span></div>
       </div>
     </div>
-    <!-- 简繁 -->
-    <div class="sub-pane" data-sub="cc">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
-        <textarea id="ccInput" rows="10" placeholder="粘贴要转换的文本" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_ccInput"></textarea>
-        <div class="result-box" id="ccResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="ccResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
-      </div>
-      <div class="btn-group">
-        <button class="btn btn-primary" id="ccToSimpBtn" data-lk="ccToSimpBtn">繁→简</button>
-        <button class="btn" id="ccToTradBtn" data-lk="ccToTradBtn">简→繁</button>
-        <button class="btn" id="ccClearBtn" data-lk="ccClearBtn">清空</button>
-      </div>
-    </div>
     <!-- 大小写/命名转换 -->
     <div class="sub-pane" data-sub="case">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
@@ -925,19 +910,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-sm" id="caseScreamingBtn" data-lk="caseScreamingBtn">SCREAMING_SNAKE</button>
         <button class="btn btn-sm" id="caseClearBtn" data-lk="caseClearBtn">清空</button>
       </div>
-    </div>
-    <!-- 翻译 -->
-    <div class="sub-pane" data-sub="trans">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
-        <textarea id="transInput" rows="10" placeholder="输入要翻译的文本" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_transInput"></textarea>
-        <div class="result-box" id="transResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow:auto;" data-lk="transResult">等待输入</div>
-      </div>
-      <div class="btn-group" style="margin-top:8px;">
-        <button class="btn btn-primary btn-sm" id="transToEn" data-lk="transToEn">中→英</button>
-        <button class="btn btn-sm" id="transToZh" data-lk="transToZh">英→中</button>
-        <button class="btn btn-sm" id="transClearBtn" data-lk="transClearBtn">清空</button>
-      </div>
-      <div class="stat-line" id="transStat"></div>
     </div>
     <!-- CSV -->
     <div class="sub-pane" data-sub="csv">
@@ -966,20 +938,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-sm" id="diffClearBtn" data-lk="diffClearBtn">清空</button>
         <span id="diffStat" style="font-size:12px;color:var(--text-dim);line-height:28px;margin-left:auto;"></span>
       </div>
-    </div>
-    <!-- Markdown -->
-    <div class="sub-pane" data-sub="markdown">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
-        <textarea id="markdownInput" rows="10" placeholder="输入 Markdown 文本" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_markdownInput"></textarea>
-        <div class="result-box" id="markdownResult" style="min-height:55vh;margin:0;font-family:'Segoe UI',sans-serif;font-size:14px;line-height:1.6;overflow:auto;">
-          <div style="padding:20px;text-align:center;color:var(--text-dim);">Markdown 预览</div>
-        </div>
-      </div>
-      <div class="btn-group" style="margin-top:8px;">
-        <button class="btn btn-sm" id="markdownCopyBtn" data-lk="markdownCopyBtn">复制 HTML</button>
-        <button class="btn btn-sm" id="markdownClearBtn" data-lk="markdownClearBtn">清空</button>
-      </div>
-      <div id="markdownInfo" style="font-size:12px;color:var(--text-dim);margin-top:8px;"></div>
     </div>
   </div>
 
@@ -1050,7 +1008,7 @@ const _L = {
   sub_rex:{zh:'◎ 正则速查',en:'◎ Regex Cheat'}, sub_cron:{zh:'⏰ Cron',en:'⏰ Cron'},   sub_fmt:{zh:'🔧 代码格式化',en:'🔧 Code Formatter'}, sub_calc:{zh:'🧮 计算器',en:'🧮 Calculator'},
   rexExplainBtn:{zh:'解释',en:'Explain'}, pl_rexExplainInput:{zh:'输入正则表达式，如 \\d{4}-\\d{2}-\\d{2}',en:'Enter regex, e.g. \\d{4}-\\d{2}-\\d{2}'},
   sub_proc:{zh:'📝 处理',en:'📝 Process'}, sub_stats:{zh:'📊 统计',en:'📊 Stats'},
-  sub_cc:{zh:'🀄 简繁',en:'🀄 Chinese'}, sub_case:{zh:'🔄 大小写',en:'🔄 Case'},
+  sub_case:{zh:'🔄 大小写',en:'🔄 Case'},
   tsNowBtn:{zh:'当前',en:'Now'}, tsClearBtn:{zh:'清空',en:'Clear'},
   jsonPathBtn:{zh:'查询',en:'Query'}, jsonPathInput:{zh:'JSONPath 查询，如 $.store.book[*].title',en:'JSONPath e.g. $.store.book[*].title'},
   sqlResult:{zh:'结果',en:'Result'}, sqlGenBtn:{zh:'生成 IN',en:'Generate IN'}, sqlInsertParseBtn:{zh:'解析',en:'Parse'}, sql_insert_title:{zh:'INSERT 语句',en:'INSERT Statement'},
@@ -1114,18 +1072,10 @@ const _L = {
   statsChars:{zh:'字数',en:'Chars'}, statsCharsWS:{zh:'字符（含空格）',en:'Chars (w/ space)'},
   statsLines:{zh:'行数',en:'Lines'}, statsWords:{zh:'单词',en:'Words'},
   statsParas:{zh:'段落',en:'Paras'}, statsBytes:{zh:'字节',en:'Bytes'},
-  ccResult:{zh:'结果',en:'Result'}, ccToSimpBtn:{zh:'繁→简',en:'Trad→Simp'},
-  ccToTradBtn:{zh:'简→繁',en:'Simp→Trad'}, ccClearBtn:{zh:'清空',en:'Clear'},
   caseResult:{zh:'结果',en:'Result'}, caseCamelBtn:{zh:'camelCase',en:'camelCase'}, casePascalBtn:{zh:'PascalCase',en:'PascalCase'},
   caseSnakeBtn:{zh:'snake_case',en:'snake_case'}, caseKebabBtn:{zh:'kebab-case',en:'kebab-case'}, caseScreamingBtn:{zh:'SCREAMING_SNAKE',en:'SCREAMING_SNAKE'}, caseClearBtn:{zh:'清空',en:'Clear'},
   pl_caseInput:{zh:'输入文本，如 hello_world / HELLO WORLD / helloWorld',en:'Enter text, e.g. hello_world / HELLO WORLD / helloWorld'},
-  sub_trans:{zh:'🌐 翻译',en:'🌐 Translate'}, sub_markdown:{zh:'📝 Markdown',en:'📝 Markdown'}, transResult:{zh:'结果',en:'Result'},
-  markdownCopyBtn:{zh:'复制 HTML',en:'Copy HTML'}, markdownClearBtn:{zh:'清空',en:'Clear'},
-  markdown_empty:{zh:'输入 Markdown 开始预览',en:'Enter Markdown to preview'},
-  pl_markdownInput:{zh:'输入 Markdown 文本，右侧实时预览',en:'Enter Markdown, preview on right'},
   resp_body:{zh:'响应体',en:'Body'}, resp_headers:{zh:'响应头',en:'Headers'},
-  transToEn:{zh:'中 → 英',en:'ZH → EN'}, transToZh:{zh:'英 → 中',en:'EN → ZH'},
-  transClearBtn:{zh:'清空',en:'Clear'}, pl_transInput:{zh:'输入要翻译的文本',en:'Enter text to translate'},
   pl_tabSearch:{zh:'搜索页签…',en:'Search tabs…'}, pl_tzSearch:{zh:'搜索时区...',en:'Search timezone...'},
   pl_sqlInsert:{zh:'粘贴 INSERT 语句，自动解析列名与值的对应关系',en:'Paste INSERT statement to parse column-value mapping'},
   pl_sqlInsertSearch:{zh:'🔍 搜索值定位列名...',en:'🔍 Search value to locate column...'},
@@ -1170,7 +1120,6 @@ const _L = {
   pl_cronInput:{zh:'Cron 表达式，如 */5 * * * *',en:'Cron expr, e.g. */5 * * * *'},
   pl_tpInput:{zh:'输入文本',en:'Enter text'},
   pl_statsInput:{zh:'粘贴文本',en:'Paste text'},
-  pl_ccInput:{zh:'粘贴要转换的文本',en:'Paste text to convert'},
   pl_colorInput:{zh:'#FF6600 / rgb(255,102,0) / hsl(24,100%,50%)',en:'#FF6600 / rgb(255,102,0) / hsl(24,100%,50%)'},
   pl_bcInput:{zh:'输入数字，如 255 / 0xFF / 0b1111 / 0o377',en:'Enter number: 255 / 0xFF / 0b1111 / 0o377'},
   pl_morseInput:{zh:'输入文本，如 SOS',en:'Enter text, e.g. SOS'},
@@ -1727,8 +1676,6 @@ function handleFileDrop(file) {
       readDroppedFile(file).then(text => { if (text) { $('tpInput').value = text; } });
     } else if (subId === 'stats') {
       readDroppedFile(file).then(text => { if (text) { $('statsInput').value = text; updateStats(); } });
-    } else if (subId === 'cc') {
-      readDroppedFile(file).then(text => { if (text) { $('ccInput').value = text; } });
     } else if (subId === 'csv') {
       readDroppedFile(file).then(text => { if (text) { $('csvInput').value = text; renderCSV(text); } });
     } else { toast(`当前子页签不支持拖拽`, 1); }
@@ -3506,105 +3453,6 @@ $('tpRegexPattern').addEventListener('keydown', e => { if (e.key === 'Enter') ap
 setupFileInput({ btnId: 'tpFileBtn', targetEl: $('tpInput') });
 
 // ═══════════════════════════════════════
-//  📝 Markdown 预览
-// ═══════════════════════════════════════
-function mdEscape(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function mdInline(s) {
-  let t = mdEscape(s);
-  t = t.replace(/`([^`]+)`/g, '<code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:0.9em;">$1</code>');
-  t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  t = t.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
-  t = t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:4px;" onerror="this.style.display=\'none\'">');
-  t = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:var(--accent);">$1</a>');
-  t = t.replace(/~~([^~]+)~~/g, '<del>$1</del>');
-  return t;
-}
-function renderMarkdown(src) {
-  if (!src.trim()) return '<div style="padding:20px;text-align:center;color:var(--text-dim);">' + (_('markdown_empty') || '输入 Markdown 开始预览') + '</div>';
-  let html = '';
-  const lines = src.replace(/\r\n/g, '\n').split('\n');
-  let inCode = false, codeLang = '', codeBuf = [];
-  let listType = null, listItems = [];
-  let tbl = [];
-  const flushList = () => {
-    if (!listItems.length) return;
-    const tag = listType === 'ol' ? 'ol' : 'ul';
-    html += '<' + tag + ' style="padding-left:24px;margin:8px 0;">' + listItems.map(li => '<li style="margin:2px 0;">' + li + '</li>').join('') + '</' + tag + '>';
-    listItems = []; listType = null;
-  };
-  const flushTbl = () => {
-    if (!tbl.length) return;
-    const isHead = tbl[0] && tbl[0].isHead;
-    html += '<div style="overflow-x:auto;margin:8px 0;"><table style="border-collapse:collapse;font-size:13px;width:100%;"><thead><tr>' + (isHead ? tbl[0].cells.map(c => '<th style="border:1px solid var(--border);padding:6px 10px;background:var(--surface2);text-align:left;">' + c + '</th>').join('') : '') + '</tr></thead><tbody>' + (isHead ? tbl.slice(1) : tbl).map(r => '<tr>' + r.cells.map(c => '<td style="border:1px solid var(--border);padding:5px 10px;">' + c + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
-    tbl = [];
-  };
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.trim().startsWith('```')) {
-      if (!inCode) { flushList(); flushTbl(); inCode = true; codeLang = line.trim().slice(3).trim(); codeBuf = []; }
-      else {
-        inCode = false;
-        html += '<pre style="background:var(--surface2);padding:12px;border-radius:6px;overflow-x:auto;margin:8px 0;font-family:Consolas,monospace;font-size:12px;line-height:1.5;"><code' + (codeLang ? ' class="lang-' + mdEscape(codeLang) + '"' : '') + '>' + mdEscape(codeBuf.join('\n')) + '</code></pre>';
-      }
-      continue;
-    }
-    if (inCode) { codeBuf.push(line); continue; }
-    const codeMatch = line.match(/^ {4}/);
-    if (codeMatch) { flushList(); flushTbl(); html += '<pre style="background:var(--surface2);padding:10px;border-radius:6px;overflow-x:auto;margin:6px 0;font-family:Consolas,monospace;font-size:12px;">' + mdEscape(line.slice(4)) + '</pre>'; continue; }
-    const h = line.match(/^(#{1,6})\s+(.*)$/);
-    if (h) { flushList(); flushTbl(); const lv = h[1].length; html += '<h' + lv + ' style="margin:12px 0 8px;line-height:1.3;">' + mdInline(h[2]) + '</h' + lv + '>'; continue; }
-    if (/^\s*([-*+])\s+/.test(line) && !/^\s*[-*+](\s)+$/.test(line)) {
-      const m = line.match(/^\s*([-*+])\s+(.*)$/);
-      const tag = m[1] === '-' ? 'ul' : (m[1] === '+' ? 'ul' : 'ul');
-      if (listType !== 'ul') { flushList(); flushTbl(); listType = 'ul'; }
-      listItems.push(mdInline(m[2]));
-      continue;
-    }
-    if (/^\s*\d+[.)]\s+/.test(line)) {
-      const m = line.match(/^\s*\d+[.)]\s+(.*)$/);
-      if (listType !== 'ol') { flushList(); flushTbl(); listType = 'ol'; }
-      listItems.push(mdInline(m[1]));
-      continue;
-    }
-    const bq = line.match(/^>\s?(.*)$/);
-    if (bq) { flushList(); flushTbl(); html += '<blockquote style="border-left:3px solid var(--accent);padding:6px 12px;margin:8px 0;background:var(--surface2);color:var(--text-dim);">' + mdInline(bq[1]) + '</blockquote>'; continue; }
-    if (/^\|.*\|$/.test(line.trim())) {
-      const cells = line.trim().slice(1, -1).split('|').map(c => mdInline(c.trim()));
-      if (tbl.length === 1 && /^:?-{3,}:?$/.test(cells[0]) && /^:?-{3,}:?$/.test(cells[1])) { tbl[0].isHead = true; continue; }
-      tbl.push({ cells, isHead: tbl.length === 0 ? true : false });
-      continue;
-    }
-    if (/^\s*(---+|\*\*\*+|___+)\s*$/.test(line)) { flushList(); flushTbl(); html += '<hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">'; continue; }
-    if (!line.trim()) { flushList(); flushTbl(); html += '<div style="height:8px;"></div>'; continue; }
-    flushList(); flushTbl();
-    html += '<p style="margin:6px 0;line-height:1.7;">' + mdInline(line.trim()) + '</p>';
-  }
-  if (inCode) html += '<pre style="background:var(--surface2);padding:12px;border-radius:6px;overflow-x:auto;font-family:Consolas,monospace;font-size:12px;"><code>' + mdEscape(codeBuf.join('\n')) + '</code></pre>';
-  flushList(); flushTbl();
-  return html;
-}
-let _mdTimer;
-$('markdownInput').addEventListener('input', () => {
-  clearTimeout(_mdTimer);
-  _mdTimer = setTimeout(() => { $('markdownResult').innerHTML = renderMarkdown($('markdownInput').value); }, 150);
-});
-$('markdownResult').addEventListener('click', () => {
-  const sel = window.getSelection(); if (sel && sel.toString()) return;
-  const input = $('markdownInput'); if (input) input.focus();
-});
-$('markdownCopyBtn').addEventListener('click', () => {
-  const html = renderMarkdown($('markdownInput').value);
-  copy(html);
-  toast(_('copied'));
-});
-$('markdownClearBtn').addEventListener('click', () => {
-  $('markdownInput').value = '';
-  $('markdownResult').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);">' + (_('markdown_empty') || '输入 Markdown 开始预览') + '</div>';
-});
-$('markdownInput').value = '# Hello Markdown\n\n支持 **粗体**、*斜体*、`行内代码`、[链接](https://example.com)\n\n```js\nconst a = 1;\n```\n\n- 列表项 1\n- 列表项 2\n\n| 列1 | 列2 |\n| --- | --- |\n| A | B |';
-$('markdownResult').innerHTML = renderMarkdown($('markdownInput').value);
-
-// ═══════════════════════════════════════
 //  🔢 进制转换
 // ═══════════════════════════════════════
 function convertBase(input) {
@@ -4036,34 +3884,6 @@ $('statsInput').addEventListener('input', updateStats);
 $('statsClearBtn').addEventListener('click', () => { $('statsInput').value = ''; updateStats(); });
 
 // ═══════════════════════════════════════
-//  🀄 简繁转换
-// ═══════════════════════════════════════
-(function(){
-const _s = "与专业东丝两严个义乌乐书买卖乱争于亏云亚产亲什仅仆仇今介从仑仓仅们价众优伙会伛伞伟传伤伦伪体估计们伦伯佣低伶佝佞偶尔佩佰佳佴佶佸佻佼佽侑侔侃侄侈侪侬侭俭俗俘俚保俜俟侠俦俨侣侦侧侨侩侪侬俣俦俨俩俪俫俭修俯俱俳俵俶俸俺俾倌倏们值倭偈偎偲偻傥傧储催傩僎像僖僚僭僮儆儇儋儕償儻儲催傭僱優儲儂儐儗儘儔儕儖儗償儻儲";
-const _t = "與專業東絲兩嚴個義烏樂書買賣亂爭於虧雲亞產親什僅僕仇今介從艙倉僅們價眾優夥會傴傘偉傳傷倫偽體估計們倫伯傭低伶佝佞偶爾佩佰佳佴佶佸佻佼佽侑侔侃侄侈儕儂儐儉俗俘俚保俜俟俠儔儼侶偵側僑儈儕儂俁儔儼倆儷倈儉修俯俱俳俵俶俸俺俾倌倏們值倭偈偎偲僂儻儐儲催儺僎像僖僚僭僮儆儇儋儕償儻儲催傭僱優儲儂儐儗儘儔儕儖儗償儻儲";
-// Expanded mapping
-const _s2 = "丙丢临义乏乌乎乖乘乙乞乾亂了予二于互五些亡交产享京亮亿什仁仅仆仇今介仍从他的付仙代们以仪们价众优伙会伟传伤伦伪体估伯佣低伶佝佞住位伴佰佳佴佶佸佻佼佽侑侔侃侄侈侪侬侭俭俗俘俚保倜俟侠俦俨侣侦侧侨侩侪侬俣俦俨俩俪俫俭修俯俱俳俵俶俸俺俾倌倏们值倭偈偎偲偻傥傧储催傩僎像僖僚僭僮儆儇儋儕償儻儲催傭僱優儲儂儐儗儘儔儕儖儗償儻儲";
-const _t2 = "丙丟臨義乏烏乎乖乘乙乞乾亂了予二於互五些亡交產享京亮億什仁僅僕仇今介仍從他的付仙代們以儀們價眾優夥會偉傳傷倫偽體估伯傭低伶佝佞住位伴佰佳佴佶佸佻佼佽侑侔侃侄侈儕儂儐儉俗俘俚保倜俟俠儔儼侶偵側僑儈儕儂俁儔儼倆儷倈儉修俯俱俳俵俶俸俺俾倌倏們值倭偈偎偲僂儻儐儲催儺僎像僖僚僭僮儆儇儋儕償儻儲催傭僱優儲儂儐儗儘儔儕儖儗償儻儲";
-// Merge
-const _sAll = _s + _s2, _tAll = _t + _t2;
-const s2t = {}, t2s = {};
-for (let i = 0; i < _sAll.length; i++) { s2t[_sAll[i]] = _tAll[i]; t2s[_tAll[i]] = _sAll[i]; }
-function ccConvert(text, map) { return text.split('').map(c => map[c] || c).join(''); }
-$('ccToSimpBtn').addEventListener('click', () => {
-  const v = $('ccInput').value;
-  if (!v) { toast(_('err_input_text'), 1); return; }
-  $('ccResult').textContent = ccConvert(v, t2s);
-});
-$('ccToTradBtn').addEventListener('click', () => {
-  const v = $('ccInput').value;
-  if (!v) { toast(_('err_input_text'), 1); return; }
-  $('ccResult').textContent = ccConvert(v, s2t);
-});
-$('ccClearBtn').addEventListener('click', () => { $('ccInput').value = ''; $('ccResult').textContent = _('res_json'); });
-bindStats($('ccInput'), 'ccStat');
-})();
-
-// ═══════════════════════════════════════
 //  🔄 大小写/命名转换
 // ═══════════════════════════════════════
 function splitCaseWords(text) {
@@ -4090,34 +3910,6 @@ $('caseSnakeBtn').addEventListener('click', () => caseConvert(toSnake));
 $('caseKebabBtn').addEventListener('click', () => caseConvert(toKebab));
 $('caseScreamingBtn').addEventListener('click', () => caseConvert(toScreaming));
 $('caseClearBtn').addEventListener('click', () => { $('caseInput').value = ''; $('caseResult').textContent = _('caseResult'); });
-
-// ═══════════════════════════════════════
-//  🌐 翻译
-// ═══════════════════════════════════════
-let _transAbort = null;
-async function translateText(text, from, to) {
-  if (!text.trim()) { toast(_('err_input_text'), 1); return; }
-  if (_transAbort) _transAbort.abort();
-  _transAbort = new AbortController();
-  if (text.length > 500) { toast('API limit 500 chars, truncated', 1); text = text.slice(0, 500); }
-  $('transResult').textContent = 'Translating…';
-  try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}`;
-    const resp = await fetch(url, { signal: _transAbort.signal });
-    const data = await resp.json();
-    if (data.responseStatus === 200 && data.responseData?.translatedText) {
-      $('transResult').textContent = data.responseData.translatedText;
-    } else {
-      $('transResult').textContent = 'Translation failed: ' + (data.responseDetails || 'Unknown error');
-    }
-  } catch (e) {
-    if (e.name !== 'AbortError') $('transResult').textContent = 'Request failed: ' + e.message;
-  }
-}
-$('transToEn').addEventListener('click', () => translateText($('transInput').value, 'zh-CN', 'en'));
-$('transToZh').addEventListener('click', () => translateText($('transInput').value, 'en', 'zh-CN'));
-$('transClearBtn').addEventListener('click', () => { $('transInput').value = ''; $('transResult').textContent = _('res_json'); });
-bindStats($('transInput'), 'transStat');
 
 // ═══════════════════════════════════════
 //  🔐 JWT
@@ -4418,7 +4210,7 @@ const n = new Date();
 $('tsRevInput').value = `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())} ${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
 // Session persistence
 (function(){
-const KEYS = ['jsonInput','b64Input','urlInput','uuidCount','tpInput','bcInput','htmlInput','sqlInput','hashInput','colorInput','statsInput','jwtInput','csvInput','ccInput'];
+const KEYS = ['jsonInput','b64Input','urlInput','uuidCount','tpInput','bcInput','htmlInput','sqlInput','hashInput','colorInput','statsInput','jwtInput','csvInput'];
 const SAVE = () => {
   const d = {};
   KEYS.forEach(id => { const el = $(id); if (el && el.value) d[id] = el.value; });
@@ -4512,7 +4304,7 @@ const tabMeta = [
   {tab:'sql', name:'🗄️ SQL', sub:[{id:'sql-in',n:'IN 生成'},{id:'sql-insert',n:'INSERT 解析'},{id:'sql-fmt',n:'SQL 格式化'}], kw:'sql 数据库 insert 值 列 格式化'},
   {tab:'encode', name:'🔐 编解码', sub:[{id:'b64',n:'Base64'},{id:'url',n:'URL'},{id:'html',n:'HTML'},{id:'jwt',n:'JWT'},{id:'bc',n:'进制'},{id:'morse',n:'Morse'},{id:'caesar',n:'Caesar'},{id:'bintext',n:'二进制文本'}], kw:'编码 解码 base64 url html jwt 进制 hex bin oct morse caesar 凯撒 二进制'},
   {tab:'gen', name:'🎲 生成', sub:[{id:'uuid',n:'UUID'},{id:'hash',n:'Hash'},{id:'color',n:'颜色'},{id:'passwd',n:'密码'},{id:'lorem',n:'Lorem'},{id:'cron',n:'Cron'},{id:'fmt',n:'代码格式化'},{id:'calc',n:'计算器'}], kw:'生成 uuid hash sha 颜色 色值 密码 lorem cron 代码格式化 beautify minify js css html 计算器 calc 计算'},
-  {tab:'text', name:'📝 文本', sub:[{id:'proc',n:'处理'},{id:'stats',n:'统计'},{id:'cc',n:'简繁'},{id:'case',n:'大小写'},{id:'trans',n:'翻译'},{id:'csv',n:'CSV'},{id:'diff',n:'Diff'},{id:'markdown',n:'Markdown'}], kw:'排序 去重 统计 简繁 大小写 camel snake kebab 翻译 csv 表格 diff 比较 markdown 预览'},
+  {tab:'text', name:'📝 文本', sub:[{id:'proc',n:'处理'},{id:'stats',n:'统计'},{id:'case',n:'大小写'},{id:'csv',n:'CSV'},{id:'diff',n:'Diff'}], kw:'排序 去重 统计 大小写 camel snake kebab csv 表格 diff 比较'},
   {tab:'ts', name:'⏱ 时间', sub:[{id:'ts-convert',n:'时间戳'},{id:'ts-calc',n:'日期计算'},{id:'ts-timer',n:'计时器'}], kw:'时间 日期 毫秒 秒 时间戳 计时 倒计时'},
 ];
 const $tsi = $('tabSearchInput'), $tsr = $('tabSearchResults'), $tsIcon = $('tabSearchIcon');
