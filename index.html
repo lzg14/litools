@@ -189,6 +189,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 .jt-badge { font-size:11px; color:var(--text-dim); margin-left:4px; font-weight:400; }
 .jt-highlight { background:var(--accent-dim); border-radius:2px; }
 .jt-cur { background:var(--orange); color:#fff; border-radius:2px; } /* 搜索导航当前项 */
+.srch-cur { outline:2px solid var(--accent); outline-offset:1px; border-radius:2px; } /* 搜索模块当前命中项 */
 .jt-selected { background:rgba(25,118,210,0.2); }
 #jsonResultSearch { font-size:12px; padding:2px 8px; border:1px solid var(--border); border-radius:4px; width:150px; }
 #jsonResultSearch:focus { border-color:var(--accent); outline:none; }
@@ -330,6 +331,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <div class="tabs" id="tabs" style="flex:1;border:none;margin:0;min-width:0;">
     <div class="tab active" data-tab="json" data-lk="tab_json">{ } JSON</div>
     <div class="tab" data-tab="search" data-lk="tab_search">🔍 搜索</div>
+    <div class="tab" data-tab="regex" data-lk="tab_regex">◎ 正则</div>
     <div class="tab" data-tab="sql" data-lk="tab_sql">🗄️ SQL</div>
     <div class="tab" data-tab="encode" data-lk="tab_encode">🔐 编解码</div>
     <div class="tab" data-tab="gen" data-lk="tab_gen">🎲 生成</div>
@@ -522,16 +524,15 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
   </div>
 
-  <!-- 🔍 搜索 (合并搜索+正则) -->
+  <!-- 🔍 搜索 -->
   <div class="tab-pane" id="p-search">
-    <div class="sub-tabs">
-      <div class="sub-tab active" data-sub="search" data-lk="sub_search">🔍 搜索</div>
-      <div class="sub-tab" data-sub="regex" data-lk="sub_regex">◎ 正则</div>
-    </div>
-    <!-- 搜索 -->
-    <div class="sub-pane active" data-sub="search">
       <div class="result-box" id="srchEditor" contenteditable="true" spellcheck="false" style="height:calc(100vh - 280px);min-height:300px;padding:9px 12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;font-size:13px;overflow:auto;" data-lk-pl="pl_srchEditor"></div>
-      <div class="stat-line" id="srchStat" style="margin-top:4px;"></div>
+      <div class="stat-line" style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span id="srchStat" style="flex:1;"></span>
+        <span id="srchNavCount" style="font-size:11px;color:var(--text-dim);white-space:nowrap;">0/0</span>
+        <button class="btn btn-sm" id="srchPrevBtn" data-lk-tl="tl_jsonSearchPrev" title="上一个">↑</button>
+        <button class="btn btn-sm" id="srchNextBtn" data-lk-tl="tl_jsonSearchNext" title="下一个">↓</button>
+      </div>
       <div class="input-row" style="margin-top:8px;flex-wrap:wrap;align-items:center;">
         <input type="text" id="srchTerm" placeholder="搜索词" spellcheck="false" style="flex:2;min-width:120px;" data-lk-pl="srchTerm">
         <input type="text" id="srchReplace" placeholder="替换为" spellcheck="false" style="flex:1;min-width:100px;" data-lk-pl="srchReplace">
@@ -556,9 +557,15 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
           <div id="srchStreamBarFill" style="height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width .3s;"></div>
         </div>
       </div>
+  </div>
+
+  <!-- ◎ 正则 (测试+速查) -->
+  <div class="tab-pane" id="p-regex">
+    <div class="sub-tabs">
+      <div class="sub-tab active" data-sub="regex" data-lk="sub_regex_test">🧪 正则测试</div>
+      <div class="sub-tab" data-sub="rex" data-lk="sub_rex">📖 正则速查</div>
     </div>
-    <!-- 正则 -->
-    <div class="sub-pane" data-sub="regex">
+    <div class="sub-pane active" data-sub="regex">
       <div style="display:flex;gap:8px;margin-bottom:8px;">
         <input type="text" id="rexPattern" placeholder="正则表达式" spellcheck="false" style="flex:1;" data-lk-pl="pl_rexPattern">
         <select id="rexFlags" style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:12px;">
@@ -573,6 +580,16 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       </div>
       <div class="stat-line" id="rexStat" style="margin-top:4px;"></div>
       <div id="rexInfo" style="font-size:12px;color:var(--text-dim);margin-top:4px;"></div>
+    </div>
+    <!-- 正则速查 -->
+    <div class="sub-pane" data-sub="rex">
+      <div class="input-row" style="margin-bottom:8px;">
+        <input type="text" id="rexExplainInput" placeholder="输入正则表达式，如 \d{4}-\d{2}-\d{2}" spellcheck="false" style="flex:1;font-family:'Cascadia Code',monospace;" data-lk-pl="pl_rexExplainInput">
+        <button class="btn btn-primary btn-sm" id="rexExplainBtn" data-lk="rexExplainBtn">解释</button>
+      </div>
+      <div id="rexExplainResult" style="margin-bottom:10px;font-size:12px;color:var(--text-dim);max-height:200px;overflow:auto;"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="rexCheatContainer"></div>
+      <div class="result-item" style="margin-top:8px;"><span class="label" data-lk="rexCheatPreview">预览</span><span class="value mono" id="rexCheatPreview" style="white-space:pre-wrap;font-size:12px;">—</span><button class="copy-btn-sm" data-target="rexCheatPreview">📋</button></div>
     </div>
   </div>
 
@@ -699,7 +716,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div class="sub-tab" data-sub="color" data-lk="sub_color">🎨 颜色</div>
       <div class="sub-tab" data-sub="passwd" data-lk="sub_passwd">🔑 密码</div>
       <div class="sub-tab" data-sub="lorem" data-lk="sub_lorem">📃 Lorem</div>
-      <div class="sub-tab" data-sub="rex" data-lk="sub_rex">◎ 正则速查</div>
       <div class="sub-tab" data-sub="cron" data-lk="sub_cron">⏰ Cron</div>
       <div class="sub-tab" data-sub="fmt" data-lk="sub_fmt">🔧 代码格式化</div>
       <div class="sub-tab" data-sub="calc" data-lk="sub_calc">🧮 计算器</div>
@@ -782,16 +798,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-sm" id="loremCopyBtn" data-lk="loremCopyBtn">复制</button>
       </div>
       <div class="result-box" id="loremResult" style="line-height:1.8;">结果</div>
-    </div>
-    <!-- 正则速查 -->
-    <div class="sub-pane" data-sub="rex">
-      <div class="input-row" style="margin-bottom:8px;">
-        <input type="text" id="rexExplainInput" placeholder="输入正则表达式，如 \d{4}-\d{2}-\d{2}" spellcheck="false" style="flex:1;font-family:'Cascadia Code',monospace;" data-lk-pl="pl_rexExplainInput">
-        <button class="btn btn-primary btn-sm" id="rexExplainBtn" data-lk="rexExplainBtn">解释</button>
-      </div>
-      <div id="rexExplainResult" style="margin-bottom:10px;font-size:12px;color:var(--text-dim);max-height:200px;overflow:auto;"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="rexCheatContainer"></div>
-      <div class="result-item" style="margin-top:8px;"><span class="label" data-lk="rexCheatPreview">预览</span><span class="value mono" id="rexCheatPreview" style="white-space:pre-wrap;font-size:12px;">—</span><button class="copy-btn-sm" data-target="rexCheatPreview">📋</button></div>
     </div>
     <!-- Cron 解析 -->
     <div class="sub-pane" data-sub="cron">
@@ -1028,7 +1034,7 @@ const $ = id => document.getElementById(id);
 
 let _lang = localStorage.getItem('lang') || 'zh';
 const _L = {
-  tab_search:{zh:'🔍 搜索',en:'🔍 Search'}, tab_ts:{zh:'⏱ 时间',en:'⏱ Time'}, sub_ts_convert:{zh:'⏱ 时间戳',en:'⏱ Timestamp'}, sub_ts_calc:{zh:'🔢 日期计算',en:'🔢 Date Calc'}, sub_ts_timer:{zh:'⏱ 计时器',en:'⏱ Timer'},
+  tab_search:{zh:'🔍 搜索',en:'🔍 Search'}, tab_regex:{zh:'◎ 正则',en:'◎ Regex'}, tab_ts:{zh:'⏱ 时间',en:'⏱ Time'}, sub_ts_convert:{zh:'⏱ 时间戳',en:'⏱ Timestamp'}, sub_ts_calc:{zh:'🔢 日期计算',en:'🔢 Date Calc'}, sub_ts_timer:{zh:'⏱ 计时器',en:'⏱ Timer'},
   tab_encode:{zh:'🔐 编解码',en:'🔐 Encode/Decode'}, tab_gen:{zh:'🎲 生成',en:'🎲 Generate'},
   tab_text:{zh:'📝 文本',en:'📝 Text'}, tab_color:{zh:'🎨 颜色',en:'🎨 Color'}, tab_diff:{zh:'📑 Diff',en:'📑 Diff'},
   tab_json:{zh:'{ } JSON',en:'{ } JSON'},
@@ -1036,7 +1042,7 @@ const _L = {
   sub_sql_in:{zh:'🗄️ IN 生成',en:'🗄️ IN Generator'}, sub_sql_insert:{zh:'📋 INSERT 解析',en:'📋 INSERT Parser'}, sub_sql_fmt:{zh:'✨ SQL 格式化',en:'✨ SQL Formatter'},
   sub_bc:{zh:'🔢 进制',en:'🔢 Base Conv'}, sub_csv:{zh:'📋 CSV',en:'📋 CSV'}, sub_diff:{zh:'📑 Diff',en:'📑 Diff'}, sub_color:{zh:'🎨 颜色',en:'🎨 Color'},
   sub_morse:{zh:'📻 Morse',en:'📻 Morse'}, sub_caesar:{zh:'🔐 Caesar',en:'🔐 Caesar'}, sub_bintext:{zh:'💾 二进制文本',en:'💾 Binary Text'},
-  sub_search:{zh:'🔍 搜索',en:'🔍 Search'}, sub_regex:{zh:'◎ 正则',en:'◎ Regex'},
+  sub_regex_test:{zh:'🧪 正则测试',en:'🧪 Regex Test'},
   sub_b64:{zh:'Base64',en:'Base64'}, sub_url:{zh:'URL',en:'URL'},
   sub_html:{zh:'HTML',en:'HTML'}, sub_jwt:{zh:'JWT',en:'JWT'},
   sub_uuid:{zh:'UUID',en:'UUID'}, sub_hash:{zh:'Hash',en:'Hash'},
@@ -1702,17 +1708,16 @@ function handleFileDrop(file) {
   if (id === 'p-json') {
     readDroppedFile(file).then(text => { if (text) { $('jsonInput').value = text; renderJSONResult(text); } });
   } else if (id === 'p-search') {
-    if (subId === 'regex') {
-      readDroppedFile(file).then(text => { if (text) { rexEditor.textContent = text; rexHighlight(); } });
+    if (file.size > SRCH_STREAM_THRESHOLD) {
+      toast(`流式搜索 ${file.name}...`);
+      srchExitStream(true);
+      srchStreamScan(file).then(() => toast(`完成: ${_srchStreamMatches.length} 条匹配`)).catch(e => { srchExitStream(true); toast(`出错: ${e.message}`, 1); });
     } else {
-      if (file.size > SRCH_STREAM_THRESHOLD) {
-        toast(`流式搜索 ${file.name}...`);
-        srchExitStream(true);
-        srchStreamScan(file).then(() => toast(`完成: ${_srchStreamMatches.length} 条匹配`)).catch(e => { srchExitStream(true); toast(`出错: ${e.message}`, 1); });
-      } else {
-        readDroppedFile(file).then(text => { if (text) { srchEditor.textContent = text; srchEditor.dataset.lkPl = ''; applyHighlights(); updateSrchLines(); } });
-      }
+      readDroppedFile(file).then(text => { if (text) { srchEditor.textContent = text; srchEditor.dataset.lkPl = ''; applyHighlights(); updateSrchLines(); } });
     }
+  } else if (id === 'p-regex') {
+    if (subId === 'rex') { toast(`当前子页签不支持拖拽`, 1); }
+    else { readDroppedFile(file).then(text => { if (text) { rexEditor.textContent = text; rexHighlight(); } }); }
   } else if (id === 'p-encode' && subId === 'jwt') {
     readDroppedFile(file).then(text => { if (text) { $('jwtInput').value = text; $('jwtDecodeBtn').click(); } });
   } else if (id === 'p-gen' && subId === 'hash') {
@@ -2768,6 +2773,8 @@ function applyHighlights() {
     srchEditor.innerHTML = '';
     srchEditor.dataset.lkPl = 'pl_srchEditor';
     _srchLastText = '';
+    _srchHitIdx = -1;
+    $('srchNavCount').textContent = '0/0';
     return;
   }
   const liveTerm = $('srchTerm').value.trim();
@@ -2780,11 +2787,15 @@ function applyHighlights() {
   if (allTerms.length === 0) {
     srchEditor.textContent = text;
     _srchLastHtml = '';
+    _srchHitIdx = -1;
+    $('srchNavCount').textContent = '0/0';
     return;
   }
   if (text.length > SRCH_CHUNK) {
     srchEditor.textContent = text;
     _srchLastHtml = '';
+    _srchHitIdx = -1;
+    $('srchNavCount').textContent = '0/0';
     $('srchStat').textContent = `文本过大，跳过高亮`;
     return;
   }
@@ -2800,6 +2811,8 @@ function applyHighlights() {
   if (ranges.length === 0) {
     srchEditor.textContent = text;
     _srchLastHtml = '';
+    _srchHitIdx = -1;
+    $('srchNavCount').textContent = '0/0';
     $('srchStat').textContent = '';
     return;
   }
@@ -2818,7 +2831,7 @@ function applyHighlights() {
   let pos = 0;
   for (const r of merged) {
     if (pos < r.s) parts.push(esc(text.slice(pos, r.s)));
-    parts.push(`<span style="background:${r.c};border-radius:2px;padding:0 1px;">${esc(text.slice(r.s, r.e))}</span>`);
+    parts.push(`<span class="srch-hit" style="background:${r.c};border-radius:2px;padding:0 1px;">${esc(text.slice(r.s, r.e))}</span>`);
     pos = r.e;
   }
   if (pos < text.length) parts.push(esc(text.slice(pos)));
@@ -2827,8 +2840,25 @@ function applyHighlights() {
     srchEditor.innerHTML = html;
     _srchLastHtml = html;
   }
+  _srchHitIdx = -1; // innerHTML 重建后当前项类已失效，重置导航
+  $('srchNavCount').textContent = '0/' + merged.length;
   $('srchStat').textContent = `匹配 ${ranges.length} 处`;
 }
+
+// 🔍 命中导航：上一个/下一个/计数（srch-hit 按文档顺序即命中顺序）
+let _srchHitIdx = -1;
+function focusSrchHit(dir) {
+  const hits = srchEditor.querySelectorAll('.srch-hit');
+  if (!hits.length) { $('srchNavCount').textContent = '0/0'; return; }
+  _srchHitIdx = (_srchHitIdx + dir + hits.length) % hits.length;
+  hits.forEach(h => h.classList.remove('srch-cur'));
+  const cur = hits[_srchHitIdx];
+  cur.classList.add('srch-cur');
+  cur.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  $('srchNavCount').textContent = (_srchHitIdx + 1) + '/' + hits.length;
+}
+$('srchPrevBtn').addEventListener('click', () => focusSrchHit(-1));
+$('srchNextBtn').addEventListener('click', () => focusSrchHit(1));
 
 function updateSrchTags() {
   const text = getSrchText();
@@ -4460,10 +4490,11 @@ applyLang(_lang);
 
 const tabMeta = [
   {tab:'json', name:'{ } JSON', kw:'json 格式化 树形'},
-  {tab:'search', name:'🔍 搜索', kw:'查找 替换 正则 regex'},
+  {tab:'search', name:'🔍 搜索', kw:'查找 替换 高亮 过滤'},
+  {tab:'regex', name:'◎ 正则', sub:[{id:'regex',n:'正则测试'},{id:'rex',n:'正则速查'}], kw:'正则 regex 匹配 测试 速查'},
   {tab:'sql', name:'🗄️ SQL', sub:[{id:'sql-in',n:'IN 生成'},{id:'sql-insert',n:'INSERT 解析'},{id:'sql-fmt',n:'SQL 格式化'}], kw:'sql 数据库 insert 值 列 格式化'},
   {tab:'encode', name:'🔐 编解码', sub:[{id:'b64',n:'Base64'},{id:'url',n:'URL'},{id:'html',n:'HTML'},{id:'jwt',n:'JWT'},{id:'bc',n:'进制'},{id:'morse',n:'Morse'},{id:'caesar',n:'Caesar'},{id:'bintext',n:'二进制文本'}], kw:'编码 解码 base64 url html jwt 进制 hex bin oct morse caesar 凯撒 二进制'},
-  {tab:'gen', name:'🎲 生成', sub:[{id:'uuid',n:'UUID'},{id:'hash',n:'Hash'},{id:'color',n:'颜色'},{id:'passwd',n:'密码'},{id:'lorem',n:'Lorem'},{id:'rex',n:'正则速查'},{id:'cron',n:'Cron'},{id:'fmt',n:'代码格式化'},{id:'calc',n:'计算器'}], kw:'生成 uuid hash sha 颜色 色值 密码 lorem cron 正则速查 代码格式化 beautify minify js css html 计算器 calc 计算'},
+  {tab:'gen', name:'🎲 生成', sub:[{id:'uuid',n:'UUID'},{id:'hash',n:'Hash'},{id:'color',n:'颜色'},{id:'passwd',n:'密码'},{id:'lorem',n:'Lorem'},{id:'cron',n:'Cron'},{id:'fmt',n:'代码格式化'},{id:'calc',n:'计算器'}], kw:'生成 uuid hash sha 颜色 色值 密码 lorem cron 代码格式化 beautify minify js css html 计算器 calc 计算'},
   {tab:'text', name:'📝 文本', sub:[{id:'proc',n:'处理'},{id:'stats',n:'统计'},{id:'cc',n:'简繁'},{id:'case',n:'大小写'},{id:'trans',n:'翻译'},{id:'csv',n:'CSV'},{id:'diff',n:'Diff'},{id:'markdown',n:'Markdown'}], kw:'排序 去重 统计 简繁 大小写 camel snake kebab 翻译 csv 表格 diff 比较 markdown 预览'},
   {tab:'ts', name:'⏱ 时间', sub:[{id:'ts-convert',n:'时间戳'},{id:'ts-calc',n:'日期计算'},{id:'ts-timer',n:'计时器'}], kw:'时间 日期 毫秒 秒 时间戳 计时 倒计时'},
 ];
@@ -4514,7 +4545,7 @@ $('settingsClose').addEventListener('click', () => settingsPanel.style.display =
 document.addEventListener('click', e => { if (!e.target.closest('#settingsPanel') && !e.target.closest('#settingsToggle')) settingsPanel.style.display = 'none'; });
 
 const ALL_MODULES = [
-  {id:'json', name:'JSON'}, {id:'search', name:'🔍 搜索'},
+  {id:'json', name:'JSON'}, {id:'search', name:'🔍 搜索'}, {id:'regex', name:'◎ 正则'},
   {id:'sql', name:'SQL'}, {id:'encode', name:'🔐 编解码'}, {id:'gen', name:'🎲 生成'},
   {id:'text', name:'📝 文本'}, {id:'ts', name:'⏱ 时间'}
 ];
