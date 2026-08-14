@@ -314,7 +314,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <div class="tab" data-tab="encode" data-lk="tab_encode">🔐 编解码</div>
     <div class="tab" data-tab="gen" data-lk="tab_gen">🎲 生成</div>
     <div class="tab" data-tab="text" data-lk="tab_text">📝 文本</div>
-    <div class="tab" data-tab="ts" data-lk="tab_ts">⏱ 时间</div>
+    <div class="tab" data-tab="ts" data-lk="tab_ts">⏱ 时间戳</div>
+    <div class="tab" data-tab="timer" data-lk="tab_timer">⏱ 计时器</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
       <span id="themeToggle" style="cursor:pointer;font-size:16px;" title="切换主题" data-lk-tl="tl_themeToggle">🌙</span>
@@ -330,14 +331,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
   </div>
   <div id="pinnedToolbar" style="display:none;margin-bottom:8px;gap:6px;flex-wrap:wrap;"></div>
 
-  <!-- ⏱ 时间 -->
+  <!-- ⏱ 时间戳 -->
   <div class="tab-pane" id="p-ts">
-    <div class="sub-tabs">
-      <div class="sub-tab active" data-sub="ts-convert" data-lk="sub_ts_convert">⏱ 时间戳</div>
-      <div class="sub-tab" data-sub="ts-timer" data-lk="sub_ts_timer">⏱ 计时器</div>
-    </div>
-    <!-- 时间戳转换 -->
-    <div class="sub-pane active" data-sub="ts-convert">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
         <div style="padding-right:12px;border-right:2px solid var(--border);">
           <div class="input-row">
@@ -368,18 +363,18 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
           <div class="result-item"><span class="label" data-lk="tsRevMs_label">毫秒</span><span class="value" id="tsRevMs">—</span><button class="copy-btn-sm" data-target="tsRevMs">📋</button></div>
         </div>
       </div>
-    </div>
-    <!-- 计时器 -->
-    <div class="sub-pane" data-sub="ts-timer">
-      <div style="text-align:center;padding:20px 0;">
-        <div id="timerDisplay" style="font-size:48px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-weight:700;letter-spacing:2px;margin-bottom:20px;">00:00:00.0</div>
-        <div class="btn-group" style="justify-content:center;">
-          <button class="btn btn-primary" id="timerStartBtn" style="min-width:80px;" data-lk="timerStartBtn">▶ 开始</button>
-          <button class="btn" id="timerLapBtn" style="min-width:80px;display:none;" data-lk="timerLapBtn">📍 计次</button>
-          <button class="btn" id="timerResetBtn" style="min-width:80px;" data-lk="timerResetBtn">↺ 重置</button>
-        </div>
-        <div id="timerLaps" style="margin-top:16px;max-height:300px;overflow-y:auto;text-align:left;font-size:12px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;"></div>
+  </div>
+
+  <!-- ⏱ 计时器 -->
+  <div class="tab-pane" id="p-timer">
+    <div style="text-align:center;padding:20px 0;">
+      <div id="timerDisplay" style="font-size:48px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-weight:700;letter-spacing:2px;margin-bottom:20px;">00:00:00.0</div>
+      <div class="btn-group" style="justify-content:center;">
+        <button class="btn btn-primary" id="timerStartBtn" style="min-width:80px;" data-lk="timerStartBtn">▶ 开始</button>
+        <button class="btn" id="timerLapBtn" style="min-width:80px;display:none;" data-lk="timerLapBtn">📍 计次</button>
+        <button class="btn" id="timerResetBtn" style="min-width:80px;" data-lk="timerResetBtn">↺ 重置</button>
       </div>
+      <div id="timerLaps" style="margin-top:16px;max-height:300px;overflow-y:auto;text-align:left;font-size:12px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;"></div>
     </div>
   </div>
 
@@ -938,7 +933,7 @@ const $ = id => document.getElementById(id);
 
 let _lang = localStorage.getItem('lang') || 'zh';
 const _L = {
-  tab_search:{zh:'🔍 搜索',en:'🔍 Search'}, tab_regex:{zh:'◎ 正则',en:'◎ Regex'}, tab_ts:{zh:'⏱ 时间',en:'⏱ Time'}, sub_ts_convert:{zh:'⏱ 时间戳',en:'⏱ Timestamp'}, sub_ts_timer:{zh:'⏱ 计时器',en:'⏱ Timer'},
+  tab_search:{zh:'🔍 搜索',en:'🔍 Search'}, tab_regex:{zh:'◎ 正则',en:'◎ Regex'}, tab_ts:{zh:'⏱ 时间戳',en:'⏱ Timestamp'}, tab_timer:{zh:'⏱ 计时器',en:'⏱ Timer'},
   tab_encode:{zh:'🔐 编解码',en:'🔐 Encode/Decode'}, tab_gen:{zh:'🎲 生成',en:'🎲 Generate'},
   tab_text:{zh:'📝 文本',en:'📝 Text'}, tab_color:{zh:'🎨 颜色',en:'🎨 Color'}, tab_diff:{zh:'📑 Diff',en:'📑 Diff'},
   tab_json:{zh:'{ } JSON',en:'{ } JSON'},
@@ -4126,7 +4121,8 @@ const tabMeta = [
   {tab:'encode', name:'🔐 编解码', sub:[{id:'b64',n:'Base64'},{id:'url',n:'URL'},{id:'html',n:'HTML'},{id:'jwt',n:'JWT'},{id:'bc',n:'进制'},{id:'morse',n:'Morse'},{id:'caesar',n:'Caesar'},{id:'bintext',n:'二进制文本'}], kw:'编码 解码 base64 url html jwt 进制 hex bin oct morse caesar 凯撒 二进制'},
   {tab:'gen', name:'🎲 生成', sub:[{id:'uuid',n:'UUID'},{id:'hash',n:'Hash'},{id:'color',n:'颜色'},{id:'passwd',n:'密码'},{id:'lorem',n:'Lorem'},{id:'cron',n:'Cron'},{id:'fmt',n:'代码格式化'},{id:'calc',n:'计算器'}], kw:'生成 uuid hash sha 颜色 色值 密码 lorem cron 代码格式化 beautify minify js css html 计算器 calc 计算'},
   {tab:'text', name:'📝 文本', sub:[{id:'proc',n:'处理'},{id:'stats',n:'统计'},{id:'case',n:'大小写'},{id:'csv',n:'CSV'},{id:'diff',n:'Diff'}], kw:'排序 去重 统计 大小写 camel snake kebab csv 表格 diff 比较'},
-  {tab:'ts', name:'⏱ 时间', sub:[{id:'ts-convert',n:'时间戳'},{id:'ts-timer',n:'计时器'}], kw:'时间 日期 毫秒 秒 时间戳 计时 倒计时'},
+  {tab:'ts', name:'⏱ 时间戳', kw:'时间 日期 毫秒 秒 时间戳 转换'},
+  {tab:'timer', name:'⏱ 计时器', kw:'计时 秒表 计次 倒计时'},
 ];
 const $tsi = $('tabSearchInput'), $tsr = $('tabSearchResults'), $tsIcon = $('tabSearchIcon');
 function tsOpen() { $tsi.style.display = ''; $tsi.focus(); $tsi.select(); }
@@ -4177,7 +4173,7 @@ document.addEventListener('click', e => { if (!e.target.closest('#settingsPanel'
 const ALL_MODULES = [
   {id:'json', name:'JSON'}, {id:'search', name:'🔍 搜索'}, {id:'regex', name:'◎ 正则'},
   {id:'sql', name:'SQL'}, {id:'encode', name:'🔐 编解码'}, {id:'gen', name:'🎲 生成'},
-  {id:'text', name:'📝 文本'}, {id:'ts', name:'⏱ 时间'}
+  {id:'text', name:'📝 文本'}, {id:'ts', name:'⏱ 时间戳'}, {id:'timer', name:'⏱ 计时器'}
 ];
 function getPinned() { try { return JSON.parse(localStorage.getItem('litools_pinned') || '[]'); } catch { return []; } }
 function setPinned(list) { localStorage.setItem('litools_pinned', JSON.stringify(list)); }
