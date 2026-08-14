@@ -511,11 +511,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 
   <!-- ◎ 正则 (测试+速查) -->
   <div class="tab-pane" id="p-regex">
-    <div class="sub-tabs">
-      <div class="sub-tab active" data-sub="regex" data-lk="sub_regex_test">🧪 正则测试</div>
-      <div class="sub-tab" data-sub="rex" data-lk="sub_rex">📖 正则速查</div>
-    </div>
-    <div class="sub-pane active" data-sub="regex">
       <div style="display:flex;gap:8px;margin-bottom:8px;">
         <input type="text" id="rexPattern" placeholder="正则表达式" spellcheck="false" style="flex:1;" data-lk-pl="pl_rexPattern">
         <select id="rexFlags" style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:12px;">
@@ -530,17 +525,17 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       </div>
       <div class="stat-line" id="rexStat" style="margin-top:4px;"></div>
       <div id="rexInfo" style="font-size:12px;color:var(--text-dim);margin-top:4px;"></div>
-    </div>
-    <!-- 正则速查 -->
-    <div class="sub-pane" data-sub="rex">
-      <div class="input-row" style="margin-bottom:8px;">
-        <input type="text" id="rexExplainInput" placeholder="输入正则表达式，如 \d{4}-\d{2}-\d{2}" spellcheck="false" style="flex:1;font-family:'Cascadia Code',monospace;" data-lk-pl="pl_rexExplainInput">
-        <button class="btn btn-primary btn-sm" id="rexExplainBtn" data-lk="rexExplainBtn">解释</button>
-      </div>
-      <div id="rexExplainResult" style="margin-bottom:10px;font-size:12px;color:var(--text-dim);max-height:200px;overflow:auto;"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="rexCheatContainer"></div>
-      <div class="result-item" style="margin-top:8px;"><span class="label" data-lk="rexCheatPreview">预览</span><span class="value mono" id="rexCheatPreview" style="white-space:pre-wrap;font-size:12px;">—</span><button class="copy-btn-sm" data-target="rexCheatPreview">📋</button></div>
-    </div>
+      <!-- 正则速查 / 解释（折叠） -->
+      <details style="margin-top:8px;">
+        <summary style="cursor:pointer;font-size:12px;color:var(--text-dim);" data-lk="rexCheatTitle">📖 正则速查 / 解释</summary>
+        <div class="input-row" style="margin:8px 0;">
+          <input type="text" id="rexExplainInput" placeholder="输入正则表达式，如 \d{4}-\d{2}-\d{2}" spellcheck="false" style="flex:1;font-family:'Cascadia Code',monospace;" data-lk-pl="pl_rexExplainInput">
+          <button class="btn btn-primary btn-sm" id="rexExplainBtn" data-lk="rexExplainBtn">解释</button>
+        </div>
+        <div id="rexExplainResult" style="margin-bottom:10px;font-size:12px;color:var(--text-dim);max-height:200px;overflow:auto;"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="rexCheatContainer"></div>
+        <div class="result-item" style="margin-top:8px;"><span class="label" data-lk="rexCheatPreview">预览</span><span class="value mono" id="rexCheatPreview" style="white-space:pre-wrap;font-size:12px;">—</span><button class="copy-btn-sm" data-target="rexCheatPreview">📋</button></div>
+      </details>
   </div>
 
   <!-- 🔐 编解码 -->
@@ -857,12 +852,12 @@ const _L = {
   sub_sql_in:{zh:'🗄️ IN 生成',en:'🗄️ IN Generator'}, sub_sql_insert:{zh:'📋 INSERT 解析',en:'📋 INSERT Parser'}, sub_sql_fmt:{zh:'✨ SQL 格式化',en:'✨ SQL Formatter'},
   sub_bc:{zh:'🔢 进制',en:'🔢 Base Conv'}, sub_csv:{zh:'📋 CSV',en:'📋 CSV'}, sub_diff:{zh:'📑 Diff',en:'📑 Diff'}, sub_color:{zh:'🎨 颜色',en:'🎨 Color'},
   sub_bintext:{zh:'💾 二进制文本',en:'💾 Binary Text'},
-  sub_regex_test:{zh:'🧪 正则测试',en:'🧪 Regex Test'},
+  rexCheatTitle:{zh:'📖 正则速查 / 解释',en:'📖 Cheat Sheet / Explain'},
   sub_b64:{zh:'Base64',en:'Base64'}, sub_url:{zh:'URL',en:'URL'},
   sub_html:{zh:'HTML',en:'HTML'},
   sub_uuid:{zh:'UUID',en:'UUID'}, sub_hash:{zh:'Hash',en:'Hash'},
   sub_passwd:{zh:'🔑 密码',en:'🔑 Password'},
-  sub_rex:{zh:'◎ 正则速查',en:'◎ Regex Cheat'}, sub_cron:{zh:'⏰ Cron',en:'⏰ Cron'},
+  sub_cron:{zh:'⏰ Cron',en:'⏰ Cron'},
   rexExplainBtn:{zh:'解释',en:'Explain'}, pl_rexExplainInput:{zh:'输入正则表达式，如 \\d{4}-\\d{2}-\\d{2}',en:'Enter regex, e.g. \\d{4}-\\d{2}-\\d{2}'},
   sub_proc:{zh:'📝 处理',en:'📝 Process'}, sub_stats:{zh:'📊 统计',en:'📊 Stats'},
   sub_case:{zh:'🔄 大小写',en:'🔄 Case'},
@@ -1431,8 +1426,7 @@ function handleFileDrop(file) {
       readDroppedFile(file).then(text => { if (text) { srchEditor.textContent = text; srchEditor.dataset.lkPl = ''; applyHighlights(); updateSrchLines(); } });
     }
   } else if (id === 'p-regex') {
-    if (subId === 'rex') { toast(`当前子页签不支持拖拽`, 1); }
-    else { readDroppedFile(file).then(text => { if (text) { rexEditor.textContent = text; rexHighlight(); } }); }
+    readDroppedFile(file).then(text => { if (text) { rexEditor.textContent = text; rexHighlight(); } });
   } else if (id === 'p-gen' && subId === 'hash') {
     readDroppedFile(file).then(text => { if (text) { $('hashInput').value = text; $('hashCalcBtn').click(); } });
   } else if (id === 'p-text') {
@@ -3767,7 +3761,7 @@ applyLang(_lang);
 const tabMeta = [
   {tab:'json', name:'{ } JSON', kw:'json 格式化 树形'},
   {tab:'search', name:'🔍 搜索', kw:'查找 替换 高亮 过滤'},
-  {tab:'regex', name:'◎ 正则', sub:[{id:'regex',n:'正则测试'},{id:'rex',n:'正则速查'}], kw:'正则 regex 匹配 测试 速查'},
+  {tab:'regex', name:'◎ 正则', kw:'正则 regex 匹配 测试 速查 解释'},
   {tab:'sql', name:'🗄️ SQL', sub:[{id:'sql-in',n:'IN 生成'},{id:'sql-insert',n:'INSERT 解析'},{id:'sql-fmt',n:'SQL 格式化'}], kw:'sql 数据库 insert 值 列 格式化'},
   {tab:'encode', name:'🔐 编解码', sub:[{id:'b64',n:'Base64'},{id:'url',n:'URL'},{id:'html',n:'HTML'},{id:'bc',n:'进制'},{id:'bintext',n:'二进制文本'}], kw:'编码 解码 base64 url html 进制 hex bin oct 二进制'},
   {tab:'gen', name:'🎲 生成', sub:[{id:'uuid',n:'UUID'},{id:'hash',n:'Hash'},{id:'color',n:'颜色'},{id:'passwd',n:'密码'},{id:'cron',n:'Cron'}], kw:'生成 uuid hash sha 颜色 色值 密码 cron'},
