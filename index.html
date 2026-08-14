@@ -188,6 +188,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 .jt-brace { cursor: text; }
 .jt-badge { font-size:11px; color:var(--text-dim); margin-left:4px; font-weight:400; }
 .jt-highlight { background:var(--accent-dim); border-radius:2px; }
+.jt-cur { background:var(--orange); color:#fff; border-radius:2px; } /* 搜索导航当前项 */
 .jt-selected { background:rgba(25,118,210,0.2); }
 #jsonResultSearch { font-size:12px; padding:2px 8px; border:1px solid var(--border); border-radius:4px; width:150px; }
 #jsonResultSearch:focus { border-color:var(--accent); outline:none; }
@@ -510,7 +511,10 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       </div>
       <div style="border-left:1px solid var(--border);height:24px;"></div>
       <div class="input-row" style="flex:1;margin-bottom:0;">
-        <input type="text" id="jsonResultSearch" placeholder="搜索结果..." spellcheck="false" style="width:120px;font-size:12px;">
+        <input type="text" id="jsonResultSearch" placeholder="搜索结果..." spellcheck="false" style="width:120px;font-size:12px;" data-lk-pl="pl_jsonResultSearch">
+        <span id="jsonSearchCount" style="font-size:11px;color:var(--text-dim);white-space:nowrap;line-height:28px;">0/0</span>
+        <button class="btn btn-sm" id="jsonSearchPrevBtn" data-lk="jsonSearchPrevBtn" data-lk-tl="tl_jsonSearchPrev" title="上一个 (Shift+Enter)">↑</button>
+        <button class="btn btn-sm" id="jsonSearchNextBtn" data-lk="jsonSearchNextBtn" data-lk-tl="tl_jsonSearchNext" title="下一个 (Enter)">↓</button>
         <input type="text" id="jsonPathInput" placeholder='JSONPath 查询，如 $.store.book[*].title' spellcheck="false" style="flex:1;font-size:12px;" data-lk-pl="jsonPathInput">
         <button class="btn btn-sm" id="jsonPathBtn" data-lk="jsonPathBtn">查询</button>
         <span id="jsonPathInfo" style="font-size:11px;color:var(--text-dim);line-height:28px;"></span>
@@ -1063,6 +1067,8 @@ const _L = {
   jsonEscapeBtn:{zh:'转义',en:'Escape'}, jsonSortBtn:{zh:'排序 ▾',en:'Sort ▾'}, jsonKeepEscBtn:{zh:'保留转义',en:'Keep escapes'},
   json_escape_done:{zh:'已转义并写入结果区',en:'Escaped into result area'}, json_sorted_toast:{zh:'已按键排序',en:'Keys sorted'}, sortAscItem:{zh:'🔤 A → Z（升序）',en:'🔤 A → Z (asc)'}, sortDescItem:{zh:'🔤 Z → A（降序）',en:'🔤 Z → A (desc)'},
   stat_nodes:{zh:'节点',en:'nodes'}, stat_depth:{zh:'深度',en:'depth'}, stat_arrays:{zh:'数组',en:'arrays'}, stat_keys:{zh:'键',en:'keys'},
+  pl_jsonResultSearch:{zh:'搜索结果...',en:'Search results...'},
+  tl_jsonSearchPrev:{zh:'上一个 (Shift+Enter)',en:'Previous (Shift+Enter)'}, tl_jsonSearchNext:{zh:'下一个 (Enter)',en:'Next (Enter)'},
   jsonRepaired:{zh:'已自动修复',en:'Auto-repaired'},
   rp_unwrap:{zh:'解包字符串',en:'Unwrapped string'}, rp_unescape:{zh:'还原转义',en:'Unescaped'}, rp_comment:{zh:'去除注释',en:'Removed comments'},
   rp_trailing:{zh:'去除尾逗号',en:'Removed trailing commas'}, rp_java:{zh:'toString 转换',en:'toString → JSON'}, rp_single:{zh:'单引号→双引号',en:'Single→double quotes'},
@@ -2358,7 +2364,8 @@ $('jsonResultSearch').addEventListener('input', () => {
   _jsonSearchTimer = setTimeout(() => {
     const keyword = $('jsonResultSearch').value.trim();
     document.querySelectorAll('#jsonResult .jt-highlight').forEach(el => el.classList.remove('jt-highlight'));
-    if (!keyword) return;
+    _jsonSearchIdx = -1;
+    if (!keyword) { $('jsonSearchCount').textContent = '0/0'; return; }
     const regex = new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
     const walker = document.createTreeWalker($('jsonResult'), NodeFilter.SHOW_TEXT);
     let count = 0;
@@ -2372,7 +2379,27 @@ $('jsonResultSearch').addEventListener('input', () => {
         count++;
       }
     }
+    if (count) focusJsonSearchHit(1); // 搜索完成自动聚焦第一个命中
+    else $('jsonSearchCount').textContent = '0/0';
   }, 300);
+});
+
+// 🔍 搜索命中导航：上一个/下一个/计数，Enter / Shift+Enter 跳转
+let _jsonSearchIdx = -1;
+function focusJsonSearchHit(dir) {
+  const hits = document.querySelectorAll('#jsonResult .jt-highlight');
+  if (!hits.length) { $('jsonSearchCount').textContent = '0/0'; return; }
+  _jsonSearchIdx = (_jsonSearchIdx + dir + hits.length) % hits.length;
+  hits.forEach(h => h.classList.remove('jt-cur'));
+  const cur = hits[_jsonSearchIdx];
+  cur.classList.add('jt-cur');
+  cur.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  $('jsonSearchCount').textContent = (_jsonSearchIdx + 1) + '/' + (hits.length >= JSON_SEARCH_LIMIT ? JSON_SEARCH_LIMIT + '+' : hits.length);
+}
+$('jsonSearchNextBtn').addEventListener('click', () => focusJsonSearchHit(1));
+$('jsonSearchPrevBtn').addEventListener('click', () => focusJsonSearchHit(-1));
+$('jsonResultSearch').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); focusJsonSearchHit(e.shiftKey ? -1 : 1); }
 });
 
 // 点击显示路径
