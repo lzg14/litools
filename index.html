@@ -190,6 +190,12 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 .jt-highlight { background:var(--accent-dim); border-radius:2px; }
 .jt-cur { background:var(--orange); color:#fff; border-radius:2px; } /* 搜索导航当前项 */
 .srch-cur { outline:2px solid var(--accent); outline-offset:1px; border-radius:2px; } /* 搜索模块当前命中项 */
+#srchEditor { position:relative; } /* 行底色层的定位基准 */
+.srch-line-bg { position:absolute; left:0; right:0; border-radius:2px; background:rgba(0,120,212,0.08); } /* 搜索命中行底色 */
+[data-theme="dark"] .srch-line-bg { background:rgba(79,195,247,0.10); }
+.srch-mark-bar { position:absolute; top:0; right:0; bottom:0; width:10px; pointer-events:none; z-index:3; } /* 滚动条旁命中定位条 */
+.srch-mark { position:absolute; right:1px; width:6px; min-height:2px; border-radius:1px; background:var(--accent); opacity:0.45; } /* 命中位置标记 */
+.srch-mark-vp { position:absolute; left:1px; right:1px; border-radius:3px; background:var(--accent); opacity:0.15; } /* 当前视口指示框 */
 .jt-selected { background:rgba(25,118,210,0.2); }
 #jsonResultSearch { font-size:12px; padding:2px 8px; border:1px solid var(--border); border-radius:4px; width:150px; }
 #jsonResultSearch:focus { border-color:var(--accent); outline:none; }
@@ -467,7 +473,10 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 
   <!-- 🔍 搜索 -->
   <div class="tab-pane" id="p-search">
+      <div id="srchWrap" style="position:relative;">
       <div class="result-box" id="srchEditor" contenteditable="true" spellcheck="false" style="height:calc(100vh - 280px);min-height:300px;padding:9px 12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;font-size:13px;overflow:auto;" data-lk-pl="pl_srchEditor"></div>
+      <div class="srch-mark-bar" id="srchMarkBar"></div>
+      </div>
       <div class="stat-line" style="margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <span id="srchStat" style="flex:1;"></span>
         <span id="srchNavCount" style="font-size:11px;color:var(--text-dim);white-space:nowrap;">0/0</span>
@@ -2420,6 +2429,7 @@ async function srchStreamScan(file) {
   $('srchStreamFile').textContent = `📄 ${file.name} (${(total/1024/1024).toFixed(1)}MB)`;
   srchEditor.innerHTML = '';
   srchEditor.contentEditable = 'false';
+  renderSrchMarks(); // 流式模式无 srch-hit，清掉行底色与定位标记
   let scannedBytes = 0;
   for (let off = 0; off < total; off += SRCH_STREAM_CHUNK) {
     if (_srchStreamAbort) { srchExitStream(true); return; }
@@ -2456,6 +2466,7 @@ function srchExitStream(restoreEditor) {
     srchEditor.innerHTML = '';
     srchEditor.contentEditable = 'true';
     _srchStreamMatches = [];
+    renderSrchMarks();
   }
 }
 
@@ -2477,6 +2488,7 @@ function applyHighlights() {
     _srchLastText = '';
     _srchHitIdx = -1;
     $('srchNavCount').textContent = '0/0';
+    renderSrchMarks();
     return;
   }
   const liveTerm = $('srchTerm').value.trim();
@@ -2491,6 +2503,7 @@ function applyHighlights() {
     _srchLastHtml = '';
     _srchHitIdx = -1;
     $('srchNavCount').textContent = '0/0';
+    renderSrchMarks();
     return;
   }
   if (text.length > SRCH_CHUNK) {
@@ -2499,6 +2512,7 @@ function applyHighlights() {
     _srchHitIdx = -1;
     $('srchNavCount').textContent = '0/0';
     $('srchStat').textContent = `文本过大，跳过高亮`;
+    renderSrchMarks();
     return;
   }
   // 收集匹配区间
@@ -2516,6 +2530,7 @@ function applyHighlights() {
     _srchHitIdx = -1;
     $('srchNavCount').textContent = '0/0';
     $('srchStat').textContent = '';
+    renderSrchMarks();
     return;
   }
   ranges.sort((a, b) => a.s - b.s);
@@ -2545,7 +2560,70 @@ function applyHighlights() {
   _srchHitIdx = -1; // innerHTML 重建后当前项类已失效，重置导航
   $('srchNavCount').textContent = '0/' + merged.length;
   $('srchStat').textContent = `匹配 ${ranges.length} 处`;
+  renderSrchMarks();
 }
+
+// 🔍 命中行底色 + 滚动条定位标记：行底色层在内容坐标系中随内容滚动，右侧标记条反映全文命中分布与当前视口
+const SRCH_MARK_MAX = 500; // 标记条最大条数，超出均匀抽稀防 DOM 爆炸
+function renderSrchMarks() {
+  const bar = $('srchMarkBar');
+  if (!bar) return;
+  const hits = srchEditor.querySelectorAll('.srch-hit');
+  if (!hits.length) { bar.innerHTML = ''; bar.style.display = 'none'; return; }
+  bar.style.display = '';
+  // 收集每个命中的行片段矩形 → 内容坐标 y（getClientRects 覆盖软换行跨行的命中）
+  const cs = getComputedStyle(srchEditor);
+  const baseTop = srchEditor.getBoundingClientRect().top + parseFloat(cs.borderTopWidth) - srchEditor.scrollTop;
+  const tops = new Set();
+  let lineH = 0;
+  for (const h of hits) {
+    for (const r of h.getClientRects()) {
+      tops.add(Math.round(r.top - baseTop));
+      if (!lineH) lineH = r.height;
+    }
+  }
+  const arr = [...tops].sort((a, b) => a - b);
+  const sh = srchEditor.scrollHeight, barH = bar.clientHeight || 1;
+  // 行底色层（absolute 于滚动内容中，自动跟随滚动）
+  let layer = $('srchLineLayer');
+  if (!layer) {
+    layer = document.createElement('div');
+    layer.id = 'srchLineLayer';
+    layer.contentEditable = 'false'; // 防光标进入
+    srchEditor.appendChild(layer);
+  }
+  layer.innerHTML = '';
+  layer.style.cssText = `position:absolute;top:0;left:0;right:0;height:${sh}px;pointer-events:none;`;
+  const step = Math.max(1, Math.ceil(arr.length / SRCH_MARK_MAX));
+  const frag = document.createDocumentFragment();
+  const fragBar = document.createDocumentFragment();
+  for (let i = 0; i < arr.length; i += step) {
+    const y = arr[i];
+    const d = document.createElement('div');
+    d.className = 'srch-line-bg';
+    d.style.top = y + 'px';
+    d.style.height = (lineH || 22) + 'px';
+    frag.appendChild(d);
+    const m = document.createElement('div');
+    m.className = 'srch-mark';
+    m.style.top = Math.min(barH - 2, y / sh * barH) + 'px';
+    fragBar.appendChild(m);
+  }
+  layer.appendChild(frag);
+  // 当前视口指示框
+  const vp = document.createElement('div');
+  vp.className = 'srch-mark-vp';
+  vp.style.top = (srchEditor.scrollTop / sh * barH) + 'px';
+  vp.style.height = (srchEditor.clientHeight / sh * barH) + 'px';
+  fragBar.appendChild(vp);
+  bar.appendChild(fragBar);
+}
+srchEditor.addEventListener('scroll', () => {
+  const bar = $('srchMarkBar'), vp = bar && bar.querySelector('.srch-mark-vp');
+  if (!vp) return;
+  vp.style.top = (srchEditor.scrollTop / srchEditor.scrollHeight * bar.clientHeight) + 'px';
+}, { passive: true });
+window.addEventListener('resize', () => renderSrchMarks());
 
 // 🔍 命中导航：上一个/下一个/计数（srch-hit 按文档顺序即命中顺序）
 let _srchHitIdx = -1;
