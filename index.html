@@ -656,10 +656,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div class="sub-tab" data-sub="hash" data-lk="sub_hash">Hash</div>
       <div class="sub-tab" data-sub="color" data-lk="sub_color">🎨 颜色</div>
       <div class="sub-tab" data-sub="passwd" data-lk="sub_passwd">🔑 密码</div>
-      <div class="sub-tab" data-sub="lorem" data-lk="sub_lorem">📃 Lorem</div>
       <div class="sub-tab" data-sub="cron" data-lk="sub_cron">⏰ Cron</div>
-      <div class="sub-tab" data-sub="fmt" data-lk="sub_fmt">🔧 代码格式化</div>
-      <div class="sub-tab" data-sub="calc" data-lk="sub_calc">🧮 计算器</div>
     </div>
     <!-- UUID -->
     <div class="sub-pane active" data-sub="uuid">
@@ -724,22 +721,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div class="result-box" id="passwdResult" style="font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.9;white-space:pre-wrap;">结果</div>
       <div class="stat-line" id="passwdStat"></div>
     </div>
-    <!-- Lorem Ipsum -->
-    <div class="sub-pane" data-sub="lorem">
-      <div class="input-row" style="flex-wrap:wrap;">
-        <label style="font-size:13px;white-space:nowrap;" data-lk="loremTypeLabel">类型:</label>
-        <select id="loremType" style="width:110px;">
-          <option value="paragraphs">段落</option>
-          <option value="words">字数</option>
-          <option value="sentences">句子</option>
-        </select>
-        <input type="number" id="loremCount" value="5" min="1" max="100" style="width:70px;">
-        <label style="font-size:13px;white-space:nowrap;"><input type="checkbox" id="loremCn"> <span data-lk="loremCn">中文</span></label>
-        <button class="btn btn-primary btn-sm" id="loremGenBtn" data-lk="loremGenBtn">生成</button>
-        <button class="btn btn-sm" id="loremCopyBtn" data-lk="loremCopyBtn">复制</button>
-      </div>
-      <div class="result-box" id="loremResult" style="line-height:1.8;">结果</div>
-    </div>
     <!-- Cron 解析 -->
     <div class="sub-pane" data-sub="cron">
       <div class="input-row">
@@ -749,32 +730,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div class="result-item"><span class="label" data-lk="cronDescLabel">描述</span><span class="value" id="cronDesc">—</span></div>
       <div class="result-item"><span class="label" data-lk="cronNextLabel">未来 10 次执行</span><span class="value mono" id="cronNext" style="white-space:pre-wrap;font-size:12px;line-height:1.9;">—</span></div>
       <div style="font-size:12px;color:var(--text-dim);margin-top:8px;" data-lk="cronHint">格式: 分 时 日 月 周（支持 * / , -）</div>
-    </div>
-    <!-- 代码格式化 -->
-    <div class="sub-pane" data-sub="fmt">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
-        <textarea id="fmtInput" rows="10" placeholder="粘贴 JS / CSS / HTML 代码" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_fmtInput"></textarea>
-        <div class="result-box" id="fmtResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="fmtResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
-      </div>
-      <div class="btn-group" style="margin-top:8px;">
-        <button class="btn btn-primary btn-sm" id="fmtJsBeautifyBtn" data-lk="fmtJsBeautifyBtn">JS 美化</button>
-        <button class="btn btn-sm" id="fmtJsMinifyBtn" data-lk="fmtJsMinifyBtn">JS 压缩</button>
-        <button class="btn btn-sm" id="fmtCssBeautifyBtn" data-lk="fmtCssBeautifyBtn">CSS 美化</button>
-        <button class="btn btn-sm" id="fmtHtmlBeautifyBtn" data-lk="fmtHtmlBeautifyBtn">HTML 美化</button>
-        <button class="btn btn-sm" id="fmtClearBtn" data-lk="fmtClearBtn">清空</button>
-      </div>
-    </div>
-    <!-- 计算器 -->
-    <div class="sub-pane" data-sub="calc">
-      <input type="text" id="calcInput" placeholder="输入表达式，如 2**10 + sqrt(144)" spellcheck="false" style="width:100%;font-family:'Cascadia Code',monospace;font-size:15px;margin-bottom:6px;" data-lk-pl="pl_calcInput">
-      <div id="calcResult" style="font-size:22px;font-weight:700;color:var(--accent);padding:10px 0;min-height:44px;font-family:'Cascadia Code',monospace;border-bottom:1px solid var(--border);margin-bottom:10px;"></div>
-      <div id="calcPad" style="display:inline-grid;grid-template-columns:repeat(4,56px);gap:4px;margin:0 auto 10px;"></div>
-      <div style="display:inline-grid;grid-template-columns:repeat(4,56px);gap:4px;margin-bottom:10px;">
-        <button class="btn btn-sm" id="calcBackBtn" style="background:var(--red);color:#fff;">⌫</button>
-        <button class="btn btn-primary btn-sm" id="calcBtn" data-lk="calcBtn">=</button>
-        <button class="btn btn-sm" id="calcClearBtn" data-lk="calcClearBtn">C</button>
-      </div>
-      <div id="calcHistory" style="max-height:160px;overflow-y:auto;font-size:12px;color:var(--text-dim);"></div>
     </div>
   </div>
   <div class="tab-pane" id="p-text">
@@ -945,8 +900,8 @@ const _L = {
   sub_b64:{zh:'Base64',en:'Base64'}, sub_url:{zh:'URL',en:'URL'},
   sub_html:{zh:'HTML',en:'HTML'}, sub_jwt:{zh:'JWT',en:'JWT'},
   sub_uuid:{zh:'UUID',en:'UUID'}, sub_hash:{zh:'Hash',en:'Hash'},
-  sub_passwd:{zh:'🔑 密码',en:'🔑 Password'}, sub_lorem:{zh:'📃 Lorem',en:'📃 Lorem'},
-  sub_rex:{zh:'◎ 正则速查',en:'◎ Regex Cheat'}, sub_cron:{zh:'⏰ Cron',en:'⏰ Cron'},   sub_fmt:{zh:'🔧 代码格式化',en:'🔧 Code Formatter'}, sub_calc:{zh:'🧮 计算器',en:'🧮 Calculator'},
+  sub_passwd:{zh:'🔑 密码',en:'🔑 Password'},
+  sub_rex:{zh:'◎ 正则速查',en:'◎ Regex Cheat'}, sub_cron:{zh:'⏰ Cron',en:'⏰ Cron'},
   rexExplainBtn:{zh:'解释',en:'Explain'}, pl_rexExplainInput:{zh:'输入正则表达式，如 \\d{4}-\\d{2}-\\d{2}',en:'Enter regex, e.g. \\d{4}-\\d{2}-\\d{2}'},
   sub_proc:{zh:'📝 处理',en:'📝 Process'}, sub_stats:{zh:'📊 统计',en:'📊 Stats'},
   sub_case:{zh:'🔄 大小写',en:'🔄 Case'},
@@ -987,16 +942,9 @@ const _L = {
   passwdLower:{zh:'小写 a-z',en:'Lowercase a-z'}, passwdNum:{zh:'数字 0-9',en:'Digits 0-9'},
   passwdSym:{zh:'特殊 !@#$',en:'Special !@#$'}, passwdGenBtn:{zh:'生成',en:'Generate'},
   passwdCopyBtn:{zh:'复制全部',en:'Copy All'},
-  loremTypeLabel:{zh:'类型:',en:'Type:'}, loremCn:{zh:'中文',en:'Chinese'},
-  loremGenBtn:{zh:'生成',en:'Generate'}, loremCopyBtn:{zh:'复制',en:'Copy'},
   rexCheatPreview:{zh:'预览',en:'Preview'},
   cronParseBtn:{zh:'解析',en:'Parse'}, cronDescLabel:{zh:'描述',en:'Description'},
   cronNextLabel:{zh:'未来 10 次执行',en:'Next 10 runs'}, cronHint:{zh:'格式: 分 时 日 月 周（支持 * / , -）',en:'Format: min hour day month weekday (* / , -)'},
-  fmtResult:{zh:'结果',en:'Result'}, fmtJsBeautifyBtn:{zh:'JS 美化',en:'JS Beautify'}, fmtJsMinifyBtn:{zh:'JS 压缩',en:'JS Minify'},
-  fmtCssBeautifyBtn:{zh:'CSS 美化',en:'CSS Beautify'}, fmtHtmlBeautifyBtn:{zh:'HTML 美化',en:'HTML Beautify'},   fmtClearBtn:{zh:'清空',en:'Clear'},
-  calcBtn:{zh:'计算',en:'Calculate'}, calcClearBtn:{zh:'清空',en:'Clear'},
-  pl_calcInput:{zh:'输入表达式，如 2**10 + sqrt(144)',en:'Enter expression, e.g. 2**10 + sqrt(144)'},
-  pl_fmtInput:{zh:'粘贴 JS / CSS / HTML 代码',en:'Paste JS / CSS / HTML code'},
   hashCalcBtn:{zh:'计算',en:'Calc'}, hashClearBtn:{zh:'清空',en:'Clear'},
   tpSortAsc:{zh:'排序 A→Z',en:'Sort A→Z'}, tpSortDesc:{zh:'排序 Z→A',en:'Sort Z→A'},
   tpUnique:{zh:'去重',en:'Unique'}, tpReverse:{zh:'反转行',en:'Reverse'},
@@ -2974,54 +2922,6 @@ $('passwdCopyBtn').addEventListener('click', () => {
 });
 
 // ═══════════════════════════════════════
-//  📃 Lorem Ipsum
-// ═══════════════════════════════════════
-const _LOREM = "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim id est laborum".split(' ');
-const _LOREM_CN = "天地玄黄宇宙洪荒日月盈昃辰宿列张寒来暑往秋收冬藏闰余成岁律吕调阳云腾致雨露结为霜金生丽水玉出昆冈剑号巨阙珠称夜光果珍李柰菜重芥姜海咸河淡鳞潜羽翔龙师火帝鸟官人皇始制文字乃服衣裳".split('');
-function loremWords(n) {
-  const out = [];
-  for (let i = 0; i < n; i++) out.push(_LOREM[Math.floor(Math.random() * _LOREM.length)]);
-  return out.join(' ');
-}
-function loremCnWords(n) {
-  const out = [];
-  for (let i = 0; i < n; i++) out.push(_LOREM_CN[Math.floor(Math.random() * _LOREM_CN.length)]);
-  return out.join('');
-}
-function loremSentences(n) {
-  const out = [];
-  for (let i = 0; i < n; i++) {
-    const wc = 6 + (Math.random() * 10 | 0);
-    out.push(loremWords(wc).replace(/^./, c => c.toUpperCase()) + '.');
-  }
-  return out.join(' ');
-}
-function loremParagraphs(n) {
-  const out = [];
-  for (let i = 0; i < n; i++) {
-    const sc = 3 + (Math.random() * 4 | 0);
-    out.push(loremSentences(sc));
-  }
-  return out.join('\n\n');
-}
-$('loremGenBtn').addEventListener('click', () => {
-  const type = $('loremType').value;
-  const count = Math.min(Math.max(parseInt($('loremCount').value) || 5, 1), 100);
-  const cn = $('loremCn').checked;
-  let text;
-  if (cn) text = cn ? loremCnWords(count * 40) : '';
-  else if (type === 'paragraphs') text = loremParagraphs(count);
-  else if (type === 'sentences') text = loremSentences(count);
-  else text = loremWords(count);
-  $('loremResult').textContent = text;
-});
-$('loremCopyBtn').addEventListener('click', () => {
-  const v = $('loremResult').textContent;
-  if (!v || v === _('res_json')) { toast(_('err_empty'), 1); return; }
-  copy(v); toast(_('copied'));
-});
-
-// ═══════════════════════════════════════
 //  ◎ 正则速查
 // ═══════════════════════════════════════
 const _REX_CHEAT = [
@@ -3120,152 +3020,6 @@ $('cronParseBtn').addEventListener('click', () => {
   const runs = cronNextRuns(fields, 10);
   $('cronNext').textContent = runs.length ? runs.join('\n') : _('cronNoFuture');
 });
-
-// ═══════════════════════════════════════
-//  🔧 代码格式化
-// ═══════════════════════════════════════
-function jsBeautify(code) {
-  let indent = 0, out = [], inStr = false, strCh = '';
-  for (let i = 0; i < code.length; i++) {
-    const c = code[i];
-    if (inStr) { out.push(c); if (c === strCh && code[i-1] !== '\\') inStr = false; continue; }
-    if (c === '"' || c === "'" || c === '`') { inStr = true; strCh = c; out.push(c); continue; }
-    if (c === '{' || c === '[') { out.push('\n' + '  '.repeat(indent) + c); indent++; continue; }
-    if (c === '}' || c === ']') { indent = Math.max(0, indent-1); out.push('\n' + '  '.repeat(indent) + c); continue; }
-    if (c === ';') { out.push(';\n' + '  '.repeat(indent)); continue; }
-    if (c === ',') { out.push(',\n' + '  '.repeat(indent)); continue; }
-    out.push(c);
-  }
-  return out.join('').replace(/\n\s*\n/g, '\n').trim();
-}
-function jsMinify(code) {
-  return code.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').trim();
-}
-function cssBeautify(code) {
-  let indent = 0, out = [], inStr = false, strCh = '';
-  for (let i = 0; i < code.length; i++) {
-    const c = code[i];
-    if (inStr) { out.push(c); if (c === strCh && code[i-1] !== '\\') inStr = false; continue; }
-    if (c === '"' || c === "'") { inStr = true; strCh = c; out.push(c); continue; }
-    if (c === '{') { out.push(' {\n' + '  '.repeat(indent + 1)); indent++; continue; }
-    if (c === '}') { indent = Math.max(0, indent-1); out.push('\n' + '  '.repeat(indent) + '}'); continue; }
-    if (c === ';') { out.push(';\n' + '  '.repeat(indent)); continue; }
-    out.push(c);
-  }
-  return out.join('').replace(/\n\s*\n/g, '\n').trim();
-}
-function htmlBeautify(code) {
-  let indent = 0, out = [], inTag = false, inClose = false, inSelfClose = false;
-  const selfClosing = new Set(['br','hr','img','input','meta','link','area','base','col','embed','source','track','wbr']);
-  for (let i = 0; i < code.length; i++) {
-    const c = code[i];
-    if (c === '<') {
-      inTag = true;
-      inClose = code[i+1] === '/';
-      out.push('\n' + '  '.repeat(indent));
-      if (inClose) indent = Math.max(0, indent-1);
-      out.push(c);
-      continue;
-    }
-    if (inTag && c === '>') {
-      inTag = false;
-      const tag = code.slice(Math.max(0, i - 20), i).match(/<(\w[\w-]*)/);
-      if (tag && !inClose && !selfClosing.has(tag[1].toLowerCase()) && code[i-1] !== '/') indent++;
-      out.push(c);
-      continue;
-    }
-    out.push(c);
-  }
-  return out.join('').replace(/\n\s*\n/g, '\n').trim();
-}
-$('fmtJsBeautifyBtn').addEventListener('click', () => { const v = $('fmtInput').value; if (!v.trim()) { toast(_('tpEmpty'), 1); return; } $('fmtResult').textContent = jsBeautify(v); });
-$('fmtJsMinifyBtn').addEventListener('click', () => { const v = $('fmtInput').value; if (!v.trim()) { toast(_('tpEmpty'), 1); return; } $('fmtResult').textContent = jsMinify(v); });
-$('fmtCssBeautifyBtn').addEventListener('click', () => { const v = $('fmtInput').value; if (!v.trim()) { toast(_('tpEmpty'), 1); return; } $('fmtResult').textContent = cssBeautify(v); });
-$('fmtHtmlBeautifyBtn').addEventListener('click', () => { const v = $('fmtInput').value; if (!v.trim()) { toast(_('tpEmpty'), 1); return; } $('fmtResult').textContent = htmlBeautify(v); });
-$('fmtClearBtn').addEventListener('click', () => { $('fmtInput').value = ''; $('fmtResult').textContent = _('fmtResult'); });
-
-// ═══════════════════════════════════════
-//  🧮 计算器
-// ═══════════════════════════════════════
-const _calcHistory = [];
-const _calcPadBtns = [
-  ['sin','cos','tan','sqrt'],
-  ['asin','acos','atan','cbrt'],
-  ['log','log2','log10','abs'],
-  ['7','8','9','/'],
-  ['4','5','6','*'],
-  ['1','2','3','-'],
-  ['0','.','PI','+'],
-  ['E','^','(',')'],
-];
-function calcInsert(val) {
-  const inp = $('calcInput');
-  const s = inp.value;
-  const start = inp.selectionStart, end = inp.selectionEnd;
-  if (val === '×') val = '*'; else if (val === '÷') val = '/';
-  else if (val === '^') val = '**';
-  else if (val === 'ln') val = 'log';
-  inp.value = s.slice(0, start) + val + s.slice(end);
-  inp.focus();
-  const pos = start + val.length;
-  inp.setSelectionRange(pos, pos);
-}
-function calcBackspace() {
-  const inp = $('calcInput');
-  const s = inp.value, start = inp.selectionStart;
-  if (start > 0) { inp.value = s.slice(0, start - 1) + s.slice(start); inp.focus(); inp.setSelectionRange(start - 1, start - 1); }
-}
-function calcEval(expr) {
-  const safe = expr.replace(/\s+/g, '').replace(/×/g, '*').replace(/÷/g, '/').replace(/，/g, ',');
-  const fn = new Function(
-    'PI','E','abs','ceil','floor','round','sqrt','cbrt','pow','log','log2','log10',
-    'sin','cos','tan','asin','acos','atan','atan2','min','max','random','sign','trunc',
-    'return (' + safe + ')'
-  );
-  return fn(Math.PI, Math.E, Math.abs, Math.ceil, Math.floor, Math.round, Math.sqrt, Math.cbrt, Math.pow, Math.log, Math.log2, Math.log10, Math.sin, Math.cos, Math.atan, Math.asin, Math.acos, Math.atan2, Math.min, Math.max, Math.random, Math.sign, Math.trunc);
-}
-function calcDo() {
-  const v = $('calcInput').value.trim();
-  if (!v) return;
-  try {
-    const result = calcEval(v);
-    const display = typeof result === 'number' ? (Number.isFinite(result) ? result : String(result)) : result;
-    $('calcResult').textContent = display;
-    $('calcResult').style.color = '';
-    _calcHistory.unshift({ expr: v, result: display });
-    if (_calcHistory.length > 20) _calcHistory.pop();
-    $('calcHistory').innerHTML = _calcHistory.map(h => `<div style="padding:2px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="document.getElementById('calcInput').value='${h.expr.replace(/'/g,"\\'")}';calcDo();"><span style="color:var(--text-dim);">${escHtml(h.expr)} =</span> <span style="color:var(--accent);">${escHtml(String(h.result))}</span></div>`).join('');
-  } catch (e) {
-    $('calcResult').textContent = '⚠ ' + e.message;
-    $('calcResult').style.color = 'var(--red)';
-    setTimeout(() => { $('calcResult').style.color = ''; }, 2000);
-  }
-}
-// 生成键盘
-(function() {
-  const pad = $('calcPad');
-  if (!pad) return;
-  let html = '';
-  for (const row of _calcPadBtns) {
-    for (const btn of row) {
-      const isOp = ['sin','cos','tan','log','ln','asin','acos','atan','log2','log10','sqrt','cbrt','abs','ceil','floor'].includes(btn);
-      const bg = isOp ? 'var(--surface2)' : /[0-9.]/.test(btn) ? 'var(--surface)' : 'var(--accent-dim)';
-      html += `<button type="button" class="btn btn-sm calc-key" data-val="${btn}" style="padding:8px 2px;font-size:13px;background:${bg};min-width:0;">${btn}</button>`;
-    }
-  }
-  pad.innerHTML = html;
-  pad.querySelectorAll('.calc-key').forEach(b => {
-    b.addEventListener('click', () => {
-      const v = b.dataset.val;
-      if (v === 'backspace') calcBackspace();
-      else calcInsert(v);
-    });
-  });
-})();
-$('calcBtn').addEventListener('click', calcDo);
-$('calcBackBtn').addEventListener('click', calcBackspace);
-$('calcInput').addEventListener('keydown', e => { if (e.key === 'Enter') calcDo(); });
-$('calcClearBtn').addEventListener('click', () => { $('calcInput').value = ''; $('calcResult').textContent = ''; $('calcHistory').innerHTML = ''; _calcHistory.length = 0; });
 
 // ═══════════════════════════════════════
 //  📝 文本处理
@@ -4118,7 +3872,7 @@ const tabMeta = [
   {tab:'regex', name:'◎ 正则', sub:[{id:'regex',n:'正则测试'},{id:'rex',n:'正则速查'}], kw:'正则 regex 匹配 测试 速查'},
   {tab:'sql', name:'🗄️ SQL', sub:[{id:'sql-in',n:'IN 生成'},{id:'sql-insert',n:'INSERT 解析'},{id:'sql-fmt',n:'SQL 格式化'}], kw:'sql 数据库 insert 值 列 格式化'},
   {tab:'encode', name:'🔐 编解码', sub:[{id:'b64',n:'Base64'},{id:'url',n:'URL'},{id:'html',n:'HTML'},{id:'jwt',n:'JWT'},{id:'bc',n:'进制'},{id:'morse',n:'Morse'},{id:'caesar',n:'Caesar'},{id:'bintext',n:'二进制文本'}], kw:'编码 解码 base64 url html jwt 进制 hex bin oct morse caesar 凯撒 二进制'},
-  {tab:'gen', name:'🎲 生成', sub:[{id:'uuid',n:'UUID'},{id:'hash',n:'Hash'},{id:'color',n:'颜色'},{id:'passwd',n:'密码'},{id:'lorem',n:'Lorem'},{id:'cron',n:'Cron'},{id:'fmt',n:'代码格式化'},{id:'calc',n:'计算器'}], kw:'生成 uuid hash sha 颜色 色值 密码 lorem cron 代码格式化 beautify minify js css html 计算器 calc 计算'},
+  {tab:'gen', name:'🎲 生成', sub:[{id:'uuid',n:'UUID'},{id:'hash',n:'Hash'},{id:'color',n:'颜色'},{id:'passwd',n:'密码'},{id:'cron',n:'Cron'}], kw:'生成 uuid hash sha 颜色 色值 密码 cron'},
   {tab:'text', name:'📝 文本', sub:[{id:'proc',n:'处理'},{id:'stats',n:'统计'},{id:'case',n:'大小写'},{id:'csv',n:'CSV'},{id:'diff',n:'Diff'}], kw:'排序 去重 统计 大小写 camel snake kebab csv 表格 diff 比较'},
   {tab:'ts', name:'⏱ 时间戳', kw:'时间 日期 毫秒 秒 时间戳 转换'},
   {tab:'timer', name:'⏱ 计时器', kw:'计时 秒表 计次 倒计时'},
