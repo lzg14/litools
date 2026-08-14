@@ -210,6 +210,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 .jt-body { padding-left:0; }
 .jt-root { margin:0; padding:0; }
 .jt-root div { margin:0; padding:0; }
+/* { } JSON 智能修复提示条 */
+.json-repair-note { display:flex; align-items:center; flex-wrap:wrap; gap:6px; background:var(--surface2); border:1px solid var(--accent-dim); border-radius:var(--radius); padding:5px 10px; margin-bottom:8px; font-size:12px; color:var(--text); }
 .result-box .copy-btn {
   position: sticky; top: 0; float: right;
   background: var(--surface2); border: 1px solid var(--border);
@@ -502,7 +504,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div class="btn-group" style="margin-bottom:0;">
         <button class="btn btn-primary" id="jsonFormatBtn" data-lk="jsonFormatBtn">格式化 (Ctrl+Enter)</button>
         <button class="btn" id="jsonCompressBtn" data-lk="jsonCompressBtn">压缩</button>
-        <button class="btn" id="jsonLooseBtn" data-lk="jsonLooseBtn">宽松解析</button>
         <button class="btn" id="jsonYamlBtn" data-lk="jsonYamlBtn">→ YAML</button>
         <button class="btn" id="jsonXmlBtn" data-lk="jsonXmlBtn">→ XML</button>
         <button class="btn" id="jsonCodeBtn" data-lk="jsonCodeBtn">→ Code</button>
@@ -1188,8 +1189,13 @@ const _L = {
   tsRevSec:{zh:'秒',en:'Sec'}, tsRevMs:{zh:'毫秒',en:'ms'},
   jsonResult:{zh:'结果',en:'Result'}, jsonFormatBtn:{zh:'格式化 (Ctrl+Enter)',en:'Format (Ctrl+Enter)'},
   jsonWorkerHint:{zh:'⏳ 正在后台 Worker 中处理大数据…',en:'⏳ Processing in background worker…'},
-  jsonCompressBtn:{zh:'压缩',en:'Compact'}, jsonLooseBtn:{zh:'宽松解析',en:'Loose'},
+  jsonCompressBtn:{zh:'压缩',en:'Compact'},
   jsonSchemaBtn:{zh:'Schema',en:'Schema'}, jsonMergeBtn:{zh:'合并',en:'Merge'}, jsonDiffBtn:{zh:'对比',en:'Diff'}, jsonUnescapeBtn:{zh:'去除转义',en:'Unescape'},
+  jsonRepaired:{zh:'已自动修复',en:'Auto-repaired'},
+  rp_unwrap:{zh:'解包字符串',en:'Unwrapped string'}, rp_unescape:{zh:'还原转义',en:'Unescaped'}, rp_comment:{zh:'去除注释',en:'Removed comments'},
+  rp_trailing:{zh:'去除尾逗号',en:'Removed trailing commas'}, rp_java:{zh:'toString 转换',en:'toString → JSON'}, rp_single:{zh:'单引号→双引号',en:'Single→double quotes'},
+  rp_key:{zh:'补全键引号',en:'Quoted keys'}, rp_value:{zh:'补全值引号',en:'Quoted values'}, rp_extract:{zh:'提取 JSON 片段',en:'Extracted JSON'},
+  jsonWriteBackBtn:{zh:'写回输入框',en:'Write back'}, json_large_hint:{zh:'文档较大已折叠显示，右键可全部展开',en:'Large document collapsed; right-click → Expand all'},
   jsonXmlBtn:{zh:'→ XML',en:'→ XML'}, jsonCodeBtn:{zh:'→ Code',en:'→ Code'}, json_code_lang:{zh:'TypeScript / Python / Go?',en:'TypeScript / Python / Go?'}, json_code_invalid:{zh:'请输入 ts/python/go',en:'Enter ts/python/go'},
   copy_val:{zh:'复制值',en:'Copy value'}, copy_path:{zh:'复制路径',en:'Copy path'},
   genTxt:{zh:'生成',en:'Create'}, genCount:{zh:'个',en:''},
@@ -1864,7 +1870,7 @@ function handleFileDrop(file) {
   const sub = active.querySelector('.sub-pane.active');
   const subId = sub ? sub.dataset.sub : '';
   if (id === 'p-json') {
-    readDroppedFile(file).then(text => { if (text) { $('jsonInput').value = text; renderJSONResult(text, true); } });
+    readDroppedFile(file).then(text => { if (text) { $('jsonInput').value = text; renderJSONResult(text); } });
   } else if (id === 'p-search') {
     if (subId === 'regex') {
       readDroppedFile(file).then(text => { if (text) { rexEditor.textContent = text; rexHighlight(); } });
@@ -1981,9 +1987,227 @@ let _jsonLinesTimer;
 jsonInput.addEventListener('input', () => { clearTimeout(_jsonLinesTimer); _jsonLinesTimer = setTimeout(() => updateJsonLines(), 150); });
 jsonInput.addEventListener('scroll', () => { jsonLines.scrollTop = jsonInput.scrollTop; });
 
-function looseTransform(v) {
-  return v.replace(/\/\/.*/g,'').replace(/\/\*[\s\S]*?\*\//g,'').replace(/,\s*}/g,'}').replace(/,\s*\]/g,']').replace(/([{,]\s*)'([^']*?)'(\s*[,:}\]])/g,'$1"$2"$3').replace(/([{,]\s*)(\w+)(\s*:)/g,'$1"$2"$3').replace(/:\s*'([^']*?)'(\s*[,:}\]])/g,': "$1"$2').replace(/(\w+)"([,}])/g,'$1$2').replace(/:\s*(\w+)\s*([,}])/g,(m,v,s)=>v==='true'||v==='false'||v==='null'||isFinite(Number(v))?m:`:"${v}"${s}`);
+// SMART-REPAIR-START
+// ⚡ 智能修复：级联修复"脏 JSON"，每一步都用 JSON.parse 实测验证，猜错自动试下一种
+// 典型场景：toString 转义产物、Java 日志拷贝、Python 字典、JS 对象、尾逗号/注释/无引号 key、杂质中抠 JSON
+function smartRepairJSON(raw) {
+  const text = String(raw == null ? '' : raw).trim();
+  if (!text) return { ok: false, text: String(raw == null ? '' : raw), steps: [], error: new Error('empty input') };
+  return _srpRepair(text, [], 0);
 }
+function _srpRepair(text, steps, depth) {
+  const P = t => { try { return { ok: true, v: JSON.parse(t) }; } catch (e) { return { ok: false, e }; } };
+  let cur = text;
+  let lastOk = null; // 阶段1 中最后一次成功解析的结果（解包失败时兜底返回）
+  // 阶段1：解包字符串层 / 还原无引号转义（Java 日志风格），最多 8 轮
+  for (let round = 0; round < 8; round++) {
+    const r = P(cur);
+    if (r.ok) {
+      if (typeof r.v === 'string' && /^[[{]/.test(r.v.trim())) { lastOk = { text: cur, v: r.v }; steps.push('unwrap'); cur = r.v.trim(); continue; }
+      return { ok: true, text: cur, steps, value: r.v };
+    }
+    if (/\\["'ntrbf\\/]/.test(cur)) {
+      const u = _srpUnescape(cur);
+      if (u !== cur) { steps.push('unescape'); cur = u; continue; }
+    }
+    break;
+  }
+  // 阶段2：累计宽松修复链（各步骤互不冲突，前面的步骤无匹配时是无操作）
+  const chain = [
+    ['comment', _srpStripComments],      // 去除 // 和 /* */ 注释（字符串感知，不误伤 URL）
+    ['trailing', _srpStripTrailing],     // 去除尾逗号
+    ['java', _srpJavaEquals],            // Java toString: = → :
+    ['single', _srpSingleQuotes],        // 单引号 → 双引号 + Python True/False/None
+    ['key', _srpQuoteKeys],              // 补全无引号 key
+    ['value', _srpQuoteValues],          // 补全裸值引号（跳过数字/true/false/null）
+  ];
+  for (let i = 0; i < chain.length; i++) {
+    const r = P(cur);
+    if (r.ok) return { ok: true, text: cur, steps, value: r.v };
+    const t2 = chain[i][1](cur);
+    if (t2 !== cur) { steps.push(chain[i][0]); cur = t2; }
+  }
+  const rEnd = P(cur);
+  if (rEnd.ok) return { ok: true, text: cur, steps, value: rEnd.v };
+  // 阶段3：从杂质文本中提取平衡的 {...}/[...] 块，重跑整条修复链
+  if (depth < 2) {
+    const cands = _srpExtract(cur);
+    for (let i = 0; i < cands.length; i++) {
+      const sub = _srpRepair(cands[i], [], depth + 1);
+      if (sub.ok) { sub.steps.unshift('extract'); return sub; }
+    }
+  }
+  // 全部失败：若中途解析成功过（如本身是合法 JSON 字符串），返回那个结果
+  if (lastOk) return { ok: true, text: lastOk.text, steps, value: lastOk.v };
+  return { ok: false, text, steps, error: P(text).e };
+}
+// 单遍反转义：\" \' \\ \n \t \r \b \f → 实际字符（\uXXXX 留给 JSON.parse 处理）
+function _srpUnescape(t) {
+  let out = '', changed = false;
+  const map = { '"': '"', "'": "'", '\\': '\\', 'n': '\n', 't': '\t', 'r': '\r', 'b': '\b', 'f': '\f' };
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (c === '\\' && i + 1 < t.length && map[t[i + 1]] !== undefined) { out += map[t[i + 1]]; changed = true; i++; continue; }
+    out += c;
+  }
+  return changed ? out : t;
+}
+// 去除注释（跳过双引号字符串，避免误伤 "http://x"）
+function _srpStripComments(t) {
+  let out = '', i = 0, n = t.length, inS = false, changed = false;
+  while (i < n) {
+    const c = t[i];
+    if (inS) { out += c; if (c === '\\') { out += t[i + 1] || ''; i += 2; continue; } if (c === '"') inS = false; i++; continue; }
+    if (c === '"') { inS = true; out += c; i++; continue; }
+    if (c === '/' && t[i + 1] === '/') { while (i < n && t[i] !== '\n') i++; changed = true; continue; }
+    if (c === '/' && t[i + 1] === '*') { i += 2; while (i < n && !(t[i] === '*' && t[i + 1] === '/')) i++; i = Math.min(i + 2, n); changed = true; continue; }
+    out += c; i++;
+  }
+  return changed ? out : t;
+}
+// 去除尾逗号（}, ] 前的逗号，字符串感知）
+function _srpStripTrailing(t) {
+  let out = '', i = 0, n = t.length, inS = false, changed = false;
+  while (i < n) {
+    const c = t[i];
+    if (inS) { out += c; if (c === '\\') { out += t[i + 1] || ''; i += 2; continue; } if (c === '"') inS = false; i++; continue; }
+    if (c === '"') { inS = true; out += c; i++; continue; }
+    if (c === ',') {
+      let j = i + 1;
+      while (j < n && /\s/.test(t[j])) j++;
+      if (t[j] === '}' || t[j] === ']') { changed = true; i++; continue; }
+    }
+    out += c; i++;
+  }
+  return changed ? out : t;
+}
+// Java toString：= → :（跳过双引号字符串，排除 ==）
+function _srpJavaEquals(t) {
+  let out = '', i = 0, n = t.length, inS = false, changed = false;
+  while (i < n) {
+    const c = t[i];
+    if (inS) { out += c; if (c === '\\') { out += t[i + 1] || ''; i += 2; continue; } if (c === '"') inS = false; i++; continue; }
+    if (c === '"') { inS = true; out += c; i++; continue; }
+    if (c === '=' && t[i + 1] !== '=') { changed = true; out += ':'; i++; continue; }
+    out += c; i++;
+  }
+  return changed ? out : t;
+}
+// 单引号字符串 → 双引号（内部双引号转义、\' 还原），字符串外 Python 常量 True/False/None → true/false/null
+function _srpSingleQuotes(t) {
+  let out = '', i = 0, n = t.length, changed = false;
+  while (i < n) {
+    const c = t[i];
+    if (c === '"') { // 双引号字符串原样通过
+      out += c; i++;
+      while (i < n) { const d = t[i]; out += d; if (d === '\\') { out += t[i + 1] || ''; i += 2; continue; } i++; if (d === '"') break; }
+      continue;
+    }
+    if (c === "'") { // 单引号 → 双引号
+      changed = true; out += '"'; i++;
+      while (i < n) {
+        const d = t[i];
+        if (d === '\\' && t[i + 1] === "'") { out += "'"; i += 2; continue; }
+        if (d === '"') { out += '\\"'; i++; continue; }
+        if (d === "'") { out += '"'; i++; break; }
+        out += d; i++;
+      }
+      continue;
+    }
+    if (/[A-Za-z_]/.test(c)) { // 字符串外：Python 常量
+      let j = i; while (j < n && /\w/.test(t[j])) j++;
+      const w = t.slice(i, j);
+      if (w === 'True' || w === 'False' || w === 'None') { changed = true; out += w === 'True' ? 'true' : w === 'False' ? 'false' : 'null'; }
+      else out += w;
+      i = j; continue;
+    }
+    out += c; i++;
+  }
+  return changed ? out : t;
+}
+// 补全无引号 key：{ key: / , key: → { "key": （字符串感知，key 允许字母数字 _ $ . -）
+function _srpQuoteKeys(t) {
+  let out = '', i = 0, n = t.length, inS = false, changed = false;
+  while (i < n) {
+    const c = t[i];
+    if (inS) { out += c; if (c === '\\') { out += t[i + 1] || ''; i += 2; continue; } if (c === '"') inS = false; i++; continue; }
+    if (c === '"') { inS = true; out += c; i++; continue; }
+    if (c === '{' || c === ',') {
+      out += c; i++;
+      let j = i; while (j < n && /\s/.test(t[j])) j++;
+      if (j < n && /[A-Za-z_$]/.test(t[j])) {
+        let k = j; while (k < n && /[\w$.\-]/.test(t[k])) k++;
+        let k2 = k; while (k2 < n && /\s/.test(t[k2])) k2++;
+        if (t[k2] === ':') { changed = true; out += t.slice(i, j) + '"' + t.slice(j, k) + '"'; i = k; continue; }
+      }
+      continue;
+    }
+    out += c; i++;
+  }
+  return changed ? out : t;
+}
+// 补全裸值引号：冒号后/数组元素位置的裸词（可含空格，如 Java msg=hello world）加引号；
+// 数字 / true / false / null 保持原样；通过栈跟踪数组上下文
+function _srpQuoteValues(t) {
+  const stack = [];
+  let out = '', i = 0, n = t.length, changed = false, expectVal = false;
+  const NUM_RE = /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/;
+  while (i < n) {
+    const c = t[i];
+    if (/\s/.test(c)) { out += c; i++; continue; }
+    if (c === '"') { // 双引号字符串原样通过
+      out += c; i++;
+      while (i < n) { const d = t[i]; out += d; if (d === '\\') { out += t[i + 1] || ''; i += 2; continue; } i++; if (d === '"') break; }
+      expectVal = false; continue;
+    }
+    if (c === '{' || c === '[') { stack.push(c); out += c; i++; expectVal = c === '['; continue; }
+    if (c === '}' || c === ']') { stack.pop(); out += c; i++; expectVal = false; continue; }
+    if (c === ',') { out += c; i++; expectVal = stack[stack.length - 1] === '['; continue; }
+    if (c === ':') { out += c; i++; expectVal = true; continue; }
+    if (expectVal) { // 读整个裸值（到结构性字符为止，保留内部空格/冒号）
+      let j = i, tok = '';
+      while (j < n) {
+        const d = t[j];
+        if (d === ',' || d === '}' || d === ']' || d === '{' || d === '[' || d === '"') break;
+        tok += d; j++;
+      }
+      const v = tok.trim();
+      const keep = v === '' || v === 'true' || v === 'false' || v === 'null' || NUM_RE.test(v);
+      if (!keep) { changed = true; out += '"' + v.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"'; }
+      else out += t.slice(i, j);
+      i = j; expectVal = false; continue;
+    }
+    out += c; i++;
+  }
+  return changed ? out : t;
+}
+// 从杂质文本中提取平衡的 {...}/[...] 块（每个起始位置都尝试，最多 10 个候选）
+function _srpExtract(t) {
+  if (t.length > 1048576) return []; // 超大文本跳过提取阶段
+  const res = [];
+  let s = 0, tried = 0;
+  const n = t.length;
+  while (res.length < 10 && tried < 10) {
+    while (s < n && t[s] !== '{' && t[s] !== '[') s++;
+    if (s >= n) break;
+    tried++;
+    let i = s, depth = 0, close = -1;
+    while (i < n) {
+      const c = t[i];
+      if (c === '"') { i++; while (i < n) { if (t[i] === '\\') { i += 2; continue; } if (t[i] === '"') { i++; break; } i++; } continue; }
+      if (c === '{' || c === '[') depth++;
+      else if (c === '}' || c === ']') { depth--; if (depth === 0) { close = i; break; } }
+      i++;
+    }
+    if (close > s) {
+      const cand = t.slice(s, close + 1);
+      if (cand.length >= 2) res.push(cand);
+    }
+    s++; // 下一个起始位置也尝试（捕获嵌在杂质里的块）
+  }
+  return res;
+}
+// SMART-REPAIR-END
 function fmtJSONError(text, e) {
   if (!e) return '<div style="font-size:12px;color:var(--text-dim);">' + _('json_cancelled') + '</div>';
   if (text.length > JSON_TREE_LIMIT) return `<div style="font-size:12px;color:var(--red);">⚠ ${escHtml(e.message)}</div>`;
@@ -2033,19 +2257,46 @@ function jsonTree(val, path, lazy) {
   }</span><span class="jt-brace">${isArr?']':'}'}</span></span>`;
 }
 
-function renderJSONResult(v, loose) {
-  if (!v.trim()) { $('jsonResult').innerHTML = _('jsonResult'); _jsonData = null; return; }
-  try {
-    if (v.length > JSON_TREE_LIMIT) { const d = JSON.parse(v); $('jsonResult').textContent = JSON.stringify(d, null, 2); _jsonData = null; return; }
-    const r = JSON.parse(loose ? looseTransform(v) : v);
-    _jsonData = r;
-    // 使用懒加载：第一层展开，其余折叠
-    $('jsonResult').innerHTML = `<div class="jt-root">${jsonTree(r, [], true)}</div>`;
-  } catch (e) {
-    if (v.length > JSON_TREE_LIMIT) $('jsonResult').textContent = `⚠ ${e.message}`;
-    else $('jsonResult').innerHTML = fmtJSONError(v, e);
-    _jsonData = null;
+const JSON_EXPAND_LIMIT = 2000; // 节点数低于该值时默认全展开渲染，超过则懒加载折叠（右键可全部展开）
+let _jsonRepairedText = null; // 最近一次自动修复得到的可解析文本（供"写回输入框"）
+const RP_LABELS = { unwrap:'rp_unwrap', unescape:'rp_unescape', comment:'rp_comment', trailing:'rp_trailing', java:'rp_java', single:'rp_single', key:'rp_key', value:'rp_value', extract:'rp_extract' };
+function repairStepsText(steps) {
+  const counts = {};
+  steps.forEach(s => { counts[s] = (counts[s] || 0) + 1; });
+  return Object.keys(counts).map(s => _(RP_LABELS[s] || s) + (counts[s] > 1 ? ` ×${counts[s]}` : '')).join(' · ');
+}
+function countJsonNodes(v, cap) {
+  let n = 0; const stack = [v];
+  while (stack.length) {
+    const cur = stack.pop();
+    n++;
+    if (n > cap) return n;
+    if (cur && typeof cur === 'object') { const ks = Object.keys(cur); for (let i = 0; i < ks.length; i++) stack.push(cur[ks[i]]); }
   }
+  return n;
+}
+
+function renderJSONResult(v) {
+  if (!v || !v.trim()) { $('jsonResult').innerHTML = _('jsonResult'); _jsonData = null; _jsonRepairedText = null; return; }
+  if (v.length > JSON_TREE_LIMIT) { // >10MB：纯文本展示，不做修复（性能保护）
+    try { const d = JSON.parse(v); $('jsonResult').textContent = JSON.stringify(d, null, 2); }
+    catch (e) { $('jsonResult').textContent = `⚠ ${e.message}`; }
+    _jsonData = null; _jsonRepairedText = null;
+    return;
+  }
+  // ⚡ 智能修复：标准 JSON 零成本直接通过，脏 JSON 自动级联修复
+  const r = smartRepairJSON(v);
+  if (!r.ok) { $('jsonResult').innerHTML = fmtJSONError(v, r.error); _jsonData = null; _jsonRepairedText = null; return; }
+  _jsonData = r.value;
+  _jsonRepairedText = r.steps.length ? r.text : null;
+  const note = r.steps.length
+    ? `<div class="json-repair-note">⚡ ${_('jsonRepaired')}: ${repairStepsText(r.steps)}<button class="copy-btn-sm" id="jsonWriteBackBtn" style="margin-left:auto;">${_('jsonWriteBackBtn')}</button></div>`
+    : '';
+  // 小文档全展开渲染；大文档懒加载折叠 + 提示
+  const tree = countJsonNodes(r.value, JSON_EXPAND_LIMIT) <= JSON_EXPAND_LIMIT
+    ? `<div class="jt-root">${jsonTree(r.value, [], false)}</div>`
+    : `<div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">${_('json_large_hint')}</div><div class="jt-root">${jsonTree(r.value, [], true)}</div>`;
+  $('jsonResult').innerHTML = note + tree;
 }
 
 document.addEventListener('click', e => {
@@ -2167,18 +2418,16 @@ $('jsonFormatBtn').addEventListener('click', () => {
   if (v.length > 1048576) {
     $('jsonResult').textContent = _('jsonWorkerHint');
     jsonFormatInWorker(v, (pretty, fallback) => {
-      if (fallback || pretty === null) renderJSONResult(v, false);
-      else { try { $('jsonResult').textContent = pretty; _jsonData = JSON.parse(v); } catch { renderJSONResult(v, false); } }
+      if (fallback || pretty === null) renderJSONResult(v); // worker 失败 → 主线程智能修复兜底
+      else { try { $('jsonResult').textContent = pretty; _jsonData = JSON.parse(v); } catch { renderJSONResult(v); } }
     });
-  } else renderJSONResult(v, false);
+  } else renderJSONResult(v);
 });
 $('jsonCompressBtn').addEventListener('click', () => {
   const v = $('jsonInput').value.trim();
   if (!v) { toast(_('err_input_json'), 1); return; }
   try { $('jsonResult').textContent = JSON.stringify(JSON.parse(v)); } catch(e) { $('jsonResult').innerHTML = fmtJSONError(v, e); }
 });
-$('jsonLooseBtn').addEventListener('click', () => renderJSONResult($('jsonInput').value, true));
-
 // JSON → YAML 转换
 function jsonToYaml(obj, indent) {
   indent = indent || 0;
@@ -2345,8 +2594,19 @@ $('jsonDiffBtn').addEventListener('click', () => {
 });
 
 $('jsonClearBtn').addEventListener('click', () => { $('jsonInput').value = ''; $('jsonResult').innerHTML = (_L.res_json ? _L.res_json[_lang] : 'Result') + '<button class=\"copy-btn\" data-lk=\"copy\">' + (_L.copy?_L.copy[_lang]:'Copy') + '</button>'; _jsonData = null; updateJsonLines(); });
-$('jsonInput').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) renderJSONResult($('jsonInput').value, true); });
-setupFileInput({ btnId: 'jsonFileBtn', targetEl: $('jsonInput'), accept: '.json,.txt', onLoad: text => renderJSONResult(text, true) });
+$('jsonInput').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) renderJSONResult($('jsonInput').value); });
+// 粘贴后自动格式化（paste 事件触发时 value 尚未更新，延迟一拍）
+jsonInput.addEventListener('paste', () => setTimeout(() => renderJSONResult(jsonInput.value), 60));
+// 修复提示条"写回输入框"：把修复后的标准 JSON 写回左侧编辑区
+$('jsonResult').addEventListener('click', e => {
+  if (e.target.id !== 'jsonWriteBackBtn' || _jsonRepairedText == null) return;
+  jsonInput.value = JSON.stringify(_jsonData, null, 2);
+  _jsonRepairedText = null;
+  updateJsonLines();
+  renderJSONResult(jsonInput.value);
+  toast(_('done'));
+});
+setupFileInput({ btnId: 'jsonFileBtn', targetEl: $('jsonInput'), accept: '.json,.txt', onLoad: text => renderJSONResult(text) });
 
 // 去除转义
 $('jsonUnescapeBtn').addEventListener('click', () => {
@@ -2358,7 +2618,7 @@ $('jsonUnescapeBtn').addEventListener('click', () => {
     // 对格式化后的字符串进行去转义处理
     const unescaped = str.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
     $('jsonInput').value = unescaped;
-    renderJSONResult(unescaped, true);
+    renderJSONResult(unescaped);
     toast(_('done'));
   } catch(e) {
     // 如果不是合法 JSON，对原文进行去转义
@@ -2367,7 +2627,7 @@ $('jsonUnescapeBtn').addEventListener('click', () => {
     result = result.replace(/\\"/g, '"');
     result = result.replace(/\\\\/g, '\\');
     $('jsonInput').value = result;
-    renderJSONResult(result, true);
+    renderJSONResult(result);
     toast(_('done'));
   }
 });
@@ -4576,7 +4836,7 @@ $('httpSendBtn').addEventListener('click', async () => {
       $('jsonInput').value = bodyText;
       const tab = document.querySelector('.tab[data-tab="json"]');
       if (tab) tab.click();
-      renderJSONResult(bodyText, true);
+      renderJSONResult(bodyText);
       toast(_('sent_to_json'));
     });
     $('httpSaveBtn').addEventListener('click', () => downloadText(bodyText, dlName));
@@ -5401,7 +5661,7 @@ function renderHistory() {
 }
 function restoreHistory(h) {
   switchTab(h.tab);
-  if (h.tab === 'json') { $('jsonInput').value = h.data; renderJSONResult(h.data, true); }
+  if (h.tab === 'json') { $('jsonInput').value = h.data; renderJSONResult(h.data); }
   else if (h.tab === 'http') { $('httpUrl').value = h.data; }
   else if (h.tab === 'search') { const se = $('srchEditor'); se.textContent = h.data; se.dataset.lkPl = ''; se.contentEditable = 'true'; applyHighlights(); }
   else if (h.tab === 'sql') { $('sqlInput').value = h.data; }
