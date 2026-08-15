@@ -59,7 +59,7 @@ body {
   justify-content: center;
   padding: 8px 16px;
 }
-.container { max-width: 1400px; width: 100%; }
+.container { max-width: 1400px; width: 100%; display:flex; flex-direction:column; min-height:100vh; }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -69,7 +69,9 @@ body {
 
 /* Tabs */
 .tab-pane {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   opacity: 0;
   animation: fadeIn 0.15s ease forwards;
 }
@@ -368,8 +370,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <!-- IN 生成 -->
     <div class="sub-pane active" data-sub="sql-in">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <textarea id="sqlInput" rows="10" placeholder="粘贴值，可用逗号、换行、空格分隔&#10;例: abc, def, ghi&#10;或: abc(def(ghi" spellcheck="false" style="min-height:calc(100vh - 110px);" data-lk-pl="pl_sqlInput"></textarea>
-        <div class="result-box" id="sqlResult" style="min-height:calc(100vh - 110px);margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;" data-lk="sqlResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+        <textarea id="sqlInput" rows="10" placeholder="粘贴值，可用逗号、换行、空格分隔&#10;例: abc, def, ghi&#10;或: abc(def(ghi" spellcheck="false" style="min-height:calc(100vh - 140px);" data-lk-pl="pl_sqlInput"></textarea>
+        <div class="result-box" id="sqlResult" style="min-height:calc(100vh - 140px);margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;" data-lk="sqlResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
       <div class="btn-group" style="margin-top:8px;">
         <button class="btn btn-primary" id="sqlGenBtn" data-lk="sqlGenBtn">生成 IN</button>
@@ -385,7 +387,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <span class="arrow">▼</span> <span data-lk="sql_insert_title">INSERT 语句</span>
       </div>
       <div class="collapsible-body" style="max-height:40vh;">
-        <textarea id="sqlInsertInput" rows="4" placeholder="粘贴 INSERT 语句，自动解析列名与值的对应关系&#10;例: INSERT INTO t (a,b,c) VALUES (1,2,3)" spellcheck="false" style="min-height:calc(100vh - 110px);font-size:13px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="pl_sqlInsert"></textarea>
+        <textarea id="sqlInsertInput" rows="4" placeholder="粘贴 INSERT 语句，自动解析列名与值的对应关系&#10;例: INSERT INTO t (a,b,c) VALUES (1,2,3)" spellcheck="false" style="min-height:calc(100vh - 140px);font-size:13px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="pl_sqlInsert"></textarea>
       </div>
       <div class="btn-group" style="margin-top:6px;">
         <button class="btn btn-primary" id="sqlInsertParseBtn" data-lk="sqlInsertParseBtn">解析</button>
@@ -397,8 +399,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <!-- SQL 格式化 -->
     <div class="sub-pane" data-sub="sql-fmt">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <textarea id="sqlFmtInput" rows="10" placeholder="粘贴 SQL 语句，自动格式化&#10;支持 SELECT/INSERT/UPDATE/DELETE/WHERE/ORDER BY 等" spellcheck="false" style="min-height:calc(100vh - 110px);" data-lk-pl="pl_sqlFmtInput"></textarea>
-        <div class="result-box" id="sqlFmtResult" style="min-height:calc(100vh - 110px);margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;" data-lk="sqlFmtResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+        <textarea id="sqlFmtInput" rows="10" placeholder="粘贴 SQL 语句，自动格式化&#10;支持 SELECT/INSERT/UPDATE/DELETE/WHERE/ORDER BY 等" spellcheck="false" style="min-height:calc(100vh - 140px);" data-lk-pl="pl_sqlFmtInput"></textarea>
+        <div class="result-box" id="sqlFmtResult" style="min-height:calc(100vh - 140px);margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;" data-lk="sqlFmtResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
       <div class="btn-group" style="margin-top:8px;">
         <button class="btn btn-primary" id="sqlFmtBtn" data-lk="sqlFmtBtn">格式化</button>
@@ -410,13 +412,13 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 
   <!-- { } JSON -->
   <div class="tab-pane active" id="p-json">
-    <div id="jsonSplit" style="display:flex;gap:0;min-height:calc(100vh - 110px);">
+    <div id="jsonSplit" style="display:flex;gap:0;min-height:calc(100vh - 140px);">
       <div id="jsonLeft" style="display:flex;flex:0 0 35%;min-width:200px;overflow:hidden;">
         <div id="jsonLines" style="padding:9px 6px 9px 8px;background:var(--surface);border:1px solid var(--border);border-right:none;border-radius:var(--radius) 0 0 var(--radius);overflow:hidden;text-align:right;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.5;color:var(--text-dim);user-select:none;min-width:36px;"></div>
-        <textarea id="jsonInput" rows="16" placeholder="粘贴 JSON" spellcheck="false" style="flex:1;min-height:calc(100vh - 110px);border-radius:0 var(--radius) var(--radius) 0;" data-lk-pl="pl_jsonInput"></textarea>
+        <textarea id="jsonInput" rows="16" placeholder="粘贴 JSON" spellcheck="false" style="flex:1;min-height:calc(100vh - 140px);border-radius:0 var(--radius) var(--radius) 0;" data-lk-pl="pl_jsonInput"></textarea>
       </div>
       <div id="jsonDragBar" style="width:5px;cursor:col-resize;background:var(--border);transition:background 0.15s;flex-shrink:0;"></div>
-      <div id="jsonResultWrap" class="result-box" style="flex:1;min-width:200px;min-height:calc(100vh - 110px);margin:0;padding:10px 12px;white-space:normal;">
+      <div id="jsonResultWrap" class="result-box" style="flex:1;min-width:200px;min-height:calc(100vh - 140px);margin:0;padding:10px 12px;white-space:normal;">
 <div id="jsonResult" data-lk="jsonResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
     </div>
@@ -493,9 +495,9 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-primary" id="rexTestBtn" data-lk="rexTestBtn">测试</button>
         <button class="btn" id="rexClearBtn" data-lk="rexClearBtn">清空</button>
       </div>
-      <div style="display:flex;gap:0;min-height:calc(100vh - 110px);">
+      <div style="display:flex;gap:0;min-height:calc(100vh - 140px);">
         <div id="rexLines" style="padding:9px 6px 9px 8px;background:var(--surface);border:1px solid var(--border);border-right:none;border-radius:var(--radius) 0 0 var(--radius);overflow:hidden;text-align:right;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.7;color:var(--text-dim);user-select:none;min-width:36px;"></div>
-        <div class="result-box" id="rexEditor" contenteditable="true" spellcheck="false" style="flex:1;min-height:calc(100vh - 110px);padding:9px 12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;font-size:13px;overflow:auto;border-radius:0 var(--radius) var(--radius) 0;" data-lk-pl="pl_rexEditor"></div>
+        <div class="result-box" id="rexEditor" contenteditable="true" spellcheck="false" style="flex:1;min-height:calc(100vh - 140px);padding:9px 12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;font-size:13px;overflow:auto;border-radius:0 var(--radius) var(--radius) 0;" data-lk-pl="pl_rexEditor"></div>
       </div>
       <div class="stat-line" id="rexStat" style="margin-top:4px;"></div>
       <div id="rexInfo" style="font-size:12px;color:var(--text-dim);margin-top:4px;"></div>
@@ -539,7 +541,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- HTML -->
     <div class="sub-pane" data-sub="html">
-      <textarea id="htmlInput" rows="6" placeholder="输入文本或 HTML 实体" spellcheck="false" style="min-height:calc(100vh - 110px);" data-lk-pl="pl_htmlInput"></textarea>
+      <textarea id="htmlInput" rows="6" placeholder="输入文本或 HTML 实体" spellcheck="false" style="min-height:calc(100vh - 140px);" data-lk-pl="pl_htmlInput"></textarea>
       <div class="btn-group">
         <button class="btn btn-primary btn-sm" id="htmlEncodeBtn" data-lk="htmlEncodeBtn">编码 →</button>
         <button class="btn btn-sm" id="htmlDecodeBtn" data-lk="htmlDecodeBtn">解码 ←</button>
@@ -563,7 +565,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- 二进制文本 -->
     <div class="sub-pane" data-sub="bintext">
-      <textarea id="bintextInput" rows="6" placeholder="输入文本或二进制（每字符 8 位，UTF-8 多字节）" spellcheck="false" style="min-height:calc(100vh - 110px);" data-lk-pl="pl_bintextInput"></textarea>
+      <textarea id="bintextInput" rows="6" placeholder="输入文本或二进制（每字符 8 位，UTF-8 多字节）" spellcheck="false" style="min-height:calc(100vh - 140px);" data-lk-pl="pl_bintextInput"></textarea>
       <div class="btn-group">
         <button class="btn btn-primary btn-sm" id="bintextEncodeBtn" data-lk="bintextEncodeBtn">→ 二进制</button>
         <button class="btn btn-sm" id="bintextDecodeBtn" data-lk="bintextDecodeBtn">← 解码</button>
@@ -594,7 +596,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- Hash -->
     <div class="sub-pane" data-sub="hash">
-      <textarea id="hashInput" rows="6" placeholder="输入要计算 Hash 的文本" spellcheck="false" style="min-height:calc(100vh - 110px);" data-lk-pl="pl_hashInput"></textarea>
+      <textarea id="hashInput" rows="6" placeholder="输入要计算 Hash 的文本" spellcheck="false" style="min-height:calc(100vh - 140px);" data-lk-pl="pl_hashInput"></textarea>
       <div class="btn-group">
         <button class="btn btn-primary btn-sm" id="hashCalcBtn" data-lk="hashCalcBtn">计算</button>
         <button class="btn btn-sm" id="hashClearBtn" data-lk="hashClearBtn">清空</button>
@@ -652,12 +654,12 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
   <div class="tab-pane" id="p-text">
     <!-- 文本处理 -->
     <div class="sub-pane active" data-sub="proc">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:calc(100vh - 110px);">
-        <div class="ln-editor" style="min-height:calc(100vh - 110px);">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:calc(100vh - 140px);">
+        <div class="ln-editor" style="min-height:calc(100vh - 140px);">
           <div class="ln-gutter" id="tpGutter" aria-hidden="true">1</div>
-          <textarea id="tpInput" placeholder="输入文本" spellcheck="false" style="min-height:calc(100vh - 110px);" data-lk-pl="pl_tpInput"></textarea>
+          <textarea id="tpInput" placeholder="输入文本" spellcheck="false" style="min-height:calc(100vh - 140px);" data-lk-pl="pl_tpInput"></textarea>
         </div>
-        <div class="result-box" id="tpResult" style="min-height:calc(100vh - 110px);margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="tpResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+        <div class="result-box" id="tpResult" style="min-height:calc(100vh - 140px);margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="tpResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
       <div class="btn-group" style="margin-top:8px;">
         <button class="btn btn-primary btn-sm" id="tpSortAsc" data-lk="tpSortAsc">排序 A→Z</button>
@@ -683,9 +685,9 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- 大小写/命名转换 -->
     <div class="sub-pane" data-sub="case">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:calc(100vh - 110px);">
-        <textarea id="caseInput" rows="10" placeholder="输入文本，如 hello_world / HELLO WORLD / helloWorld" spellcheck="false" style="min-height:calc(100vh - 110px);" data-lk-pl="pl_caseInput"></textarea>
-        <div class="result-box" id="caseResult" style="min-height:calc(100vh - 110px);margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="caseResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:calc(100vh - 140px);">
+        <textarea id="caseInput" rows="10" placeholder="输入文本，如 hello_world / HELLO WORLD / helloWorld" spellcheck="false" style="min-height:calc(100vh - 140px);" data-lk-pl="pl_caseInput"></textarea>
+        <div class="result-box" id="caseResult" style="min-height:calc(100vh - 140px);margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="caseResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
       <div class="btn-group" style="margin-top:8px;">
         <button class="btn btn-sm" id="caseUpperBtn" data-lk="caseUpperBtn">大写</button>
@@ -700,9 +702,9 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- CSV -->
     <div class="sub-pane" data-sub="csv">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:calc(100vh - 110px);">
-        <textarea id="csvInput" rows="10" placeholder="粘贴 CSV 文本，或拖入 .csv 文件&#10;自动检测分隔符（逗号/制表符）" spellcheck="false" style="min-height:calc(100vh - 110px);" data-lk-pl="pl_csvInput"></textarea>
-        <div class="result-box" id="csvResult" style="min-height:calc(100vh - 110px);margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.5;overflow:auto;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:calc(100vh - 140px);">
+        <textarea id="csvInput" rows="10" placeholder="粘贴 CSV 文本，或拖入 .csv 文件&#10;自动检测分隔符（逗号/制表符）" spellcheck="false" style="min-height:calc(100vh - 140px);" data-lk-pl="pl_csvInput"></textarea>
+        <div class="result-box" id="csvResult" style="min-height:calc(100vh - 140px);margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.5;overflow:auto;">
           <div style="padding:20px;text-align:center;color:var(--text-dim);" data-lk="csv_empty">CSV 解析结果</div>
         </div>
       </div>
