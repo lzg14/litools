@@ -3982,6 +3982,11 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   });
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data?.type === 'SW_UPDATED') {
+      toast('🔄 ' + (_lang === 'zh' ? '新版本已就绪，刷新生效' : 'New version ready, refresh to apply'));
+    }
+  });
 }
 
 </script>
