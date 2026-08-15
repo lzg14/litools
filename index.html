@@ -9,6 +9,11 @@
 <meta property="og:type" content="website">
 <title>litools</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0078d4">
+<link rel="apple-touch-icon" href="static/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 :root {
   --bg: #f5f5f5;
@@ -4016,7 +4021,7 @@ renderPinnedToolbar();
 // ═══════════════════════════════════════
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('static/sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').catch(() => {});
   });
 }
 

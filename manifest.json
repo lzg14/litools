@@ -1,0 +1,26 @@
+{
+  "name": "litools - 单文件开发者工具箱",
+  "short_name": "litools",
+  "description": "JSON格式化、HTTP请求、搜索、编解码、Diff、文本处理等开发者高频工具，零依赖，离线可用。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f5f5f5",
+  "theme_color": "#0078d4",
+  "icons": [
+    {
+      "src": "static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

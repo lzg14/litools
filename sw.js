@@ -1,8 +1,11 @@
-const CACHE = 'litools-v1';
+const CACHE = 'litools-v2';
 const ASSETS = [
-  '../index.html',
-  'pic.png',
-  './'
+  './',
+  'index.html',
+  'manifest.json',
+  'static/icon-192.png',
+  'static/icon-512.png',
+  'static/pic.png'
 ];
 
 self.addEventListener('install', (e) => {
