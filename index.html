@@ -319,6 +319,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <div class="tab" data-tab="text" data-lk="tab_text">📝 文本</div>
     <div class="tab" data-tab="ts" data-lk="tab_ts">⏱ 时间戳</div>
     <div class="tab" data-tab="timer" data-lk="tab_timer">⏱ 计时器</div>
+    <div class="tab" data-tab="cd" data-lk="tab_cd">⏳ 定时器</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
       <span id="themeToggle" style="cursor:pointer;font-size:16px;" title="切换主题" data-lk-tl="tl_themeToggle">🌙</span>
@@ -378,6 +379,32 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn" id="timerResetBtn" style="min-width:80px;" data-lk="timerResetBtn">↺ 重置</button>
       </div>
       <div id="timerLaps" style="margin-top:16px;max-height:300px;overflow-y:auto;text-align:left;font-size:12px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;"></div>
+    </div>
+  </div>
+
+  <!-- ⏳ 定时器 -->
+  <div class="tab-pane" id="p-cd">
+    <div style="text-align:center;padding:20px 0;">
+      <div class="btn-group" style="justify-content:center;margin-bottom:16px;">
+        <button class="btn" data-cd-quick="60" data-lk="cdQuick1m">1 分</button>
+        <button class="btn" data-cd-quick="300" data-lk="cdQuick5m">5 分</button>
+        <button class="btn" data-cd-quick="600" data-lk="cdQuick10m">10 分</button>
+        <button class="btn" data-cd-quick="1500" data-lk="cdQuick25m">25 分</button>
+        <button class="btn" data-cd-quick="1800" data-lk="cdQuick30m">30 分</button>
+        <button class="btn" data-cd-quick="3600" data-lk="cdQuick1h">1 小时</button>
+      </div>
+      <div class="input-row" style="justify-content:center;gap:4px;margin-bottom:20px;">
+        <input type="number" id="cdHours" min="0" max="99" value="0" style="width:70px;text-align:center;font-size:16px;" data-lk-pl="pl_cdHours">
+        <span style="font-size:20px;color:var(--text-dim);">:</span>
+        <input type="number" id="cdMins" min="0" max="59" value="5" style="width:70px;text-align:center;font-size:16px;" data-lk-pl="pl_cdMins">
+        <span style="font-size:20px;color:var(--text-dim);">:</span>
+        <input type="number" id="cdSecs" min="0" max="59" value="0" style="width:70px;text-align:center;font-size:16px;" data-lk-pl="pl_cdSecs">
+      </div>
+      <div id="cdDisplay" style="font-size:56px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-weight:700;letter-spacing:2px;margin-bottom:20px;">00:00:00</div>
+      <div class="btn-group" style="justify-content:center;">
+        <button class="btn btn-primary" id="cdStartBtn" style="min-width:90px;" data-lk="cdStartBtn">▶ 开始</button>
+        <button class="btn" id="cdResetBtn" style="min-width:90px;" data-lk="cdResetBtn">↺ 重置</button>
+      </div>
     </div>
   </div>
 
@@ -841,7 +868,7 @@ const $ = id => document.getElementById(id);
 
 let _lang = localStorage.getItem('lang') || 'zh';
 const _L = {
-  tab_search:{zh:'🔍 搜索',en:'🔍 Search'}, tab_regex:{zh:'◎ 正则',en:'◎ Regex'}, tab_ts:{zh:'⏱ 时间戳',en:'⏱ Timestamp'}, tab_timer:{zh:'⏱ 计时器',en:'⏱ Timer'},
+  tab_search:{zh:'🔍 搜索',en:'🔍 Search'}, tab_regex:{zh:'◎ 正则',en:'◎ Regex'}, tab_ts:{zh:'⏱ 时间戳',en:'⏱ Timestamp'}, tab_timer:{zh:'⏱ 计时器',en:'⏱ Timer'}, tab_cd:{zh:'⏳ 定时器',en:'⏳ Countdown'},
   tab_encode:{zh:'🔐 编解码',en:'🔐 Encode/Decode'}, tab_gen:{zh:'🎲 生成',en:'🎲 Generate'},
   tab_text:{zh:'📝 文本',en:'📝 Text'}, tab_color:{zh:'🎨 颜色',en:'🎨 Color'}, tab_diff:{zh:'📑 Diff',en:'📑 Diff'},
   tab_json:{zh:'{ } JSON',en:'{ } JSON'},
@@ -1078,6 +1105,14 @@ const _L = {
   timerResetBtn:{zh:'↺ 重置',en:'↺ Reset'},
   timerPaused:{zh:'⏸ 暂停',en:'⏸ Pause'},
   timerResume:{zh:'▶ 继续',en:'▶ Resume'},
+  cdQuick1m:{zh:'1 分',en:'1 min'}, cdQuick5m:{zh:'5 分',en:'5 min'}, cdQuick10m:{zh:'10 分',en:'10 min'}, cdQuick25m:{zh:'25 分',en:'25 min'}, cdQuick30m:{zh:'30 分',en:'30 min'}, cdQuick1h:{zh:'1 小时',en:'1 hour'},
+  pl_cdHours:{zh:'时',en:'h'}, pl_cdMins:{zh:'分',en:'m'}, pl_cdSecs:{zh:'秒',en:'s'},
+  cdStartBtn:{zh:'▶ 开始',en:'▶ Start'},
+  cdPaused:{zh:'⏸ 暂停',en:'⏸ Pause'},
+  cdResume:{zh:'▶ 继续',en:'▶ Resume'},
+  cdResetBtn:{zh:'↺ 重置',en:'↺ Reset'},
+  cd_done:{zh:'⏰ 时间到！',en:'⏰ Time\'s up!'},
+  err_cd_invalid:{zh:'请输入有效的倒计时时长',en:'Enter a valid countdown duration'},
   tsRel_label:{zh:'相对',en:'Relative'},
   tsMs_label:{zh:'毫秒',en:'Millisecond'},
   tsRevSec_label:{zh:'秒',en:'Second'},
@@ -1341,6 +1376,76 @@ $('timerResetBtn').addEventListener('click', () => {
   $('timerStartBtn').textContent = _('timerStartBtn');
   $('timerLapBtn').style.display = 'none';
   $('timerLaps').innerHTML = '';
+});
+
+// ␣ 定时器（倒计时）
+let cdRunning = false, cdTotalMs = 0, cdLeftMs = 0, cdEndAt = 0, cdTimer = null;
+function cdFormat(ms) {
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function cdSetInput(h, m, s) { $('cdHours').value = h; $('cdMins').value = m; $('cdSecs').value = s; }
+function cdRender() { $('cdDisplay').textContent = cdFormat(Math.max(0, cdLeftMs)); }
+function cdStartFromInput() {
+  const h = parseInt($('cdHours').value, 10) || 0;
+  const m = parseInt($('cdMins').value, 10) || 0;
+  const s = parseInt($('cdSecs').value, 10) || 0;
+  if (m > 59 || s > 59) { toast(_('err_cd_invalid'), 1); return; }
+  const total = (h * 3600 + m * 60 + s) * 1000;
+  if (total <= 0) { toast(_('err_cd_invalid'), 1); return; }
+  cdTotalMs = total;
+  cdLeftMs = total;
+  cdEndAt = Date.now() + total;
+  cdRunning = true;
+  $('cdStartBtn').textContent = _('cdPaused');
+  cdTick();
+}
+function cdTick() {
+  if (!cdRunning) return;
+  cdLeftMs = cdEndAt - Date.now();
+  cdRender();
+  if (cdLeftMs <= 0) {
+    cdRunning = false;
+    $('cdStartBtn').textContent = _('cdStartBtn');
+    toast(_('cd_done'));
+    return;
+  }
+  cdTimer = setTimeout(cdTick, 100);
+}
+document.querySelectorAll('[data-cd-quick]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (cdRunning) return;
+    const secs = parseInt(btn.dataset.cdQuick, 10);
+    cdSetInput(Math.floor(secs / 3600), Math.floor((secs % 3600) / 60), secs % 60);
+    cdLeftMs = secs * 1000;
+    cdRender();
+  });
+});
+$('cdStartBtn').addEventListener('click', () => {
+  if (cdRunning) {
+    cdRunning = false;
+    clearTimeout(cdTimer);
+    cdLeftMs = cdEndAt - Date.now();
+    $('cdStartBtn').textContent = _('cdResume');
+    return;
+  }
+  if (cdLeftMs > 0 && cdLeftMs < cdTotalMs) {
+    cdEndAt = Date.now() + cdLeftMs;
+    cdRunning = true;
+    $('cdStartBtn').textContent = _('cdPaused');
+    cdTick();
+    return;
+  }
+  cdStartFromInput();
+});
+$('cdResetBtn').addEventListener('click', () => {
+  cdRunning = false;
+  clearTimeout(cdTimer);
+  cdTotalMs = cdLeftMs = 0;
+  $('cdStartBtn').textContent = _('cdStartBtn');
+  cdRender();
 });
 
 // ═══════════════════════════════════════
@@ -3785,6 +3890,7 @@ const tabMeta = [
   {tab:'text', name:'📝 文本', sub:[{id:'proc',n:'处理'},{id:'stats',n:'统计'},{id:'case',n:'大小写'},{id:'csv',n:'CSV'},{id:'diff',n:'Diff'}], kw:'排序 去重 统计 大小写 camel snake kebab csv 表格 diff 比较'},
   {tab:'ts', name:'⏱ 时间戳', kw:'时间 日期 毫秒 秒 时间戳 转换'},
   {tab:'timer', name:'⏱ 计时器', kw:'计时 秒表 计次 倒计时'},
+  {tab:'cd', name:'⏳ 定时器', kw:'倒计时 定时 番茄钟 countdown'},
 ];
 const $tsi = $('tabSearchInput'), $tsr = $('tabSearchResults'), $tsIcon = $('tabSearchIcon');
 function tsOpen() { $tsi.style.display = ''; $tsi.focus(); $tsi.select(); }
@@ -3835,7 +3941,7 @@ document.addEventListener('click', e => { if (!e.target.closest('#settingsPanel'
 const ALL_MODULES = [
   {id:'json', name:'JSON'}, {id:'search', name:'🔍 搜索'}, {id:'regex', name:'◎ 正则'},
   {id:'sql', name:'SQL'}, {id:'encode', name:'🔐 编解码'}, {id:'gen', name:'🎲 生成'},
-  {id:'text', name:'📝 文本'}, {id:'ts', name:'⏱ 时间戳'}, {id:'timer', name:'⏱ 计时器'}
+  {id:'text', name:'📝 文本'}, {id:'ts', name:'⏱ 时间戳'}, {id:'timer', name:'⏱ 计时器'}, {id:'cd', name:'⏳ 定时器'}
 ];
 function getPinned() { try { return JSON.parse(localStorage.getItem('litools_pinned') || '[]'); } catch { return []; } }
 function setPinned(list) { localStorage.setItem('litools_pinned', JSON.stringify(list)); }
