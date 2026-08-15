@@ -1,5 +1,5 @@
 {
-  "name": "litools - 单文件开发者工具箱",
+  "name": "litools - Developer Toolkit",
   "short_name": "litools",
   "version": "2.0.0",
   "description": "JSON格式化、搜索、正则、编解码、Diff、文本处理等开发者高频工具，零依赖，离线可用。",
