@@ -3865,14 +3865,19 @@ const MODULE_GROUPS = [
   {id:'text',   zh:'文本',     en:'Text'},
 ];
 const DEFAULT_PINNED = ['json','search','regex','ts','sql-in','sql-fmt','b64','url','hash','diff'];
+const PINNED_VERSION = 'v2';
 function getPinned() {
   try {
     const raw = localStorage.getItem('litools_pinned');
-    if (raw === null) return [...DEFAULT_PINNED];
+    const ver = localStorage.getItem('litools_pinned_ver');
+    if (raw === null || ver !== PINNED_VERSION) {
+      localStorage.setItem('litools_pinned_ver', PINNED_VERSION);
+      return [...DEFAULT_PINNED];
+    }
     const v = JSON.parse(raw);
     if (Array.isArray(v)) {
       const valid = v.filter(id => ALL_MODULES.some(m => m.id === id));
-      return valid;
+      return valid.length ? valid : [...DEFAULT_PINNED];
     }
   } catch {}
   return [...DEFAULT_PINNED];
