@@ -68,27 +68,6 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 
 /* Tabs */
-.tabs {
-  display: flex; gap: 0;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.tabs::-webkit-scrollbar { display: none; }
-.tab {
-  padding: 8px 14px;
-  font-size: 13px;
-  cursor: pointer;
-  color: var(--text-dim);
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  transition: color 0.15s, border-color 0.15s;
-  white-space: nowrap;
-  user-select: none;
-}
-.tab:hover { color: var(--text); }
-.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
-
 .tab-pane {
   display: block;
   opacity: 0;
@@ -203,19 +182,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 #jsonResultSearch { font-size:12px; padding:2px 8px; border:1px solid var(--border); border-radius:4px; width:150px; }
 #jsonResultSearch:focus { border-color:var(--accent); outline:none; }
 #srchEditor:empty:before, #rexEditor:empty:before { content:attr(data-lk-pl); color:var(--text-dim); pointer-events:none; }
-/* Sub-tabs */
-.sub-tabs {
-  display: flex; gap: 0; margin-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-}
-.sub-tab {
-  padding: 4px 12px; font-size: 12px; cursor: pointer;
-  color: var(--text-dim); border-bottom: 2px solid transparent;
-  transition: all 0.15s; user-select: none; white-space: nowrap;
-}
-.sub-tab:hover { color: var(--text); }
-.sub-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+/* Sub-panes */
 .sub-pane { display: block; }
 .sub-pane:not(.active) { display: none !important; }
 
@@ -314,31 +281,14 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 <div class="container">
   <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;position:sticky;top:0;z-index:10;background:var(--bg);padding:4px 0;">
     <h1 style="font-size:18px;font-weight:700;white-space:nowrap;flex-shrink:0;">🧰 litools</h1>
-    <div class="tabs" id="tabs" style="flex:1;border:none;margin:0;min-width:0;">
-    <div class="tab active" data-tab="json" data-lk="tab_json">{ } JSON</div>
-    <div class="tab" data-tab="search" data-lk="tab_search">🔍 搜索</div>
-    <div class="tab" data-tab="regex" data-lk="tab_regex">◎ 正则</div>
-    <div class="tab" data-tab="sql" data-lk="tab_sql">🗄️ SQL</div>
-    <div class="tab" data-tab="encode" data-lk="tab_encode">🔐 编解码</div>
-    <div class="tab" data-tab="gen" data-lk="tab_gen">🎲 生成</div>
-    <div class="tab" data-tab="text" data-lk="tab_text">📝 文本</div>
-    <div class="tab" data-tab="ts" data-lk="tab_ts">⏱ 时间戳</div>
-    <div class="tab" data-tab="timer" data-lk="tab_timer">⏱ 计时器</div>
-    <div class="tab" data-tab="cd" data-lk="tab_cd">⏳ 定时器</div>
-    </div>
+    <div id="pinnedToolbar" style="display:flex;flex-wrap:wrap;flex:1;min-width:0;gap:2px;"></div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
       <span id="themeToggle" style="cursor:pointer;font-size:16px;" title="切换主题" data-lk-tl="tl_themeToggle">🌙</span>
       <span id="historyToggle" style="cursor:pointer;font-size:16px;" title="操作历史" data-lk-tl="tl_historyToggle">📋</span>
-      <div id="tabSearchWrap" style="position:relative;">
-        <span id="tabSearchIcon" style="cursor:pointer;font-size:14px;" title="搜索页签 (Ctrl+K)" data-lk-tl="tl_tabSearch">🔍</span>
-        <input type="text" id="tabSearchInput" placeholder="搜索页签…" spellcheck="false" style="display:none;width:130px;padding:3px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);position:absolute;right:0;top:-2px;" data-lk-pl="pl_tabSearch">
-        <div id="tabSearchResults" style="position:absolute;top:100%;right:0;left:auto;min-width:220px;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:300px;overflow-y:auto;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
-      </div>
       <span id="langToggle" style="cursor:pointer;font-size:14px;" title="切换语言" data-lk-tl="tl_langToggle">🌐</span>
       <span id="settingsToggle" style="cursor:pointer;font-size:16px;" title="设置" data-lk-tl="tl_settingsToggle">⚙️</span>
     </div>
   </div>
-  <div id="pinnedToolbar" style="display:none;margin-bottom:8px;gap:6px;flex-wrap:wrap;"></div>
 
   <!-- ⏱ 时间戳 -->
   <div class="tab-pane" id="p-ts">
@@ -415,11 +365,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 
   <!-- 🗄️ SQL IN -->
   <div class="tab-pane" id="p-sql">
-    <div class="sub-tabs">
-      <div class="sub-tab active" data-sub="sql-in" data-lk="sub_sql_in">🗄️ IN 生成</div>
-      <div class="sub-tab" data-sub="sql-insert" data-lk="sub_sql_insert">📋 INSERT 解析</div>
-      <div class="sub-tab" data-sub="sql-fmt" data-lk="sub_sql_fmt">✨ SQL 格式化</div>
-    </div>
     <!-- IN 生成 -->
     <div class="sub-pane active" data-sub="sql-in">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -440,7 +385,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <span class="arrow">▼</span> <span data-lk="sql_insert_title">INSERT 语句</span>
       </div>
       <div class="collapsible-body" style="max-height:40vh;">
-        <textarea id="sqlInsertInput" rows="4" placeholder="粘贴 INSERT 语句，自动解析列名与值的对应关系&#10;例: INSERT INTO t (a,b,c) VALUES (1,2,3)" spellcheck="false" style="min-height:80px;font-size:13px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="pl_sqlInsert"></textarea>
+        <textarea id="sqlInsertInput" rows="4" placeholder="粘贴 INSERT 语句，自动解析列名与值的对应关系&#10;例: INSERT INTO t (a,b,c) VALUES (1,2,3)" spellcheck="false" style="min-height:55vh;font-size:13px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;" data-lk-pl="pl_sqlInsert"></textarea>
       </div>
       <div class="btn-group" style="margin-top:6px;">
         <button class="btn btn-primary" id="sqlInsertParseBtn" data-lk="sqlInsertParseBtn">解析</button>
@@ -465,13 +410,13 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 
   <!-- { } JSON -->
   <div class="tab-pane active" id="p-json">
-    <div id="jsonSplit" style="display:flex;gap:0;min-height:60vh;">
+    <div id="jsonSplit" style="display:flex;gap:0;min-height:55vh;">
       <div id="jsonLeft" style="display:flex;flex:0 0 35%;min-width:200px;overflow:hidden;">
         <div id="jsonLines" style="padding:9px 6px 9px 8px;background:var(--surface);border:1px solid var(--border);border-right:none;border-radius:var(--radius) 0 0 var(--radius);overflow:hidden;text-align:right;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.5;color:var(--text-dim);user-select:none;min-width:36px;"></div>
-        <textarea id="jsonInput" rows="16" placeholder="粘贴 JSON" spellcheck="false" style="flex:1;min-height:70vh;border-radius:0 var(--radius) var(--radius) 0;" data-lk-pl="pl_jsonInput"></textarea>
+        <textarea id="jsonInput" rows="16" placeholder="粘贴 JSON" spellcheck="false" style="flex:1;min-height:55vh;border-radius:0 var(--radius) var(--radius) 0;" data-lk-pl="pl_jsonInput"></textarea>
       </div>
       <div id="jsonDragBar" style="width:5px;cursor:col-resize;background:var(--border);transition:background 0.15s;flex-shrink:0;"></div>
-      <div id="jsonResultWrap" class="result-box" style="flex:1;min-width:200px;min-height:70vh;margin:0;padding:10px 12px;white-space:normal;">
+      <div id="jsonResultWrap" class="result-box" style="flex:1;min-width:200px;min-height:55vh;margin:0;padding:10px 12px;white-space:normal;">
 <div id="jsonResult" data-lk="jsonResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
     </div>
@@ -554,28 +499,22 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       </div>
       <div class="stat-line" id="rexStat" style="margin-top:4px;"></div>
       <div id="rexInfo" style="font-size:12px;color:var(--text-dim);margin-top:4px;"></div>
-      <!-- 正则速查 / 解释（折叠） -->
-      <details style="margin-top:8px;">
-        <summary style="cursor:pointer;font-size:12px;color:var(--text-dim);" data-lk="rexCheatTitle">📖 正则速查 / 解释</summary>
-        <div class="input-row" style="margin:8px 0;">
-          <input type="text" id="rexExplainInput" placeholder="输入正则表达式，如 \d{4}-\d{2}-\d{2}" spellcheck="false" style="flex:1;font-family:'Cascadia Code',monospace;" data-lk-pl="pl_rexExplainInput">
-          <button class="btn btn-primary btn-sm" id="rexExplainBtn" data-lk="rexExplainBtn">解释</button>
-        </div>
-        <div id="rexExplainResult" style="margin-bottom:10px;font-size:12px;color:var(--text-dim);max-height:200px;overflow:auto;"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="rexCheatContainer"></div>
-        <div class="result-item" style="margin-top:8px;"><span class="label" data-lk="rexCheatPreview">预览</span><span class="value mono" id="rexCheatPreview" style="white-space:pre-wrap;font-size:12px;">—</span><button class="copy-btn-sm" data-target="rexCheatPreview">📋</button></div>
-      </details>
+  </div>
+
+  <!-- 📖 正则速查 / 解释 -->
+  <div class="tab-pane" id="p-rexcheat">
+      <div class="input-row" style="margin-bottom:8px;">
+        <input type="text" id="rexExplainInput" placeholder="输入正则表达式，如 \d{4}-\d{2}-\d{2}" spellcheck="false" style="flex:1;font-family:'Cascadia Code',monospace;" data-lk-pl="pl_rexExplainInput">
+        <button class="btn btn-primary btn-sm" id="rexExplainBtn" data-lk="rexExplainBtn">解释</button>
+      </div>
+      <div id="rexExplainResult" style="margin-bottom:10px;font-size:12px;color:var(--text-dim);max-height:200px;overflow:auto;"></div>
+      <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:6px;" data-lk="rexCheatTitle">📖 正则速查</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="rexCheatContainer"></div>
+      <div class="result-item" style="margin-top:8px;"><span class="label" data-lk="rexCheatPreview">预览</span><span class="value mono" id="rexCheatPreview" style="white-space:pre-wrap;font-size:12px;">—</span><button class="copy-btn-sm" data-target="rexCheatPreview">📋</button></div>
   </div>
 
   <!-- 🔐 编解码 -->
   <div class="tab-pane" id="p-encode">
-    <div class="sub-tabs">
-      <div class="sub-tab active" data-sub="b64" data-lk="sub_b64">Base64</div>
-      <div class="sub-tab" data-sub="url" data-lk="sub_url">URL</div>
-      <div class="sub-tab" data-sub="html" data-lk="sub_html">HTML</div>
-      <div class="sub-tab" data-sub="bc" data-lk="sub_bc">🔢 进制</div>
-      <div class="sub-tab" data-sub="bintext" data-lk="sub_bintext">💾 二进制文本</div>
-    </div>
     <!-- Base64 -->
     <div class="sub-pane active" data-sub="b64">
       <textarea id="b64Input" rows="8" placeholder="输入文本或 Base64" spellcheck="false" data-lk-pl="pl_b64Input"></textarea>
@@ -600,7 +539,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- HTML -->
     <div class="sub-pane" data-sub="html">
-      <textarea id="htmlInput" rows="6" placeholder="输入文本或 HTML 实体" spellcheck="false" style="min-height:30vh;" data-lk-pl="pl_htmlInput"></textarea>
+      <textarea id="htmlInput" rows="6" placeholder="输入文本或 HTML 实体" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_htmlInput"></textarea>
       <div class="btn-group">
         <button class="btn btn-primary btn-sm" id="htmlEncodeBtn" data-lk="htmlEncodeBtn">编码 →</button>
         <button class="btn btn-sm" id="htmlDecodeBtn" data-lk="htmlDecodeBtn">解码 ←</button>
@@ -624,7 +563,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- 二进制文本 -->
     <div class="sub-pane" data-sub="bintext">
-      <textarea id="bintextInput" rows="6" placeholder="输入文本或二进制（每字符 8 位，UTF-8 多字节）" spellcheck="false" style="min-height:20vh;" data-lk-pl="pl_bintextInput"></textarea>
+      <textarea id="bintextInput" rows="6" placeholder="输入文本或二进制（每字符 8 位，UTF-8 多字节）" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_bintextInput"></textarea>
       <div class="btn-group">
         <button class="btn btn-primary btn-sm" id="bintextEncodeBtn" data-lk="bintextEncodeBtn">→ 二进制</button>
         <button class="btn btn-sm" id="bintextDecodeBtn" data-lk="bintextDecodeBtn">← 解码</button>
@@ -636,13 +575,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 
   <!-- 🎲 生成 (合并 UUID+Hash) -->
   <div class="tab-pane" id="p-gen">
-    <div class="sub-tabs">
-      <div class="sub-tab active" data-sub="uuid" data-lk="sub_uuid">UUID</div>
-      <div class="sub-tab" data-sub="hash" data-lk="sub_hash">Hash</div>
-      <div class="sub-tab" data-sub="color" data-lk="sub_color">🎨 颜色</div>
-      <div class="sub-tab" data-sub="passwd" data-lk="sub_passwd">🔑 密码</div>
-      <div class="sub-tab" data-sub="cron" data-lk="sub_cron">⏰ Cron</div>
-    </div>
     <!-- UUID -->
     <div class="sub-pane active" data-sub="uuid">
       <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
@@ -662,7 +594,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- Hash -->
     <div class="sub-pane" data-sub="hash">
-      <textarea id="hashInput" rows="6" placeholder="输入要计算 Hash 的文本" spellcheck="false" style="min-height:20vh;" data-lk-pl="pl_hashInput"></textarea>
+      <textarea id="hashInput" rows="6" placeholder="输入要计算 Hash 的文本" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_hashInput"></textarea>
       <div class="btn-group">
         <button class="btn btn-primary btn-sm" id="hashCalcBtn" data-lk="hashCalcBtn">计算</button>
         <button class="btn btn-sm" id="hashClearBtn" data-lk="hashClearBtn">清空</button>
@@ -703,7 +635,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-primary btn-sm" id="passwdGenBtn" data-lk="passwdGenBtn">生成</button>
         <button class="btn btn-sm" id="passwdCopyBtn" data-lk="passwdCopyBtn">复制全部</button>
       </div>
-      <div class="result-box" id="passwdResult" style="font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.9;white-space:pre-wrap;">结果</div>
+      <div class="result-box" id="passwdResult" style="font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.9;white-space:pre-wrap;" data-lk="res_json">结果</div>
       <div class="stat-line" id="passwdStat"></div>
     </div>
     <!-- Cron 解析 -->
@@ -718,13 +650,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
   </div>
   <div class="tab-pane" id="p-text">
-    <div class="sub-tabs">
-      <div class="sub-tab active" data-sub="proc" data-lk="sub_proc">📝 处理</div>
-      <div class="sub-tab" data-sub="stats" data-lk="sub_stats">📊 统计</div>
-      <div class="sub-tab" data-sub="case" data-lk="sub_case">🔄 大小写</div>
-      <div class="sub-tab" data-sub="csv" data-lk="sub_csv">📋 CSV</div>
-      <div class="sub-tab" data-sub="diff" data-lk="sub_diff">📑 Diff</div>
-    </div>
     <!-- 文本处理 -->
     <div class="sub-pane active" data-sub="proc">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
@@ -756,25 +681,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div class="stat-line" id="tpRegexStat"></div>
       <div class="stat-line" id="tpStat"></div>
     </div>
-    <!-- 统计 -->
-    <div class="sub-pane" data-sub="stats">
-      <div class="ln-editor">
-        <div class="ln-gutter" id="statsGutter" aria-hidden="true">1</div>
-        <textarea id="statsInput" rows="10" placeholder="粘贴文本" spellcheck="false" data-lk-pl="pl_statsInput"></textarea>
-      </div>
-      <div class="stat-line" id="statsStat"></div>
-      <div class="btn-group">
-        <button class="btn btn-sm" id="statsClearBtn" data-lk="statsClearBtn">清空</button>
-      </div>
-      <div>
-        <div class="result-item"><span class="label" data-lk="statsChars">字数</span><span class="value" id="stChars">0</span></div>
-        <div class="result-item"><span class="label" data-lk="statsCharsWS">字符（含空格）</span><span class="value" id="stCharsAll">0</span></div>
-        <div class="result-item"><span class="label" data-lk="statsLines">行数</span><span class="value" id="stLines">0</span></div>
-        <div class="result-item"><span class="label" data-lk="statsWords">单词</span><span class="value" id="stWords">0</span></div>
-        <div class="result-item"><span class="label" data-lk="statsParas">段落</span><span class="value" id="stParas">0</span></div>
-        <div class="result-item"><span class="label" data-lk="statsBytes">字节</span><span class="value" id="stBytes">0</span></div>
-      </div>
-    </div>
     <!-- 大小写/命名转换 -->
     <div class="sub-pane" data-sub="case">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
@@ -797,7 +703,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
         <textarea id="csvInput" rows="10" placeholder="粘贴 CSV 文本，或拖入 .csv 文件&#10;自动检测分隔符（逗号/制表符）" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_csvInput"></textarea>
         <div class="result-box" id="csvResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.5;overflow:auto;">
-          <div style="padding:20px;text-align:center;color:var(--text-dim);">CSV 解析结果</div>
+          <div style="padding:20px;text-align:center;color:var(--text-dim);" data-lk="csv_empty">CSV 解析结果</div>
         </div>
       </div>
       <div class="btn-group" style="margin-top:8px;">
@@ -827,11 +733,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 
   <div style="text-align:center;padding:8px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);margin-top:12px;line-height:1.8;">
     <a href="https://github.com/lzg14/litools" target="_blank" style="color:var(--text-dim);text-decoration:none;">litools</a> · Single-file Dev Toolkit · MIT License
-    <span style="margin-left:12px;opacity:0.6;">
-      <kbd style="padding:1px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-size:10px;">Ctrl+K</kbd> 搜索页签 ·
-      <kbd style="padding:1px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-size:10px;">Ctrl+Enter</kbd> 格式化JSON ·
-      <kbd style="padding:1px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-size:10px;">Esc</kbd> 关闭
-    </span>
   </div>
 </div>
 
@@ -842,19 +743,21 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <span id="settingsClose" style="cursor:pointer;color:var(--text-dim);font-size:16px;line-height:1;">✕</span>
   </div>
   <div style="padding:12px 14px;font-size:12px;max-height:calc(80vh - 44px);overflow-y:auto;">
-    <div style="font-weight:600;color:var(--accent);margin-bottom:6px;" data-lk="settings_data">数据</div>
-    <div class="btn-group">
-      <button class="btn btn-sm" id="settingsExportBtn" data-lk="settingsExportBtn">⬇ 导出设置</button>
-      <button class="btn btn-sm" id="settingsImportBtn" data-lk="settingsImportBtn">⬆ 导入设置</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <span style="font-weight:600;color:var(--accent);" data-lk="settings_pin">模块显示</span>
+      <span style="display:flex;gap:6px;">
+        <button class="btn btn-sm" id="pinAllBtn" data-lk="pinAllBtn">全选</button>
+        <button class="btn btn-sm" id="pinNoneBtn" data-lk="pinNoneBtn">全不选</button>
+        <button class="btn btn-sm" id="pinResetBtn" data-lk="pinResetBtn">默认</button>
+      </span>
+    </div>
+    <input type="text" id="settingsModSearch" placeholder="筛选模块…" spellcheck="false" style="width:100%;padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);margin-bottom:6px;" data-lk-pl="pl_settingsModSearch">
+    <div id="settingsPinList" style="margin-bottom:4px;"></div>
+    <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:8px;font-size:11px;color:var(--text-dim);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <button class="btn btn-sm" id="settingsExportBtn" data-lk="settingsExportBtn">⬇ 导出</button>
+      <button class="btn btn-sm" id="settingsImportBtn" data-lk="settingsImportBtn">⬆ 导入</button>
       <input type="file" id="settingsImportFile" accept=".json" style="display:none;">
     </div>
-    <div style="font-weight:600;color:var(--accent);margin:10px 0 6px;" data-lk="settings_pin">工具栏固定</div>
-    <div id="settingsPinList" style="margin-bottom:4px;"></div>
-    <div style="font-size:11px;color:var(--text-dim);" data-lk="settings_pin_hint">勾选模块后将固定到顶部工具栏，一键跳转</div>
-    <div style="font-weight:600;color:var(--accent);margin:10px 0 6px;" data-lk="settings_shortcuts">快捷键</div>
-    <div id="settingsShortcuts" style="font-size:11px;line-height:1.9;color:var(--text-dim);"></div>
-    <div style="font-weight:600;color:var(--accent);margin:10px 0 6px;" data-lk="settings_pwa">离线支持</div>
-    <div style="font-size:11px;color:var(--text-dim);" id="settingsPwaStatus"></div>
   </div>
 </div>
 <div id="historyPanel" style="display:none;position:fixed;top:44px;right:16px;width:320px;max-height:70vh;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 32px rgba(0,0,0,0.2);z-index:150;overflow:hidden;">
@@ -873,12 +776,12 @@ const $ = id => document.getElementById(id);
 
 let _lang = localStorage.getItem('lang') || 'zh';
 const _L = {
-  tab_search:{zh:'🔍 搜索',en:'🔍 Search'}, tab_regex:{zh:'◎ 正则',en:'◎ Regex'}, tab_ts:{zh:'⏱ 时间戳',en:'⏱ Timestamp'}, tab_timer:{zh:'⏱ 计时器',en:'⏱ Timer'}, tab_cd:{zh:'⏳ 定时器',en:'⏳ Countdown'},
+  tab_search:{zh:'🔍 搜索',en:'🔍 Search'},   tab_regex:{zh:'◎ 正则',en:'◎ Regex'}, tab_rexcheat:{zh:'📖 速查',en:'📖 Cheat'}, tab_ts:{zh:'⏱ 时间戳',en:'⏱ Timestamp'}, tab_timer:{zh:'⏱ 计时器',en:'⏱ Timer'}, tab_cd:{zh:'⏳ 定时器',en:'⏳ Countdown'},
   tab_encode:{zh:'🔐 编解码',en:'🔐 Encode/Decode'}, tab_gen:{zh:'🎲 生成',en:'🎲 Generate'},
   tab_text:{zh:'📝 文本',en:'📝 Text'}, tab_color:{zh:'🎨 颜色',en:'🎨 Color'}, tab_diff:{zh:'📑 Diff',en:'📑 Diff'},
   tab_json:{zh:'{ } JSON',en:'{ } JSON'},
   tab_sql:{zh:'🗄️ SQL',en:'🗄️ SQL'},
-  sub_sql_in:{zh:'🗄️ IN 生成',en:'🗄️ IN Generator'}, sub_sql_insert:{zh:'📋 INSERT 解析',en:'📋 INSERT Parser'}, sub_sql_fmt:{zh:'✨ SQL 格式化',en:'✨ SQL Formatter'},
+  sub_sql_in:{zh:'🗄️ SQL IN',en:'🗄️ SQL IN'}, sub_sql_insert:{zh:'📋 SQL 解析',en:'📋 SQL Parser'}, sub_sql_fmt:{zh:'✨ SQL 格式化',en:'✨ SQL Formatter'},
   sub_bc:{zh:'🔢 进制',en:'🔢 Base Conv'}, sub_csv:{zh:'📋 CSV',en:'📋 CSV'}, sub_diff:{zh:'📑 Diff',en:'📑 Diff'}, sub_color:{zh:'🎨 颜色',en:'🎨 Color'},
   sub_bintext:{zh:'💾 二进制文本',en:'💾 Binary Text'},
   rexCheatTitle:{zh:'📖 正则速查 / 解释',en:'📖 Cheat Sheet / Explain'},
@@ -888,7 +791,7 @@ const _L = {
   sub_passwd:{zh:'🔑 密码',en:'🔑 Password'},
   sub_cron:{zh:'⏰ Cron',en:'⏰ Cron'},
   rexExplainBtn:{zh:'解释',en:'Explain'}, pl_rexExplainInput:{zh:'输入正则表达式，如 \\d{4}-\\d{2}-\\d{2}',en:'Enter regex, e.g. \\d{4}-\\d{2}-\\d{2}'},
-  sub_proc:{zh:'📝 处理',en:'📝 Process'}, sub_stats:{zh:'📊 统计',en:'📊 Stats'},
+  sub_proc:{zh:'📝 处理',en:'📝 Process'},
   sub_case:{zh:'🔄 大小写',en:'🔄 Case'},
   tsNowBtn:{zh:'当前',en:'Now'}, tsClearBtn:{zh:'清空',en:'Clear'},
   jsonPathBtn:{zh:'查询',en:'Query'}, jsonPathInput:{zh:'JSONPath 查询，如 $.store.book[*].title',en:'JSONPath e.g. $.store.book[*].title'},
@@ -942,15 +845,15 @@ const _L = {
   tpRegexNeedPattern:{zh:'请输入正则表达式',en:'Enter a regex pattern'},
   tpRegexStats:{zh:'匹配 ${n} 处 · ${len} → ${out} 字符',en:'${n} matches · ${len} → ${out} chars'},
   err_regex:{zh:'正则错误',en:'Regex error'},
-  tpResult:{zh:'结果',en:'Result'}, statsClearBtn:{zh:'清空',en:'Clear'},
-  statsChars:{zh:'字数',en:'Chars'}, statsCharsWS:{zh:'字符（含空格）',en:'Chars (w/ space)'},
+  tpResult:{zh:'结果',en:'Result'},
+  statsChars:{zh:'字数',en:'Chars'},
   statsLines:{zh:'行数',en:'Lines'}, statsWords:{zh:'单词',en:'Words'},
-  statsParas:{zh:'段落',en:'Paras'}, statsBytes:{zh:'字节',en:'Bytes'},
+  statsParas:{zh:'段落',en:'Paras'},
   caseResult:{zh:'结果',en:'Result'}, caseUpperBtn:{zh:'大写',en:'UPPER'}, caseLowerBtn:{zh:'小写',en:'lower'}, caseCamelBtn:{zh:'camelCase',en:'camelCase'}, casePascalBtn:{zh:'PascalCase',en:'PascalCase'},
   caseSnakeBtn:{zh:'snake_case',en:'snake_case'}, caseKebabBtn:{zh:'kebab-case',en:'kebab-case'}, caseScreamingBtn:{zh:'SCREAMING_SNAKE',en:'SCREAMING_SNAKE'}, caseClearBtn:{zh:'清空',en:'Clear'},
   pl_caseInput:{zh:'输入文本，如 hello_world / HELLO WORLD / helloWorld',en:'Enter text, e.g. hello_world / HELLO WORLD / helloWorld'},
   resp_body:{zh:'响应体',en:'Body'}, resp_headers:{zh:'响应头',en:'Headers'},
-  pl_tabSearch:{zh:'搜索页签…',en:'Search tabs…'},
+  pl_settingsModSearch:{zh:'筛选模块…',en:'Filter modules…'},
   pl_sqlInsert:{zh:'粘贴 INSERT 语句，自动解析列名与值的对应关系',en:'Paste INSERT statement to parse column-value mapping'},
   pl_sqlInsertSearch:{zh:'🔍 搜索值定位列名...',en:'🔍 Search value to locate column...'},
   pl_b64Input:{zh:'输入文本或 Base64',en:'Enter text or Base64'},
@@ -985,7 +888,6 @@ const _L = {
   pl_hashInput:{zh:'输入要计算 Hash 的文本',en:'Enter text to hash'},
   pl_cronInput:{zh:'Cron 表达式，如 */5 * * * *',en:'Cron expr, e.g. */5 * * * *'},
   pl_tpInput:{zh:'输入文本',en:'Enter text'},
-  pl_statsInput:{zh:'粘贴文本',en:'Paste text'},
   pl_colorInput:{zh:'#FF6600 / rgb(255,102,0) / hsl(24,100%,50%)',en:'#FF6600 / rgb(255,102,0) / hsl(24,100%,50%)'},
   pl_bcInput:{zh:'输入数字，如 255 / 0xFF / 0b1111 / 0o377',en:'Enter number: 255 / 0xFF / 0b1111 / 0o377'},
   pl_bintextInput:{zh:'输入文本或二进制（每字符 8 位，UTF-8 多字节）',en:'Enter text or binary (8-bit per char, UTF-8 multi-byte)'},
@@ -995,8 +897,14 @@ const _L = {
   // titles
   tl_themeToggle:{zh:'切换主题',en:'Toggle theme'},
   tl_langToggle:{zh:'切换语言',en:'Toggle language'},
-  tl_tabSearch:{zh:'搜索页签 (Ctrl+K)',en:'Search tabs (Ctrl+K)'},
+
   // result defaults (for static fallback)
+  tsRevNowBtn:{zh:'当前',en:'Now'}, tsRevClearBtn:{zh:'清空',en:'Clear'},
+  jsonClearBtn:{zh:'清空',en:'Clear'}, jsonFileBtn:{zh:'📂 打开文件',en:'📂 Open File'},
+  jsonSearchPrevBtn:{zh:'上一个',en:'Prev'}, jsonSearchNextBtn:{zh:'下一个',en:'Next'},
+  rexTestBtn:{zh:'测试',en:'Test'}, rexClearBtn:{zh:'清空',en:'Clear'},
+  bintextResult:{zh:'结果',en:'Result'},
+  diffBtn:{zh:'比较',en:'Compare'}, diffSwapBtn:{zh:'⇄ 交换',en:'⇄ Swap'}, diffClearBtn:{zh:'清空',en:'Clear'},
   res_json:{zh:'结果',en:'Result'},
   res_uuid:{zh:'结果',en:'Result'},
   // stat labels
@@ -1025,6 +933,12 @@ const _L = {
   passwdStrong:{zh:'强',en:'Strong'}, passwdMedium:{zh:'中',en:'Medium'}, passwdWeak:{zh:'弱',en:'Weak'},
   passwdStats:{zh:'强度: ${s} · 长度 ${n}',en:'Strength: ${s} · length ${n}'},
   rexCatValidate:{zh:'验证',en:'Validate'}, rexCatExtract:{zh:'提取',en:'Extract'}, rexCatReplace:{zh:'替换',en:'Replace'},
+  rexItem_phone_cn:{zh:'手机号 (CN)',en:'Phone (CN)'}, rexItem_date:{zh:'日期 YYYY-MM-DD',en:'Date YYYY-MM-DD'},
+  rexItem_time:{zh:'时间 HH:MM:SS',en:'Time HH:MM:SS'}, rexItem_allNums:{zh:'提取所有数字',en:'All numbers'},
+  rexItem_allWords:{zh:'提取所有单词',en:'All words'}, rexItem_allEmails:{zh:'提取所有邮箱',en:'All emails'},
+  rexItem_urls:{zh:'提取 URL',en:'All URLs'}, rexItem_quoted:{zh:'提取引号内容',en:'Quoted text'},
+  rexItem_trim:{zh:'去除空白',en:'Trim whitespace'}, rexItem_htmlTags:{zh:'HTML 标签',en:'HTML tags'},
+  rexItem_collapseBlank:{zh:'重复空白折叠',en:'Collapse blanks'},
   cronInvalid:{zh:'Cron 表达式需为 5 段',en:'Cron must have 5 fields'},
   cronNoFuture:{zh:'5 年内无匹配时间',en:'No matches in 5 years'},
   cronDescOther:{zh:'自定义调度',en:'Custom schedule'},
@@ -1084,7 +998,7 @@ const _L = {
   diff_large:{zh:'文本较大 (${la}×${lb} 行)，计算可能很慢，确定继续吗？',en:'Large text (${la}×${lb} lines), may be slow. Continue?'},
   diff_need_both:{zh:'请在两侧输入文本',en:'Enter text on both sides'},
   // CSV
-  csv_rows_cols:{zh:'${rows} 行 × ${cols} 列',en:'${rows} rows × ${cols} cols'},
+  csv_rows_cols:{zh:'${rows} 行 × ${cols} 列',en:'${rows} rows × ${cols} cols'},   csv_empty:{zh:'CSV 解析结果',en:'CSV Result'},   jsonErrorLine:{zh:'第 ${li} 行第 ${col} 列',en:'Line ${li}, Col ${col}'},   searchStreamStat:{zh:'匹配: ${m} 行 / 扫描: ${l} 行',en:'Matched: ${m} / Scanned: ${l} lines'}, sql_in_stat:{zh:'共 ${n} 项，去重后 ${d} 项',en:'${n} items, ${d} unique'},
   // SQL
   sql_toggle_quote:{zh:'切换引号 (当前: ',en:'Toggle quote (current: '},
   sql_parsed_cols:{zh:'已解析 ${n} 列',en:'Parsed ${n} columns'},
@@ -1096,12 +1010,9 @@ const _L = {
   tl_settingsToggle:{zh:'设置',en:'Settings'},
   settings_title:{zh:'⚙️ 设置',en:'⚙️ Settings'}, settings_data:{zh:'数据',en:'Data'},
   settingsExportBtn:{zh:'⬇ 导出设置',en:'⬇ Export'}, settingsImportBtn:{zh:'⬆ 导入设置',en:'⬆ Import'},
-  settings_pin:{zh:'工具栏固定',en:'Pinned toolbar'}, settings_pin_hint:{zh:'勾选模块后将固定到顶部工具栏，一键跳转',en:'Pinned modules appear in the top toolbar'},
-  settings_shortcuts:{zh:'快捷键',en:'Shortcuts'}, settings_pwa:{zh:'离线支持',en:'Offline support'},
-  sc_search:{zh:'搜索页签',en:'Search tabs'}, sc_format:{zh:'格式化 JSON',en:'Format JSON'},
+  settings_pin:{zh:'模块显示',en:'Modules'},   pinAllBtn:{zh:'全选',en:'All'}, pinNoneBtn:{zh:'全不选',en:'None'}, pinResetBtn:{zh:'默认',en:'Default'}, pinEmpty:{zh:'未选择模块',en:'No modules selected'},
+  sc_search:{zh:'模块筛选',en:'Filter modules'}, sc_format:{zh:'格式化 JSON',en:'Format JSON'},
   sc_close:{zh:'关闭',en:'Close'},
-  pwa_ok:{zh:'✅ 已启用离线缓存 (Service Worker)',en:'✅ Offline cache enabled (Service Worker)'},
-  pwa_no:{zh:'⚠ 当前环境不支持 Service Worker（file:// 或非 HTTPS）',en:'⚠ Service Worker not supported here (file:// or non-HTTPS)'},
   settingsExported:{zh:'设置已导出',en:'Settings exported'},
   settingsImported:{zh:'已导入 ${n} 项设置',en:'Imported ${n} settings'},
 
@@ -1137,6 +1048,48 @@ const _L = {
   history_tab_text:{zh:'文本',en:'Text'},
   history_tab_color:{zh:'颜色',en:'Color'},
   // date calc
+  // URL parse
+  url_proto:{zh:'协议',en:'Protocol'}, url_host:{zh:'主机',en:'Host'}, url_port:{zh:'端口',en:'Port'},
+  url_port_default:{zh:'(默认)',en:'(default)'}, url_path:{zh:'路径',en:'Path'}, url_query:{zh:'查询',en:'Query'},
+  url_empty:{zh:'(空)',en:'(none)'}, url_hash:{zh:'哈希',en:'Hash'}, url_origin:{zh:'来源',en:'Origin'},
+  url_params:{zh:'参数',en:'Params'},
+  // color contrast
+  contrast_aaa:{zh:'AAA 优',en:'AAA Excellent'}, contrast_aa:{zh:'AA 良',en:'AA Good'},
+  contrast_aa_plus:{zh:'AA 较好',en:'AA Adequate'}, contrast_fail:{zh:'较差 ✗',en:'Poor ✗'},
+  // SQL insert
+  sql_ins_col:{zh:'列名',en:'Column'}, sql_ins_val:{zh:'值',en:'Value'},
+  sql_ins_empty:{zh:'(空)',en:'(empty)'}, sql_ins_null:{zh:'NULL',en:'NULL'},
+  sql_ins_rows:{zh:'共 ${n} 行',en:'${n} rows'}, sql_ins_cols:{zh:'已解析 ${n} 列',en:'Parsed ${n} columns'},
+  // diff
+  diff_del:{zh:'-${n} 行',en:'-${n} lines'}, diff_add:{zh:'+${n} 行',en:'+${n} lines'},
+  // search
+  search_text_too_large:{zh:'文本太大，跳过高亮',en:'Text too large, skipping highlight'},
+  search_showing:{zh:'显示前 ${n} 条匹配',en:'Showing first ${n} matches'},
+  search_stat:{zh:'匹配 ${n} 处',en:'Matched ${n}'},
+  // regex
+  rex_text_len:{zh:'文本过长 (${n} 字符)，未完整显示',en:'Text too long (${n} chars), not fully shown'},
+  rex_match_count:{zh:'匹配 ${n} 处',en:'Matched ${n}'},
+  // cron desc
+  cron_every_hour:{zh:'每小时',en:'Every hour'}, cron_at_hour:{zh:'${h} 时',en:'At ${h}:00'},
+  cron_at_min:{zh:'${m} 分',en:'At :${m}'}, cron_weekday:{zh:' 工作日',en:' (weekdays)'},
+  cron_other:{zh:'自定义',en:'Custom'},
+  // file
+  file_confirm:{zh:'文件 ${mb}MB 超过 500MB，确认继续？',en:'File ${mb}MB exceeds 500MB, continue?'},
+  file_reading:{zh:'正在读取 ${name} (${mb}MB)...',en:'Reading ${name} (${mb}MB)...'},
+  file_read_done:{zh:'${name} (${mb}MB, ${n} 字符)',en:'${name} (${mb}MB, ${n} chars)'},
+  file_read_err:{zh:'读取失败',en:'Read failed'},
+  file_streaming:{zh:'流式搜索 ${name}...',en:'Streaming ${name}...'},
+  file_stream_done:{zh:'完成: ${n} 处匹配',en:'Done: ${n} matches'},
+  file_stream_err:{zh:'流式搜索出错',en:'Stream error'},
+  file_read_err2:{zh:'读取出错: ${msg}',en:'Read error: ${msg}'},
+  // drag & drop
+  drag_not_supported:{zh:'当前标签不支持拖拽',en:'Current tab does not support drag'},
+  // json path
+  json_path_match:{zh:'匹配 ${n} 处',en:'Matched ${n}'},
+  // b64
+  b64_encode_err:{zh:'编码失败: ${msg}',en:'Encode failed: ${msg}'},
+  // timer / cd (keep existing, just add missing ones)
+  timer_lap:{zh:'第 ${n} 次',en:'Lap ${n}'},
 };
 const _ = k => _L[k]?.[_lang] || k;
 
@@ -1198,6 +1151,7 @@ const _resultBoxes = {
   gen: 'uuidResult', text: 'tpResult', sql: 'sqlResult', 'sql-insert': 'sqlInsertResult'
 };
 let _activeTab = 'json';
+let _activeModule = 'json';
 function saveTabResult(tabId) {
   const boxId = _resultBoxes[tabId];
   if (!boxId) return;
@@ -1205,7 +1159,7 @@ function saveTabResult(tabId) {
   if (!el) return;
   // 跳过默认占位文本
   const txt = el.textContent.trim();
-  if (!txt || txt === '结果' || txt === 'Result' || txt === '等待请求' || txt === 'Waiting') return;
+  if (!txt || txt === _('res_json') || txt === 'Result' || txt === _('tpWaiting') || txt === 'Waiting') return;
   try { sessionStorage.setItem('litools_' + boxId, el.innerHTML); } catch {}
 }
 function restoreTabResult(tabId) {
@@ -1215,42 +1169,38 @@ function restoreTabResult(tabId) {
   if (!el) return;
   try {
     const saved = sessionStorage.getItem('litools_' + boxId);
-    if (saved && el.textContent.trim() === (el.dataset.lk ? _L[el.dataset.lk]?.[_lang] || '结果' : '结果')) {
+    if (saved && el.textContent.trim() === (el.dataset.lk ? _L[el.dataset.lk]?.[_lang] || _('res_json') : _('res_json'))) {
       el.innerHTML = saved;
     }
   } catch {}
 }
 function switchTab(id) {
   saveTabResult(_activeTab);
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  const tab = document.querySelector(`.tab[data-tab="${id}"]`);
-  if (tab) tab.classList.add('active');
   const pane = $(`p-${id}`);
   if (pane) pane.classList.add('active');
   _activeTab = id;
+  document.querySelectorAll('[data-pin]').forEach(b => {
+    const on = b.dataset.pin === id;
+    b.style.background = on ? 'var(--accent)' : '';
+    b.style.color = on ? '#fff' : '';
+  });
   restoreTabResult(id);
 }
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    switchTab(tab.dataset.tab);
-  });
-});
 
 
 // ═══════════════════════════════════════
-//  Sub-tabs
+//  Sub-panes
 // ═══════════════════════════════════════
-document.querySelectorAll('.sub-tab').forEach(stab => {
-  stab.addEventListener('click', () => {
-    const parent = stab.closest('.tab-pane');
-    parent.querySelectorAll('.sub-tab').forEach(s => s.classList.remove('active'));
-    parent.querySelectorAll('.sub-pane').forEach(p => p.classList.remove('active'));
-    stab.classList.add('active');
-    const sub = parent.querySelector(`.sub-pane[data-sub="${stab.dataset.sub}"]`);
-    if (sub) sub.classList.add('active');
-  });
-});
+function activateSub(paneId, sub) {
+  const parent = $(`p-${paneId}`);
+  if (!parent) return;
+  parent.querySelectorAll('.sub-pane').forEach(p => p.classList.remove('active'));
+  const target = parent.querySelector(`.sub-pane[data-sub="${sub}"]`);
+  if (target) target.classList.add('active');
+  const m = ALL_MODULES.find(x => x.pane === paneId && x.sub === sub);
+  if (m) { _activeModule = m.id; renderPinnedToolbar(); }
+}
 
 // ═══════════════════════════════════════
 //  ⏱ 时间戳
@@ -1467,8 +1417,8 @@ function setupFileInput(opts) {
       const file = inp.files[0];
       if (!file) return;
       const mb = (file.size / 1024 / 1024).toFixed(1);
-      if (file.size > 500 * 1024 * 1024 && !confirm(`文件 ${mb}MB 超过 500MB，读取可能耗尽内存，确定吗？`)) return;
-      toast(`正在读取 ${file.name} (${mb}MB)...`);
+      if (file.size > 500 * 1024 * 1024 && !confirm(_('file_confirm').replace('${mb}', mb))) return;
+      toast(_('file_reading').replace('${name}', file.name).replace('${mb}', mb));
       const reader = new FileReader();
       reader.onload = () => {
         const text = reader.result;
@@ -1478,10 +1428,10 @@ function setupFileInput(opts) {
         } else {
           opts.targetEl.value = text;
         }
-        toast(`${file.name} (${mb}MB, ${text.length.toLocaleString()} 字符)`);
+        toast(_('file_read_done').replace('${name}', file.name).replace('${mb}', mb).replace('${n}', text.length.toLocaleString()));
         if (opts.onLoad) setTimeout(() => opts.onLoad(text), 0);
       };
-      reader.onerror = () => toast(`读取失败`, 1);
+      reader.onerror = () => toast(_('file_read_err'), 1);
       reader.readAsText(file);
     };
     inp.click();
@@ -1499,8 +1449,10 @@ function bindStats(src, statId) {
     if (!text) { stat.textContent = ''; return; }
     const lines = text.split('\n').length;
     const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-    const tmpl = _L.stat_file ? _L.stat_file[_lang] : '${n} chars · ${w} words · ${l} lines';
-    stat.textContent = tmpl.replace('${n}', text.length.toLocaleString()).replace('${w}', words.toLocaleString()).replace('${l}', lines.toLocaleString());
+    const paras = text.split(/\n\s*\n/).filter(p => p.trim()).length || 0;
+    const bytes = new Blob([text]).size;
+    const tmpl = _('stat_file');
+    stat.textContent = tmpl.replace('${n}', text.length.toLocaleString()).replace('${w}', words.toLocaleString()).replace('${l}', lines.toLocaleString()) + ` · ${paras} ${_('statsParas')} · ${bytes.toLocaleString()} B`;
   };
   src.addEventListener('input', update);
   setTimeout(update, 0);
@@ -1511,8 +1463,8 @@ function bindStats(src, statId) {
 // ═══════════════════════════════════════
 async function readDroppedFile(file) {
   const mb = (file.size / 1024 / 1024).toFixed(1);
-  if (file.size > 500 * 1024 * 1024 && !confirm(`文件 ${mb}MB 超过 500MB，确定吗？`)) return null;
-  toast(`正在读取 ${file.name} (${mb}MB)...`);
+  if (file.size > 500 * 1024 * 1024 && !confirm(_('file_confirm').replace('${mb}', mb))) return null;
+  toast(_('file_reading').replace('${name}', file.name).replace('${mb}', mb));
   try { return await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsText(file); }); }
   catch { toast(_('file_read_err'), 1); return null; }
 }
@@ -1527,9 +1479,9 @@ function handleFileDrop(file) {
     readDroppedFile(file).then(text => { if (text) { $('jsonInput').value = text; renderJSONResult(text); } });
   } else if (id === 'p-search') {
     if (file.size > SRCH_STREAM_THRESHOLD) {
-      toast(`流式搜索 ${file.name}...`);
+      toast(_('file_streaming').replace('${name}', file.name));
       srchExitStream(true);
-      srchStreamScan(file).then(() => toast(`完成: ${_srchStreamMatches.length} 条匹配`)).catch(e => { srchExitStream(true); toast(`出错: ${e.message}`, 1); });
+      srchStreamScan(file).then(() => toast(_('file_stream_done').replace('${n}', _srchStreamMatches.length))).catch(e => { srchExitStream(true); toast(_('file_stream_err') + ': ' + e.message, 1); });
     } else {
       readDroppedFile(file).then(text => { if (text) { srchEditor.textContent = text; srchEditor.dataset.lkPl = ''; applyHighlights(); updateSrchLines(); } });
     }
@@ -1540,13 +1492,11 @@ function handleFileDrop(file) {
   } else if (id === 'p-text') {
     if (subId === 'proc') {
       readDroppedFile(file).then(text => { if (text) { $('tpInput').value = text; } });
-    } else if (subId === 'stats') {
-      readDroppedFile(file).then(text => { if (text) { $('statsInput').value = text; updateStats(); } });
     } else if (subId === 'csv') {
       readDroppedFile(file).then(text => { if (text) { $('csvInput').value = text; renderCSV(text); } });
-    } else { toast(`当前子页签不支持拖拽`, 1); }
+    } else { toast(_('drag_not_supported'), 1); }
   } else {
-    toast(`当前 tab 不支持拖拽`, 1);
+    toast(_('drag_not_supported'), 1);
   }
 }
 
@@ -1868,7 +1818,7 @@ function fmtJSONError(text, e) {
     if (pos <= lineEnd) {
       const col = pos - charIdx;
       updateJsonLines(li + 1);
-      return `<div style="font-size:12px;color:var(--red);margin-bottom:6px;">⚠ 第 ${li+1} 行第 ${col+1} 列</div>
+      return `<div style="font-size:12px;color:var(--red);margin-bottom:6px;">⚠ ${_('jsonErrorLine').replace('${li}', li+1).replace('${col}', col+1)}</div>
 <div style="background:#fff5f5;border:1px solid #ffc0c0;border-radius:4px;padding:8px 10px;font-size:13px;line-height:1.5;font-family:monospace;white-space:pre-wrap;word-break:break-all;">${escHtml(lines[li])}</div>
 <div style="font-family:monospace;font-size:13px;line-height:1;white-space:pre;padding:0 10px;color:var(--red);font-weight:bold;">${' '.repeat(col)}↑</div>`;
     }
@@ -2253,39 +2203,6 @@ $('jsonResult').addEventListener('click', e => {
 });
 
 // XML → JSON
-function xmlToJson(xmlStr) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xmlStr, 'text/xml');
-  const err = doc.querySelector('parsererror');
-  if (err) throw new Error('Invalid XML: ' + err.textContent.slice(0, 120));
-  function nodeToObj(node) {
-    if (node.nodeType === 3) return node.textContent.trim() || null;
-    if (node.nodeType !== 1) return null;
-    const obj = {};
-    const childMap = {};
-    for (const ch of node.childNodes) {
-      if (ch.nodeType === 1) {
-        const name = ch.tagName;
-        if (!childMap[name]) childMap[name] = [];
-        childMap[name].push(ch);
-      }
-    }
-    if (Object.keys(childMap).length === 0) {
-      return node.textContent.trim() || null;
-    }
-    for (const [name, els] of Object.entries(childMap)) {
-      if (els.length === 1) {
-        const val = nodeToObj(els[0]);
-        obj[name] = val;
-      } else {
-        obj[name] = els.map(e => nodeToObj(e));
-      }
-    }
-    return obj;
-  }
-  return nodeToObj(doc.documentElement);
-}
-
 // JSONPath query
 function resolveJsonPath(obj, path) {
   if (!path || !obj) return [];
@@ -2315,7 +2232,7 @@ $('jsonPathBtn').addEventListener('click', () => {
   if (!r.length) { toast(_('no_match'), 1); $('jsonPathInfo').textContent = _('no_match'); return; }
   const txt = r.map(v => typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v)).join('\n---\n');
   $('jsonResult').textContent = txt;
-  $('jsonPathInfo').textContent = `匹配 ${r.length} 处`;
+  $('jsonPathInfo').textContent = _('json_path_match').replace('${n}', r.length);
 });
 $('jsonPathInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('jsonPathBtn').click(); });
 
@@ -2326,7 +2243,7 @@ $('b64EncodeBtn').addEventListener('click', () => {
   const v = $('b64Input').value;
   if (!v) { toast(_('no_input'), 1); return; }
   try { $('b64Result').textContent = btoa(unescape(encodeURIComponent(v))); }
-  catch (e) { $('b64Result').textContent = `⚠ 编码失败: ${e.message}`; }
+  catch (e) { $('b64Result').textContent = '⚠ ' + _('b64_encode_err').replace('${msg}', e.message); }
 });
 $('b64DecodeBtn').addEventListener('click', () => {
   const v = $('b64Input').value.trim();
@@ -2360,15 +2277,15 @@ $('urlParseBtn').addEventListener('click', () => {
     const u = new URL(v);
     const params = [...u.searchParams.entries()];
     const rows = [
-      ['协议', u.protocol],
-      ['主机', u.hostname],
-      ['端口', u.port || '(默认)'],
-      ['路径', u.pathname],
-      ['查询', u.search || '(空)'],
-      ['哈希', u.hash || '(空)'],
-      ['来源', u.origin],
+      [_('url_proto'), u.protocol],
+      [_('url_host'), u.hostname],
+      [_('url_port'), u.port || _('url_port_default')],
+      [_('url_path'), u.pathname],
+      [_('url_query'), u.search || _('url_empty')],
+      [_('url_hash'), u.hash || _('url_empty')],
+      [_('url_origin'), u.origin],
     ];
-    if (params.length) rows.push(['参数', params.map(([k,v]) => `${k}=${v}`).join('&')]);
+    if (params.length) rows.push([_('url_params'), params.map(([k,v]) => `${k}=${v}`).join('&')]);
     let html = '<div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12px;">';
     for (const [k, val] of rows) {
       html += `<div style="color:var(--text-dim);font-weight:600;">${k}</div><div style="word-break:break-all;">${escHtml(val)}</div>`;
@@ -2475,7 +2392,7 @@ function renderColor(input) {
   const lum = (r,g,b) => { const a = [r,g,b].map(v => { v /= 255; return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); }); return 0.2126*a[0] + 0.7152*a[1] + 0.0722*a[2]; };
   const l1 = lum(c.r, c.g, c.b), l2 = lum(255, 255, 255);
   const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
-  const grade = ratio >= 7 ? 'AAA ✅' : ratio >= 4.5 ? 'AA ✅' : ratio >= 3 ? 'AA 大字' : '不达标 ⚠';
+  const grade = ratio >= 7 ? _('contrast_aaa') : ratio >= 4.5 ? _('contrast_aa') : ratio >= 3 ? _('contrast_aa_plus') : _('contrast_fail');
   $('cContrast').textContent = `${ratio.toFixed(2)}:1 (${grade})`;
   $('colorPreview').style.background = hex;
 }
@@ -2555,7 +2472,7 @@ async function srchStreamScan(file) {
   for (let off = 0; off < total; off += SRCH_STREAM_CHUNK) {
     if (_srchStreamAbort) { srchExitStream(true); return; }
     let text;
-    try { text = await srchReadChunk(file, off); } catch (e) { srchExitStream(true); toast(`读取错误: ${e.message}`, 1); return; }
+    try { text = await srchReadChunk(file, off); } catch (e) { srchExitStream(true); toast(_('file_read_err2').replace('${msg}', e.message), 1); return; }
     scannedBytes = Math.min(off + text.length, total);
     const pct = Math.min(100, (scannedBytes / total * 100) | 0);
     $('srchStreamBarFill').style.width = pct + '%';
@@ -2566,13 +2483,13 @@ async function srchStreamScan(file) {
     if (isLast && remainder) lines.push(remainder);
     srchPushMatches(lines, _srchStreamLineOff);
     _srchStreamLineOff += lines.length;
-    $('srchStreamCount').textContent = `匹配: ${_srchStreamMatches.length.toLocaleString()} 行 / 扫描: ${_srchStreamLineOff.toLocaleString()} 行`;
+    $('srchStreamCount').textContent = _('searchStreamStat').replace('${m}', _srchStreamMatches.length.toLocaleString()).replace('${l}', _srchStreamLineOff.toLocaleString());
     await new Promise(r => setTimeout(r, 0));
   }
   if (_srchStreamMatches.length >= SRCH_DISPLAY_MAX) {
     const more = document.createElement('div');
     more.style.cssText = 'padding:8px 12px;font-size:12px;color:var(--text-dim);text-align:center;';
-    more.textContent = `⚠ 仅显示前 ${SRCH_DISPLAY_MAX.toLocaleString()} 条匹配`;
+    more.textContent = _('search_showing').replace('${n}', SRCH_DISPLAY_MAX.toLocaleString());
     srchEditor.appendChild(more);
   }
   $('srchStreamProgress').textContent = '100% ✓';
@@ -2632,7 +2549,7 @@ function applyHighlights() {
     _srchLastHtml = '';
     _srchHitIdx = -1;
     $('srchNavCount').textContent = '0/0';
-    $('srchStat').textContent = `文本过大，跳过高亮`;
+    $('srchStat').textContent = _('search_text_too_large');
     renderSrchMarks();
     return;
   }
@@ -2680,7 +2597,7 @@ function applyHighlights() {
   }
   _srchHitIdx = -1; // innerHTML 重建后当前项类已失效，重置导航
   $('srchNavCount').textContent = '0/' + merged.length;
-  $('srchStat').textContent = `匹配 ${ranges.length} 处`;
+  $('srchStat').textContent = _('search_match').replace('${n}', ranges.length);
   renderSrchMarks();
 }
 
@@ -2874,21 +2791,21 @@ $('srchFileBtn').addEventListener('click', () => {
     const file = inp.files[0];
     if (!file) return;
     const mb = (file.size / 1024 / 1024).toFixed(1);
-    if (file.size > 500 * 1024 * 1024 && !confirm(`文件 ${mb}MB 超过 500MB，确定吗？`)) return;
+    if (file.size > 500 * 1024 * 1024 && !confirm(_('file_confirm').replace('${mb}', mb))) return;
     if (file.size > SRCH_STREAM_THRESHOLD) {
-      toast(`流式搜索 ${file.name} (${mb}MB)...`);
+      toast(_('file_streaming').replace('${name}', file.name).replace('${mb}', mb) + ' (' + mb + 'MB)...');
       srchExitStream(true);
-      try { await srchStreamScan(file); } catch (e) { srchExitStream(true); toast(`流式搜索出错: ${e.message}`, 1); return; }
-      toast(`完成: ${_srchStreamMatches.length} 条匹配`);
+      try { await srchStreamScan(file); } catch (e) { srchExitStream(true); toast(_('file_stream_err') + ': ' + e.message, 1); return; }
+      toast(_('file_stream_done').replace('${n}', _srchStreamMatches.length));
     } else {
-      toast(`正在读取 ${file.name} (${mb}MB)...`);
+      toast(_('file_reading').replace('${name}', file.name).replace('${mb}', mb));
       try {
         const text = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsText(file); });
         srchEditor.textContent = text;
         srchEditor.dataset.lkPl = '';
         applyHighlights();
         updateSrchLines();
-        toast(`${file.name} (${mb}MB, ${text.length.toLocaleString()} 字符)`);
+        toast(_('file_read_done').replace('${name}', file.name).replace('${mb}', mb).replace('${n}', text.length.toLocaleString()));
       } catch { toast(_('file_read_err'), 1); }
     }
   };
@@ -2917,14 +2834,14 @@ function rexHighlight() {
   if (text.length > REX_CHUNK_SIZE) {
     rexEditor.textContent = text;
     rexUpdateLines();
-    $('rexInfo').textContent = `⚠ 文本过长 (${text.length} 字符), 未高亮显示`;
+    $('rexInfo').textContent = _('rex_text_len').replace('${n}', text.length);
     return;
   }
   let html = escHtml(text);
   html = html.replace(re, m => { count++; return `<span style="background:#fff3cd;border-radius:2px;padding:0 1px;">${m}</span>`; });
   rexEditor.innerHTML = html;
   rexUpdateLines();
-  $('rexInfo').textContent = `匹配 ${count} 处`;
+  $('rexInfo').textContent = _('rex_match_count').replace('${n}', count);
 }
 let rexTimer;
 function rexDelayed() { clearTimeout(rexTimer); rexTimer = setTimeout(rexHighlight, 200); }
@@ -2941,17 +2858,40 @@ $('rexClearBtn').addEventListener('click', () => { rexEditor.innerHTML = ''; $('
 // 正则解释器
 function explainRegex(pattern) {
   if (!pattern) return '';
+  const d = _lang === 'en' ? {
+    d:'any digit', D:'non-digit', w:'word char', W:'non-word', s:'whitespace', S:'non-whitespace',
+    b:'word boundary', B:'non-word boundary', n:'newline', t:'tab', r:'carriage return', f:'form feed', v:'vertical tab', 0:'null',
+    hex: ch => `char ${ch} (0x${ch})`, uni: u => `Unicode ${u}`, ref: n => `backreference #${n}`, esc: c => `escape "${c}"`,
+    cls_neg: inner => `match any except "${inner}"`, cls: inner => `match one of "${inner}"`, cls_unclosed:'unclosed class',
+    noncap:'non-capturing group', pos_fwd:'positive lookahead', neg_fwd:'negative lookahead',
+    pos_bwd:'positive lookbehind', neg_bwd:'negative lookbehind', group:'group', cap:'capturing group (referable)',
+    group_end:'group end', start:'start of line', end:'end of line', dot:'any char (except newline)',
+    star:'0 or more (greedy)', plus:'1 or more (greedy)', quest:'0 or 1 / non-greedy',
+    exact: n => `exactly ${n}`, at_least: n => `at least ${n}`, range: (a,b) => `${a} to ${b} times`,
+    quant:'quantifier char'
+  } : {
+    d:'任意数字', D:'任意非数字', w:'字母数字下划线', W:'非字母数字下划线', s:'空白字符', S:'非空白字符',
+    b:'单词边界', B:'非单词边界', n:'换行符', t:'制表符', r:'回车符', f:'换页符', v:'垂直制表符', 0:'空字符',
+    hex: ch => `字符 ${ch} (0x${ch})`, uni: u => `Unicode ${u}`, ref: n => `反向引用 #${n}`, esc: c => `转义 "${c}"`,
+    cls_neg: inner => `匹配 "${inner}" 以外的字符`, cls: inner => `匹配 "${inner}" 中的任意一个字符`, cls_unclosed:'未闭合的字符类',
+    noncap:'非捕获组', pos_fwd:'正向前瞻', neg_fwd:'负向前瞻',
+    pos_bwd:'正向后顾', neg_bwd:'负向后顾', group:'分组', cap:'捕获组（可引用）',
+    group_end:'分组结束', start:'行首', end:'行尾', dot:'任意字符（除换行符）',
+    star:'0 次或多次（贪婪）', plus:'1 次或多次（贪婪）', quest:'0 或 1 次 / 非贪婪',
+    exact: n => `恰好 ${n} 次`, at_least: n => `至少 ${n} 次`, range: (a,b) => `${a} 到 ${b} 次`,
+    quant:'量词字符'
+  };
   const parts = [];
   let i = 0;
   while (i < pattern.length) {
     if (pattern[i] === '\\') {
       const next = pattern[i+1];
-      const map = { d:'任意数字', D:'任意非数字', w:'字母数字下划线', W:'非字母数字下划线', s:'空白字符', S:'非空白字符', b:'单词边界', B:'非单词边界', n:'换行符', t:'制表符', r:'回车符', f:'换页符', v:'垂直制表符', 0:'空字符' };
+      const map = { d:d.d, D:d.D, w:d.w, W:d.W, s:d.s, S:d.S, b:d.b, B:d.B, n:d.n, t:d.t, r:d.r, f:d.f, v:d.v, '0':d['0'] };
       if (map[next]) parts.push({ ch: pattern.slice(i, i+2), desc: map[next] });
-      else if (next === 'x') { const hex = pattern.slice(i+2, i+4); parts.push({ ch: pattern.slice(i, i+4), desc: `字符 ${hex} (0x${hex})` }); i += 2; }
-      else if (next === 'u') { const uni = pattern.slice(i+2, i+6); parts.push({ ch: pattern.slice(i, i+6), desc: `Unicode ${uni}` }); i += 4; }
-      else if (/\d/.test(next)) { parts.push({ ch: pattern.slice(i, i+2), desc: `反向引用 #${next}` }); }
-      else parts.push({ ch: pattern.slice(i, i+2), desc: `转义 "${next}"` });
+      else if (next === 'x') { const hex = pattern.slice(i+2, i+4); parts.push({ ch: pattern.slice(i, i+4), desc: d.hex(hex) }); i += 2; }
+      else if (next === 'u') { const uni = pattern.slice(i+2, i+6); parts.push({ ch: pattern.slice(i, i+6), desc: d.uni(uni) }); i += 4; }
+      else if (/\d/.test(next)) { parts.push({ ch: pattern.slice(i, i+2), desc: d.ref(next) }); }
+      else parts.push({ ch: pattern.slice(i, i+2), desc: d.esc(next) });
       i += 2;
     } else if (pattern[i] === '[') {
       const end = pattern.indexOf(']', i + 1);
@@ -2959,25 +2899,25 @@ function explainRegex(pattern) {
         const cls = pattern.slice(i, end + 1);
         const neg = cls[1] === '^';
         const inner = cls.slice(neg ? 2 : 1, -1);
-        const desc = neg ? `匹配 "${inner}" 以外的字符` : `匹配 "${inner}" 中的任意一个字符`;
+        const desc = neg ? d.cls_neg(inner) : d.cls(inner);
         parts.push({ ch: cls, desc }); i = end + 1;
-      } else { parts.push({ ch: pattern[i], desc: '未闭合的字符类' }); i++; }
+      } else { parts.push({ ch: pattern[i], desc: d.cls_unclosed }); i++; }
     } else if (pattern[i] === '(') {
       const desc = pattern[i+1] === '?' ?
-        (pattern[i+2] === ':' ? '非捕获组' : pattern[i+2] === '=' ? '正向前瞻' : pattern[i+2] === '!' ? '负向前瞻' : pattern[i+2] === '<' ? (pattern[i+3] === '=' ? '正向后顾' : '负向后顾') : '分组') :
-        '捕获组（可引用）';
+        (pattern[i+2] === ':' ? d.noncap : pattern[i+2] === '=' ? d.pos_fwd : pattern[i+2] === '!' ? d.neg_fwd : pattern[i+2] === '<' ? (pattern[i+3] === '=' ? d.pos_bwd : d.neg_bwd) : d.group) :
+        d.cap;
       parts.push({ ch: '(', desc }); i++;
-    } else if (pattern[i] === ')') { parts.push({ ch: ')', desc: '分组结束' }); i++; }
-    else if (pattern[i] === '^') { parts.push({ ch: '^', desc: '行首' }); i++; }
-    else if (pattern[i] === '$') { parts.push({ ch: '$', desc: '行尾' }); i++; }
-    else if (pattern[i] === '.') { parts.push({ ch: '.', desc: '任意字符（除换行符）' }); i++; }
-    else if (pattern[i] === '*') { parts.push({ ch: '*', desc: '0 次或多次（贪婪）' }); i++; }
-    else if (pattern[i] === '+') { parts.push({ ch: '+', desc: '1 次或多次（贪婪）' }); i++; }
-    else if (pattern[i] === '?') { parts.push({ ch: '?', desc: '0 或 1 次 / 非贪婪' }); i++; }
+    } else if (pattern[i] === ')') { parts.push({ ch: ')', desc: d.group_end }); i++; }
+    else if (pattern[i] === '^') { parts.push({ ch: '^', desc: d.start }); i++; }
+    else if (pattern[i] === '$') { parts.push({ ch: '$', desc: d.end }); i++; }
+    else if (pattern[i] === '.') { parts.push({ ch: '.', desc: d.dot }); i++; }
+    else if (pattern[i] === '*') { parts.push({ ch: '*', desc: d.star }); i++; }
+    else if (pattern[i] === '+') { parts.push({ ch: '+', desc: d.plus }); i++; }
+    else if (pattern[i] === '?') { parts.push({ ch: '?', desc: d.quest }); i++; }
     else if (pattern[i] === '{') {
       const m = pattern.slice(i).match(/^\{(\d+)(?:,(\d*))?\}/);
-      if (m) { const desc = m[2] === undefined ? `恰好 ${m[1]} 次` : m[2] === '' ? `至少 ${m[1]} 次` : `${m[1]} 到 ${m[2]} 次`; parts.push({ ch: m[0], desc }); i += m[0].length; }
-      else { parts.push({ ch: pattern[i], desc: '量词字符' }); i++; }
+      if (m) { const desc = m[2] === undefined ? d.exact(m[1]) : m[2] === '' ? d.at_least(m[1]) : d.range(m[1], m[2]); parts.push({ ch: m[0], desc }); i += m[0].length; }
+      else { parts.push({ ch: pattern[i], desc: d.quant }); i++; }
     }
     else { parts.push({ ch: pattern[i], desc: `"${pattern[i]}"` }); i++; }
   }
@@ -3063,23 +3003,23 @@ $('passwdCopyBtn').addEventListener('click', () => {
 const _REX_CHEAT = [
   { cat: _('rexCatValidate'), items: [
     ['Email', '^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$'],
-    ['手机号 (CN)', '^1[3-9]\\d{9}$'],
+    [_('rexItem_phone_cn'), '^1[3-9]\\d{9}$'],
     ['URL', '^https?://[\\w.-]+(?:\\/[^\\s]*)?$'],
     ['IPv4', '^(?:\\d{1,3}\\.){3}\\d{1,3}$'],
-    ['日期 YYYY-MM-DD', '^\\d{4}-\\d{2}-\\d{2}$'],
-    ['时间 HH:MM:SS', '^\\d{2}:\\d{2}:\\d{2}$']
+    [_('rexItem_date'), '^\\d{4}-\\d{2}-\\d{2}$'],
+    [_('rexItem_time'), '^\\d{2}:\\d{2}:\\d{2}$']
   ]},
   { cat: _('rexCatExtract'), items: [
-    ['提取所有数字', '\\d+'],
-    ['提取所有单词', '\\b[a-zA-Z]+\\b'],
-    ['提取所有邮箱', '[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+'],
-    ['提取 URL', 'https?://[\\w.-]+(?:\\/[^\\s]*)?'],
-    ['提取引号内容', '"[^"]*"']
+    [_('rexItem_allNums'), '\\d+'],
+    [_('rexItem_allWords'), '\\b[a-zA-Z]+\\b'],
+    [_('rexItem_allEmails'), '[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+'],
+    [_('rexItem_urls'), 'https?://[\\w.-]+(?:\\/[^\\s]*)?'],
+    [_('rexItem_quoted'), '"[^"]*"']
   ]},
   { cat: _('rexCatReplace'), items: [
-    ['去除空白', '\\s+'],
-    ['HTML 标签', '<[^>]*>'],
-    ['重复空白折叠', '\\s{2,}']
+    [_('rexItem_trim'), '\\s+'],
+    [_('rexItem_htmlTags'), '<[^>]*>'],
+    [_('rexItem_collapseBlank'), '\\s{2,}']
   ]}
 ];
 function renderRexCheat() {
@@ -3125,9 +3065,9 @@ function cronDescribe(fields) {
   const [mi, h, d, mo, w] = fields;
   const parts = [];
   if (d === '*' && w === '*') {
-    parts.push((h === '*' ? '每小时' : '每小时 ' + h + ' 时'));
+    parts.push((h === '*' ? _('cron_every_hour') : _('cron_at_hour').replace('${h}', h)));
   } else if (w !== '*' && d === '*') {
-    parts.push((h === '*' ? '每小时' : h + ' 时') + (mi === '*' ? '' : ' ' + mi + ' 分') + (w === '1-5' ? ' 工作日' : ''));
+    parts.push((h === '*' ? _('cron_every_hour') : _('cron_at_hour').replace('${h}', h)) + (mi === '*' ? '' : ' ' + _('cron_at_min').replace('${m}', mi)) + (w === '1-5' ? _('cron_weekday') : ''));
   }
   return parts.join('') || _('cronDescOther');
 }
@@ -3176,7 +3116,6 @@ function initLineNumbers(textareaId, gutterId) {
   render();
 }
 initLineNumbers('tpInput', 'tpGutter');
-initLineNumbers('statsInput', 'statsGutter');
 function linesTP(fn) {
   const text = getTP();
   if (!text) { toast(_('err_input_text'), 1); return; }
@@ -3295,7 +3234,7 @@ function genSQL() {
   items = [...new Set(items)];
   const quoted = items.map(s => sqlOpts.quote ? `'${s.replace(/'/g, "''")}'` : s);
   $('sqlResult').textContent = `in (${quoted.join(',')});`;
-  $('sqlStatOld').textContent = `共 ${items.length} 项，去重后 ${items.length} 项`;
+  $('sqlStatOld').textContent = _('sql_in_stat').replace('${n}', items.length).replace('${d}', items.length);
 }
 
 $('sqlGenBtn').addEventListener('click', genSQL);
@@ -3344,14 +3283,14 @@ function parseInsertSQL(sql) {
   if (!g) g = scanSQLGroup(sql, start, false);
   if (!g) return null;
   const vals = g.vals;
-  return cols.map((col, i) => ({ col, val: i < vals.length ? (vals[i] === '' ? '(空)' : vals[i]) : '—', idx: i }));
+  return cols.map((col, i) => ({ col, val: i < vals.length ? (vals[i] === '' ? _('sql_ins_empty') : vals[i]) : '—', idx: i }));
 }
 function renderInsertResult(pairs, filter) {
   const el = $('sqlInsertResult');
   if (!pairs || !pairs.length) { el.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:8px;">Cannot parse, check SQL format</div>'; return; }
   const fl = (filter || '').toLowerCase();
   let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;font-family:\'Cascadia Code\',\'Fira Code\',Consolas,monospace;">';
-  html += '<tr style="border-bottom:2px solid var(--border);text-align:left;"><th style="padding:6px 10px;color:var(--text-dim);font-weight:500;width:40px;">#</th><th style="padding:6px 10px;color:var(--accent);">列名</th><th style="padding:6px 10px;color:var(--text-dim);">值</th></tr>';
+  html += `<tr style="border-bottom:2px solid var(--border);text-align:left;"><th style="padding:6px 10px;color:var(--text-dim);font-weight:500;width:40px;">#</th><th style="padding:6px 10px;color:var(--accent);">${_('sql_ins_col')}</th><th style="padding:6px 10px;color:var(--text-dim);">${_('sql_ins_val')}</th></tr>`;
   for (const p of pairs) {
     const match = fl && (p.col.toLowerCase().includes(fl) || p.val.toLowerCase().includes(fl));
     const bg = match ? 'background:rgba(0,120,212,0.12);' : (p.idx % 2 === 0 ? '' : 'background:var(--surface2);');
@@ -3368,7 +3307,7 @@ $('sqlInsertParseBtn').addEventListener('click', () => {
   if (!sql.trim()) { toast(_('err_input_insert'), 1); return; }
   _insertPairs = parseInsertSQL(sql);
   renderInsertResult(_insertPairs, $('sqlInsertSearch').value);
-  if (_insertPairs) toast(`已解析 ${_insertPairs.length} 列`);
+  if (_insertPairs) toast(_('sql_ins_cols').replace('${n}', _insertPairs.length));
 });
 $('sqlInsertClearBtn').addEventListener('click', () => { $('sqlInsertInput').value = ''; $('sqlInsertResult').innerHTML = ''; $('sqlInsertSearch').value = ''; _insertPairs = null; });
 $('sqlInsertSearch').addEventListener('input', () => { if (_insertPairs) renderInsertResult(_insertPairs, $('sqlInsertSearch').value); });
@@ -3504,7 +3443,7 @@ function diffLines(a, b) {
 
   $('diffLeft').innerHTML = renderSide(leftOps, la);
   $('diffRight').innerHTML = renderSide(rightOps, lb);
-  $('diffStat').textContent = `−${dels} 行  +${adds} 行`;
+  $('diffStat').textContent = _('diff_del').replace('${n}', dels) + '  ' + _('diff_add').replace('${n}', adds);
 }
 
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -3546,21 +3485,6 @@ $('diffClearBtn').addEventListener('click', () => {
 
 // ═══════════════════════════════════════
 //  📊 统计
-// ═══════════════════════════════════════
-function updateStats() {
-  const text = $('statsInput').value;
-  const ids = ['stChars','stCharsAll','stLines','stWords','stParas','stBytes'];
-  if (!text) { ids.forEach(id => $(id).textContent = '0'); return; }
-  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-  const paras = text.split(/\n\s*\n/).filter(p => p.trim()).length || 0;
-  const bytes = new Blob([text]).size;
-  const vals = [text.replace(/\s/g, '').length, text.length, text.split('\n').length, words, paras, bytes];
-  // 批量写入，减少回流
-  requestAnimationFrame(() => { ids.forEach((id, i) => $(id).textContent = vals[i]); });
-}
-$('statsInput').addEventListener('input', updateStats);
-$('statsClearBtn').addEventListener('click', () => { $('statsInput').value = ''; updateStats(); });
-
 // ═══════════════════════════════════════
 //  🔄 大小写/命名转换
 // ═══════════════════════════════════════
@@ -3741,6 +3665,8 @@ function renderHistory() {
 }
 function restoreHistory(h) {
   switchTab(h.tab);
+  const m = ALL_MODULES.find(x => x.pane === h.tab);
+  if (m) { _activeModule = m.id; renderPinnedToolbar(); }
   if (h.tab === 'json') { $('jsonInput').value = h.data; renderJSONResult(h.data); }
   else if (h.tab === 'search') { const se = $('srchEditor'); se.textContent = h.data; se.dataset.lkPl = ''; se.contentEditable = 'true'; applyHighlights(); }
   else if (h.tab === 'sql') { $('sqlInput').value = h.data; }
@@ -3799,7 +3725,7 @@ const n = new Date();
 $('tsRevInput').value = `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())} ${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
 // Session persistence
 (function(){
-const KEYS = ['jsonInput','b64Input','urlInput','uuidCount','tpInput','bcInput','htmlInput','sqlInput','hashInput','colorInput','statsInput','csvInput'];
+const KEYS = ['jsonInput','b64Input','urlInput','uuidCount','tpInput','bcInput','htmlInput','sqlInput','hashInput','colorInput','csvInput'];
 const SAVE = () => {
   const d = {};
   KEYS.forEach(id => { const el = $(id); if (el && el.value) d[id] = el.value; });
@@ -3810,10 +3736,8 @@ const SAVE = () => {
   const rp = $('rexPattern'); if (rp && rp.value) d.rexPattern = rp.value;
   const active = document.querySelector('.tab-pane.active');
   if (active) d.activeTab = active.id.replace('p-', '');
-  document.querySelectorAll('.tab-pane .sub-tab.active').forEach(st => {
-    const parentId = st.closest('.tab-pane').id;
-    d['sub_' + parentId] = st.dataset.sub;
-  });
+  const mod = ALL_MODULES.find(x => x.id === _activeModule);
+  if (mod && mod.sub) d['sub_' + mod.pane] = mod.sub;
   try { sessionStorage.setItem('devtools', JSON.stringify(d)); } catch { toast(_('session_full'), 1); }
 };
 window.addEventListener('beforeunload', SAVE);
@@ -3826,26 +3750,20 @@ try {
     if (d.rexEditor) { $('rexEditor').textContent = d.rexEditor; }
     if (d.rexPattern) { $('rexPattern').value = d.rexPattern; }
     if (d.activeTab) {
-      const tab = document.querySelector(`.tab[data-tab="${d.activeTab}"]`);
-      if (tab) tab.click();
+      const paneId = d.activeTab;
+      switchTab(paneId);
+      const m = ALL_MODULES.find(x => x.pane === paneId && (!x.sub || d['sub_' + paneId] === x.sub)) ||
+                ALL_MODULES.find(x => x.pane === paneId);
+      if (m) { _activeModule = m.id; if (m.sub) activateSub(paneId, m.sub); }
     }
-    // Restore sub-tab states
-    Object.keys(d).forEach(k => {
-      if (k.startsWith('sub_')) {
-        const st = document.querySelector(`#${k.slice(4)} .sub-tab[data-sub="${d[k]}"]`);
-        if (st) st.click();
-      }
-    });
   }
 } catch {}
 })();
 
 renderTsRev();
-updateStats();
 bindStats($('jsonInput'), 'jsonStat');
 bindStats($('rexEditor'), 'rexStat');
 bindStats($('tpInput'), 'tpStat');
-bindStats($('statsInput'), 'statsStat');
 bindStats($('htmlInput'), 'htmlStat');
 bindStats($('sqlInput'), 'sqlStat');
 autoRecordHistory();
@@ -3863,9 +3781,9 @@ function applyLang(lang) {
     else el.textContent = t[lang];
   });
   document.querySelectorAll('[data-lk-pl]').forEach(el => {
-    const t = _L[el.dataset.lkPl]; if (!t) return;
+    const key = el.dataset.lkPl;
+    const t = _L[key]; if (!t) return;
     el.placeholder = t[lang];
-    el.dataset.lkPl = t[lang];
   });
   document.querySelectorAll('[data-lk-tl]').forEach(el => {
     const t = _L[el.dataset.lkTl]; if (!t) return;
@@ -3874,6 +3792,7 @@ function applyLang(lang) {
   // update lang toggle text
   document.getElementById('langToggle').textContent = lang === 'zh' ? '🌐' : '🌐';
   document.getElementById('langToggle').title = _L.tl_langToggle[lang];
+  renderPinnedToolbar();
   // 刷新统计栏
   document.querySelectorAll('.stat-line').forEach(el => {
     const src = el.previousElementSibling?.querySelector('textarea') || el.parentElement?.querySelector('textarea');
@@ -3883,93 +3802,121 @@ function applyLang(lang) {
   if (srchTerms.length) updateSrchTags();
 }
 document.getElementById('langToggle').addEventListener('click', () => applyLang(_lang === 'zh' ? 'en' : 'zh'));
-applyLang(_lang);
 
-const tabMeta = [
-  {tab:'json', name:'{ } JSON', kw:'json 格式化 树形'},
-  {tab:'search', name:'🔍 搜索', kw:'查找 替换 高亮 过滤'},
-  {tab:'regex', name:'◎ 正则', kw:'正则 regex 匹配 测试 速查 解释'},
-  {tab:'sql', name:'🗄️ SQL', sub:[{id:'sql-in',n:'IN 生成'},{id:'sql-insert',n:'INSERT 解析'},{id:'sql-fmt',n:'SQL 格式化'}], kw:'sql 数据库 insert 值 列 格式化'},
-  {tab:'encode', name:'🔐 编解码', sub:[{id:'b64',n:'Base64'},{id:'url',n:'URL'},{id:'html',n:'HTML'},{id:'bc',n:'进制'},{id:'bintext',n:'二进制文本'}], kw:'编码 解码 base64 url html 进制 hex bin oct 二进制'},
-  {tab:'gen', name:'🎲 生成', sub:[{id:'uuid',n:'UUID'},{id:'hash',n:'Hash'},{id:'color',n:'颜色'},{id:'passwd',n:'密码'},{id:'cron',n:'Cron'}], kw:'生成 uuid hash sha 颜色 色值 密码 cron'},
-  {tab:'text', name:'📝 文本', sub:[{id:'proc',n:'处理'},{id:'stats',n:'统计'},{id:'case',n:'大小写'},{id:'csv',n:'CSV'},{id:'diff',n:'Diff'}], kw:'排序 去重 统计 大小写 camel snake kebab csv 表格 diff 比较'},
-  {tab:'ts', name:'⏱ 时间戳', kw:'时间 日期 毫秒 秒 时间戳 转换'},
-  {tab:'timer', name:'⏱ 计时器', kw:'计时 秒表 计次 倒计时'},
-  {tab:'cd', name:'⏳ 定时器', kw:'倒计时 定时 番茄钟 countdown'},
-];
-const $tsi = $('tabSearchInput'), $tsr = $('tabSearchResults'), $tsIcon = $('tabSearchIcon');
-function tsOpen() { $tsi.style.display = ''; $tsi.focus(); $tsi.select(); }
-function tsClose() { $tsi.style.display = 'none'; $tsr.style.display = 'none'; $tsi.value = ''; }
-$tsIcon.addEventListener('click', tsOpen);
+// ═══════════════════════════════════════
+//  ⚙️ 设置面板 + Ctrl+K + 快捷键 + PWA
+// ═══════════════════════════════════════
+const settingsPanel = $('settingsPanel');
+function openSettings() {
+  settingsPanel.style.display = 'block';
+  renderSettings();
+  const ms = $('settingsModSearch');
+  if (ms) { ms.value = ''; ms.dispatchEvent(new Event('input')); setTimeout(() => ms.focus(), 50); }
+}
+function closeSettings() { settingsPanel.style.display = 'none'; }
+$('settingsToggle').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (settingsPanel.style.display === 'block') closeSettings(); else openSettings();
+});
+$('settingsClose').addEventListener('click', closeSettings);
+document.addEventListener('click', e => {
+  if (!e.target.closest('#settingsPanel') && !e.target.closest('#settingsToggle')) closeSettings();
+});
 document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); tsOpen(); }
-  if (e.key === 'Escape') { tsClose(); }
-  // Ctrl+Enter: 格式化 JSON（在 jsonInput 聚焦时）
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSettings(); }
+  if (e.key === 'Escape') closeSettings();
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && document.activeElement?.id === 'jsonInput') {
     e.preventDefault(); $('jsonFormatBtn')?.click();
   }
 });
-$tsi.addEventListener('blur', () => setTimeout(() => { if (!$tsr.matches(':hover')) tsClose(); }, 200));
-$tsi.addEventListener('input', () => {
-  const q = $tsi.value.trim().toLowerCase();
-  if (!q) { $tsr.style.display = 'none'; return; }
-  let items = [];
-  for (const m of tabMeta) {
-    if (m.name.toLowerCase().includes(q) || m.kw.includes(q)) { items.push({tab:m.tab, name:m.name}); }
-    if (m.sub) for (const s of m.sub) if (s.n.toLowerCase().includes(q) || (m.kw||'').includes(q)) items.push({tab:m.tab, sub:s.id, name:m.name + ' › ' + s.n});
-  }
-  if (!items.length) { $tsr.style.display = 'none'; return; }
-  $tsr.innerHTML = items.map((it,i) => `<div class="tsr-item" data-idx="${i}" data-tab="${it.tab}"${it.sub ? ' data-sub="'+it.sub+'"' : ''} style="padding:6px 10px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);">${it.name}</div>`).join('');
-  $tsr.style.display = '';
-});
-$tsr.addEventListener('click', e => {
-  const el = e.target.closest('.tsr-item'); if (!el) return;
-  const tab = el.dataset.tab, sub = el.dataset.sub;
-  switchTab(tab); tsClose();
-  if (sub) setTimeout(() => { document.querySelectorAll('.sub-tab').forEach(st => { if (st.dataset.sub === sub) st.click(); }); }, 50);
-});
-$tsr.addEventListener('mouseover', e => { const el = e.target.closest('.tsr-item'); if (el) { $tsr.querySelectorAll('.tsr-item').forEach(x => x.style.background = ''); el.style.background = 'var(--accent)'; el.style.color = '#fff'; }});
-$tsr.addEventListener('mouseout', e => { const el = e.target.closest('.tsr-item'); if (el) { el.style.background = ''; el.style.color = ''; }});
 
-// ═══════════════════════════════════════
-//  ⚙️ 设置面板 + 工具栏固定 + 快捷键 + PWA
-// ═══════════════════════════════════════
-const settingsPanel = $('settingsPanel');
-$('settingsToggle').addEventListener('click', (e) => {
-  e.stopPropagation();
-  settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
-  if (settingsPanel.style.display === 'block') renderSettings();
-});
-$('settingsClose').addEventListener('click', () => settingsPanel.style.display = 'none');
-document.addEventListener('click', e => { if (!e.target.closest('#settingsPanel') && !e.target.closest('#settingsToggle')) settingsPanel.style.display = 'none'; });
-
+const VERSION = '2.0.0';
 const ALL_MODULES = [
-  {id:'json', name:'JSON'}, {id:'search', name:'🔍 搜索'}, {id:'regex', name:'◎ 正则'},
-  {id:'sql', name:'SQL'}, {id:'encode', name:'🔐 编解码'}, {id:'gen', name:'🎲 生成'},
-  {id:'text', name:'📝 文本'}, {id:'ts', name:'⏱ 时间戳'}, {id:'timer', name:'⏱ 计时器'}, {id:'cd', name:'⏳ 定时器'}
+  {id:'json', pane:'json', grp:'core'},
+  {id:'search', pane:'search', grp:'core'},
+  {id:'regex', pane:'regex', grp:'core'},
+  {id:'rexcheat', pane:'rexcheat', grp:'core'},
+  {id:'ts', pane:'ts', grp:'core'},
+  {id:'timer', pane:'timer', grp:'core'},
+  {id:'cd', pane:'cd', grp:'core'},
+  {id:'sql-in', pane:'sql', sub:'sql-in', grp:'sql'},
+  {id:'sql-insert', pane:'sql', sub:'sql-insert', grp:'sql'},
+  {id:'sql-fmt', pane:'sql', sub:'sql-fmt', grp:'sql'},
+  {id:'b64', pane:'encode', sub:'b64', grp:'encode'},
+  {id:'url', pane:'encode', sub:'url', grp:'encode'},
+  {id:'html', pane:'encode', sub:'html', grp:'encode'},
+  {id:'bc', pane:'encode', sub:'bc', grp:'encode'},
+  {id:'bintext', pane:'encode', sub:'bintext', grp:'encode'},
+  {id:'uuid', pane:'gen', sub:'uuid', grp:'gen'},
+  {id:'hash', pane:'gen', sub:'hash', grp:'gen'},
+  {id:'color', pane:'gen', sub:'color', grp:'gen'},
+  {id:'passwd', pane:'gen', sub:'passwd', grp:'gen'},
+  {id:'cron', pane:'gen', sub:'cron', grp:'gen'},
+  {id:'proc', pane:'text', sub:'proc', grp:'text'},
+  {id:'case', pane:'text', sub:'case', grp:'text'},
+  {id:'csv', pane:'text', sub:'csv', grp:'text'},
+  {id:'diff', pane:'text', sub:'diff', grp:'text'},
 ];
-function getPinned() { try { return JSON.parse(localStorage.getItem('litools_pinned') || '[]'); } catch { return []; } }
+const MODULE_GROUPS = [
+  {id:'core',   zh:'核心工具', en:'Core'},
+  {id:'sql',    zh:'SQL',      en:'SQL'},
+  {id:'encode', zh:'编解码',   en:'Encode'},
+  {id:'gen',    zh:'生成',     en:'Generate'},
+  {id:'text',   zh:'文本',     en:'Text'},
+];
+const DEFAULT_PINNED = ['json','search','regex','ts','sql-in','sql-fmt','b64','url','hash','diff'];
+function getPinned() {
+  try {
+    const raw = localStorage.getItem('litools_pinned');
+    if (raw === null) return [...DEFAULT_PINNED];
+    const v = JSON.parse(raw);
+    if (Array.isArray(v)) {
+      const valid = v.filter(id => ALL_MODULES.some(m => m.id === id));
+      return valid;
+    }
+  } catch {}
+  return [...DEFAULT_PINNED];
+}
 function setPinned(list) { localStorage.setItem('litools_pinned', JSON.stringify(list)); }
+function navLabel(m) {
+  if (m.sub) return _('sub_' + m.sub.replace(/-/g, '_'));
+  return _('tab_' + m.id);
+}
+function switchToModule(id) {
+  const m = ALL_MODULES.find(x => x.id === id);
+  if (!m) return;
+  switchTab(m.pane);
+  if (m.sub) activateSub(m.pane, m.sub);
+  _activeModule = id;
+  renderPinnedToolbar();
+}
 function renderPinnedToolbar() {
   const bar = $('pinnedToolbar');
   const pinned = getPinned();
-  if (!pinned.length) { bar.style.display = 'none'; bar.innerHTML = ''; return; }
+  if (!pinned.length) { bar.style.display = 'flex'; bar.innerHTML = `<span style="padding:7px 14px;font-size:12px;color:var(--text-dim);opacity:0.5;">${_('pinEmpty')}</span>`; return; }
   bar.style.display = 'flex';
   bar.innerHTML = pinned.map(id => {
     const m = ALL_MODULES.find(x => x.id === id);
-    return `<button class="btn btn-sm" data-pin="${id}" style="padding:3px 10px;font-size:12px;">${m ? m.name : id}</button>`;
+    if (!m) return '';
+    const on = id === _activeModule;
+    return `<button class="nav-btn" data-pin="${id}" style="padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap;border:1px solid transparent;border-radius:var(--radius);color:var(--text-dim);background:transparent;${on ? 'background:var(--accent);color:#fff;border-color:var(--accent);' : ''}">${navLabel(m)}</button>`;
   }).join('');
   bar.querySelectorAll('[data-pin]').forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.pin));
+    btn.addEventListener('click', () => switchToModule(btn.dataset.pin));
   });
 }
 function renderSettings() {
   const pinned = getPinned();
-  $('settingsPinList').innerHTML = ALL_MODULES.map(m => {
-    const chk = pinned.includes(m.id) ? 'checked' : '';
-    return `<label style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;cursor:pointer;"><input type="checkbox" data-pin-mod="${m.id}" ${chk}> ${m.name}</label>`;
+  const pinList = $('settingsPinList');
+  pinList.innerHTML = MODULE_GROUPS.map(g => {
+    const mods = ALL_MODULES.filter(m => m.grp === g.id);
+    const boxes = mods.map(m => {
+      const chk = pinned.includes(m.id) ? 'checked' : '';
+      return `<label class="mod-cb" data-mod-name="${m.id} ${navLabel(m).toLowerCase()}" style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;cursor:pointer;"><input type="checkbox" data-pin-mod="${m.id}" ${chk}> ${navLabel(m)}</label>`;
+    }).join('');
+    return `<div style="margin-bottom:8px;"><div style="font-size:11px;font-weight:600;color:var(--text-dim);margin-bottom:4px;">${g.zh}</div><div style="display:flex;flex-wrap:wrap;gap:2px 0;">${boxes}</div></div>`;
   }).join('');
-  $('settingsPinList').querySelectorAll('[data-pin-mod]').forEach(cb => {
+  pinList.querySelectorAll('[data-pin-mod]').forEach(cb => {
     cb.addEventListener('change', () => {
       const list = getPinned();
       if (cb.checked) { if (!list.includes(cb.dataset.pinMod)) list.push(cb.dataset.pinMod); }
@@ -3977,11 +3924,22 @@ function renderSettings() {
       setPinned(list); renderPinnedToolbar();
     });
   });
-  $('settingsShortcuts').innerHTML = [
-    ['Ctrl+K', _('sc_search')], ['Ctrl+Enter', _('sc_format')], ['Esc', _('sc_close')]
-  ].map(([k, d]) => `<div><kbd style="padding:1px 5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-size:10px;">${k}</kbd> ${d}</div>`).join('');
-  const pwaOk = 'serviceWorker' in navigator;
-  $('settingsPwaStatus').textContent = pwaOk ? _('pwa_ok') : _('pwa_no');
+  if (!$('pinAllBtn')._bound) {
+    $('pinAllBtn')._bound = true;
+    $('pinAllBtn').addEventListener('click', () => { setPinned(ALL_MODULES.map(m => m.id)); renderSettings(); renderPinnedToolbar(); });
+    $('pinNoneBtn').addEventListener('click', () => { setPinned([]); renderSettings(); renderPinnedToolbar(); });
+    $('pinResetBtn').addEventListener('click', () => { setPinned(DEFAULT_PINNED); renderSettings(); renderPinnedToolbar(); });
+  }
+  const ms = $('settingsModSearch');
+  if (ms && !ms._bound) {
+    ms._bound = true;
+    ms.addEventListener('input', () => {
+      const q = ms.value.trim().toLowerCase();
+      pinList.querySelectorAll('.mod-cb').forEach(el => {
+        el.style.display = (!q || el.dataset.modName.includes(q)) ? '' : 'none';
+      });
+    });
+  }
 }
 $('settingsExportBtn').addEventListener('click', () => {
   const data = {};
@@ -4007,7 +3965,7 @@ $('settingsImportFile').addEventListener('change', () => {
       const data = JSON.parse(r.result);
       let n = 0;
       Object.entries(data).forEach(([k, v]) => { if (k.startsWith('litools_')) { localStorage.setItem(k, v); n++; } });
-      toast(_('settingsImported').replace('${n}', n));
+toast(_('settingsImported').replace('${n}', n));
       renderPinnedToolbar();
     } catch { toast(_('err_invalid_json'), 1); }
   };
@@ -4015,6 +3973,7 @@ $('settingsImportFile').addEventListener('change', () => {
   $('settingsImportFile').value = '';
 });
 renderPinnedToolbar();
+applyLang(_lang);
 
 // ═══════════════════════════════════════
 //  📶 PWA 离线支持
