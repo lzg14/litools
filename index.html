@@ -3989,7 +3989,8 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   });
   navigator.serviceWorker.addEventListener('message', (e) => {
     if (e.data?.type === 'SW_UPDATED') {
-      toast('🔄 ' + (_lang === 'zh' ? '新版本已就绪，刷新生效' : 'New version ready, refresh to apply'));
+      toast('🔄 ' + (_lang === 'zh' ? '检测到新版本，自动更新中...' : 'New version detected, updating...'));
+      setTimeout(() => location.reload(), 800);
     }
   });
 }
