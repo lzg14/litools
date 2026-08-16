@@ -300,6 +300,9 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <div>
           <div class="input-row">
             <input type="text" id="tsInput" placeholder="粘贴时间戳，自动识别秒/毫秒/微秒" spellcheck="false" data-lk-pl="pl_tsInput">
+            <select id="tsUnit" style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:12px;">
+              <option value="auto">Auto</option><option value="s">s</option><option value="ms">ms</option><option value="us">µs</option>
+            </select>
             <button class="btn btn-primary" id="tsNowBtn" data-lk="tsNowBtn">当前</button>
             <button class="btn" id="tsClearBtn" data-lk="tsClearBtn">清空</button>
           </div>
@@ -465,6 +468,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div class="input-row" style="margin-top:8px;flex-wrap:wrap;align-items:center;">
         <input type="text" id="srchTerm" placeholder="搜索词" spellcheck="false" style="flex:2;min-width:120px;" data-lk-pl="srchTerm">
         <input type="text" id="srchReplace" placeholder="替换为" spellcheck="false" style="flex:1;min-width:100px;" data-lk-pl="srchReplace">
+        <button class="btn btn-sm" id="srchRegexBtn" data-lk="srchRegexOn">.* 正则</button>
+        <button class="btn btn-sm" id="srchCaseBtn" data-lk="srchCaseOff">Aa 忽略</button>
         <button class="btn btn-primary btn-sm" id="srchAddBtn" data-lk="srchAddBtn">添加</button>
         <button class="btn btn-sm" id="srchReplaceBtn" data-lk="srchReplaceBtn">替换</button>
         <button class="btn btn-sm" id="srchReplaceAllBtn" data-lk="srchReplaceAllBtn">全部替换</button>
@@ -603,6 +608,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <textarea id="hashInput" rows="6" placeholder="输入要计算 Hash 的文本" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_hashInput"></textarea>
       <div class="btn-group">
         <button class="btn btn-primary btn-sm" id="hashCalcBtn" data-lk="hashCalcBtn">计算</button>
+        <button class="btn btn-sm" id="hashFileBtn" data-lk="hashFileBtn">📂 文件</button>
         <button class="btn btn-sm" id="hashClearBtn" data-lk="hashClearBtn">清空</button>
       </div>
       <div id="hashResult">
@@ -715,7 +721,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       </div>
       <div class="btn-group" style="margin-top:8px;">
         <button class="btn btn-sm" id="csvParseBtn" data-lk="csvParseBtn">解析</button>
-        <button class="btn btn-sm" id="csvDelimBtn" data-delim="," data-lk="csvDelimBtn">分隔符: ,</button>
+        <button class="btn btn-sm" id="csvDelimBtn" data-delim="auto" data-lk="csvDelimBtn">分隔符: 自动</button>
         <button class="btn btn-sm" id="csvClearBtn" data-lk="csvClearBtn">清空</button>
       </div>
       <div id="csvStat" style="font-size:12px;color:var(--text-dim);margin-top:8px;"></div>
@@ -808,7 +814,7 @@ const _L = {
   sqlFmtStats:{zh:'共 ${lines} 行',en:'${lines} lines'},
   sqlQuoteBtn:{zh:'切换引号',en:'Toggle Quote'}, sqlClearBtn:{zh:'清空',en:'Clear'},
   srchTerm:{zh:'搜索词',en:'Search'}, srchReplace:{zh:'替换为',en:'Replace with'},
-  srchAddBtn:{zh:'添加',en:'Add'}, srchReplaceBtn:{zh:'替换',en:'Replace'},
+  srchAddBtn:{zh:'添加',en:'Add'}, srchReplaceBtn:{zh:'替换',en:'Replace'}, srchRegexOn:{zh:'.* 正则',en:'.* Regex'}, srchRegexOff:{zh:'Ab 字面量',en:'Ab Literal'}, srchCaseOn:{zh:'Aa 敏感',en:'Aa Sensitive'}, srchCaseOff:{zh:'Aa 忽略',en:'Aa Ignore'},
   srchReplaceAllBtn:{zh:'全部替换',en:'Replace All'}, srchClearHighBtn:{zh:'清除',en:'Clear'},
   srchFilterBtn:{zh:'只留命中行',en:'Matches Only'}, srchClearBtn:{zh:'清空',en:'Clear'},
   tl_srchRestore:{zh:'恢复原文',en:'Restore original'},
@@ -840,8 +846,8 @@ const _L = {
   passwdSym:{zh:'特殊 !@#$',en:'Special !@#$'}, passwdGenBtn:{zh:'生成',en:'Generate'},
   passwdCopyBtn:{zh:'复制全部',en:'Copy All'},
   rexCheatPreview:{zh:'预览',en:'Preview'},
-  cronParseBtn:{zh:'解析',en:'Parse'}, cronDescLabel:{zh:'描述',en:'Description'},
-  cronNextLabel:{zh:'未来 10 次执行',en:'Next 10 runs'}, cronHint:{zh:'格式: 分 时 日 月 周（支持 * / , -）',en:'Format: min hour day month weekday (* / , -)'},
+  cronParseBtn:{zh:'解析',en:'Parse'}, cronDescLabel:{zh:'描述',en:'Description'}, cronReboot:{zh:'系统启动时执行',en:'Runs at system startup'}, cronRangeErr:{zh:'字段值越界（分0-59 时0-23 日1-31 月1-12 周0-6）',en:'Field out of range (min 0-59 hour 0-23 day 1-31 month 1-12 weekday 0-6)'},
+  cronNextLabel:{zh:'未来 10 次执行',en:'Next 10 runs'}, cronHint:{zh:'格式: 分 时 日 月 周 或 秒 分 时 日 月 周（支持 * / , -）\\n支持 @daily/@hourly 等宏',en:'Format: min hour day month weekday or sec min hour day month weekday\\nMacros: @daily/@hourly/etc'},
   hashCalcBtn:{zh:'计算',en:'Calc'}, hashClearBtn:{zh:'清空',en:'Clear'},
   tpSortAsc:{zh:'排序 A→Z',en:'Sort A→Z'}, tpSortDesc:{zh:'排序 Z→A',en:'Sort Z→A'},
   tpUnique:{zh:'去重',en:'Unique'}, tpReverse:{zh:'反转行',en:'Reverse'},
@@ -871,7 +877,7 @@ const _L = {
   bintext_invalid:{zh:'二进制长度必须为 8 的倍数',en:'Binary length must be a multiple of 8'},
   bcHex:{zh:'十六进制',en:'Hexadecimal'}, bcBin:{zh:'二进制',en:'Binary'},
   bcOct:{zh:'八进制',en:'Octal'},
-  csvParseBtn:{zh:'解析',en:'Parse'}, csvDelimBtn:{zh:'分隔符: ,',en:'Delimiter:'},
+  csvParseBtn:{zh:'解析',en:'Parse'}, csvDelimBtn:{zh:'分隔符: 自动',en:'Delimiter: Auto'}, csvDelimAuto:{zh:'自动',en:'Auto'},
   csv_delimiter:{zh:'分隔符',en:'Delimiter'},
   rex_invalid:{zh:'⚠ 无效正则',en:'⚠ Invalid regex'},
   bc_invalid:{zh:'⚠ 无效',en:'⚠ Invalid'},
@@ -893,7 +899,7 @@ const _L = {
   pl_rexPattern:{zh:'正则表达式',en:'Regex pattern'},
   pl_urlInput:{zh:'输入 URL 或字符串',en:'Enter URL or string'},
   pl_htmlInput:{zh:'输入文本或 HTML 实体',en:'Enter text or HTML entities'},
-  pl_hashInput:{zh:'输入要计算 Hash 的文本',en:'Enter text to hash'},
+  pl_hashInput:{zh:'输入要计算 Hash 的文本',en:'Enter text to hash'}, hashFileBtn:{zh:'📂 文件',en:'📂 File'}, hashFileTooLarge:{zh:'文件过大（>100MB），暂不支持',en:'File too large (>100MB)'},
   pl_cronInput:{zh:'Cron 表达式，如 */5 * * * *',en:'Cron expr, e.g. */5 * * * *'},
   pl_tpInput:{zh:'输入文本',en:'Enter text'},
   pl_colorInput:{zh:'#FF6600 / rgb(255,102,0) / hsl(24,100%,50%)',en:'#FF6600 / rgb(255,102,0) / hsl(24,100%,50%)'},
@@ -901,7 +907,7 @@ const _L = {
   pl_bintextInput:{zh:'输入文本或二进制（每字符 8 位，UTF-8 多字节）',en:'Enter text or binary (8-bit per char, UTF-8 multi-byte)'},
   pl_diffLeft:{zh:'原文本',en:'Original text'},
   pl_diffRight:{zh:'新文本',en:'New text'},
-  pl_csvInput:{zh:'粘贴 CSV 文本，或拖入 .csv 文件\\n自动检测分隔符（逗号/制表符）',en:'Paste CSV text or drop .csv file'},
+  pl_csvInput:{zh:'粘贴 CSV 文本，或拖入 .csv 文件\\n自动检测分隔符（逗号/制表符/分号/管道）',en:'Paste CSV text or drop .csv file\\nAuto-detect delimiter (comma/tab/semicolon/pipe)'},
   // titles
   tl_themeToggle:{zh:'切换主题',en:'Toggle theme'}, tl_copyResult:{zh:'复制结果',en:'Copy result'},
   tl_langToggle:{zh:'切换语言',en:'Toggle language'},
@@ -1229,18 +1235,23 @@ function relTime(d) {
   for (const [ms, l] of u) { if (abs >= ms) return `${Math.floor(abs/ms)} ${l}${dir}`; }
   return _('ts_just');
 }
-function parseTs(input) {
+function parseTs(input, unit) {
   input = input.trim();
   if (!input) return null;
   const raw = input.replace(/[_,\s]/g, '');
   const n = Number(raw);
-  if (!isFinite(n) || n < 0) return { err: _('ts_invalid') };
+  if (!isFinite(n)) return { err: _('ts_invalid') };
   let ms, label;
-  if (n > 1e16) return { err: _('ts_too_large') };
-  if (n > 1e13) { ms = n / 1000; label = _('ts_micro'); }
-  else if (n > 2000000000) { ms = n; label = _('ts_milli'); }
-  else if (n > 0) { ms = n * 1000; label = _('ts_second'); }
-  else return { err: _('ts_invalid') };
+  if (unit === 's') { ms = n * 1000; label = _('ts_second'); }
+  else if (unit === 'ms') { ms = n; label = _('ts_milli'); }
+  else if (unit === 'us') { ms = n / 1000; label = _('ts_micro'); }
+  else {
+    if (Math.abs(n) > 1e16) return { err: _('ts_too_large') };
+    if (Math.abs(n) > 1e13) { ms = n / 1000; label = _('ts_micro'); }
+    else if (Math.abs(n) > 2000000000) { ms = n; label = _('ts_milli'); }
+    else if (Math.abs(n) > 0) { ms = n * 1000; label = _('ts_second'); }
+    else return { err: _('ts_invalid') };
+  }
   const d = new Date(ms);
   if (isNaN(d.getTime())) return { err: _('ts_invalid_date') };
   return { d, ms, label, sec: Math.floor(ms / 1000), utc: fmtUTC(d), local: fmtLocal(d), rfc: fmtRfc(d), rel: relTime(d) };
@@ -1256,9 +1267,10 @@ function renderTs(r) {
     else el.textContent = '—';
   });
 }
-$('tsInput').addEventListener('input', () => renderTs(parseTs($('tsInput').value)));
+$('tsInput').addEventListener('input', () => renderTs(parseTs($('tsInput').value, $('tsUnit').value)));
+$('tsUnit').addEventListener('change', () => renderTs(parseTs($('tsInput').value, $('tsUnit').value)));
 $('tsInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') { const r = parseTs($('tsInput').value); if (r && !r.err) copy(String(r.sec)); }
+  if (e.key === 'Enter') { const r = parseTs($('tsInput').value, $('tsUnit').value); if (r && !r.err) copy(String(r.sec)); }
 });
 $('tsNowBtn').addEventListener('click', () => {
   $('tsInput').value = Math.floor(Date.now() / 1000);
@@ -1361,6 +1373,27 @@ function cdStartFromInput() {
   $('cdStartBtn').textContent = _('cdPaused');
   cdTick();
 }
+function cdAlert() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    const seq = [880, 880, 1175];
+    seq.forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = f; o.type = 'square';
+      const t = ctx.currentTime + i * 0.2;
+      g.gain.setValueAtTime(0.08, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+      o.start(t); o.stop(t + 0.17);
+    });
+  } catch {}
+  try {
+    if ('Notification' in window) {
+      if (Notification.permission === 'granted') new Notification(_('cd_done'));
+      else if (Notification.permission === 'default') Notification.requestPermission();
+    }
+  } catch {}
+}
 function cdTick() {
   if (!cdRunning) return;
   cdLeftMs = cdEndAt - Date.now();
@@ -1369,6 +1402,7 @@ function cdTick() {
     cdRunning = false;
     $('cdStartBtn').textContent = _('cdStartBtn');
     toast(_('cd_done'));
+    cdAlert();
     return;
   }
   cdTimer = setTimeout(cdTick, 100);
@@ -2304,13 +2338,15 @@ $('urlParseBtn').addEventListener('click', () => {
 //  🎲 UUID
 // ═══════════════════════════════════════
 function uuidV4(upper, noDash) {
+  const b = new Uint8Array(16);
+  crypto.getRandomValues(b);
+  b[6] = (b[6] & 0x0f) | 0x40; // version 4
+  b[8] = (b[8] & 0x3f) | 0x80; // variant 10xx
   const hex = '0123456789abcdef';
   let s = '';
-  for (let i = 0; i < 36; i++) {
-    if (i === 8 || i === 13 || i === 18 || i === 23) { s += noDash ? '' : '-'; continue; }
-    if (i === 14) s += '4';
-    else if (i === 19) s += hex[(Math.random() * 4 | 0) + 8];
-    else s += hex[Math.random() * 16 | 0];
+  for (let i = 0; i < 16; i++) {
+    if (i === 4 || i === 6 || i === 8 || i === 10) s += noDash ? '' : '-';
+    s += hex[b[i] >> 4] + hex[b[i] & 15];
   }
   return upper ? s.toUpperCase() : s;
 }
@@ -2363,6 +2399,10 @@ function parseColor(input) {
     b = Math.round((b1 + m2) * 255);
   }
   if (r === undefined || isNaN(r)) return null;
+  r = Math.max(0, Math.min(255, Math.round(r)));
+  g = Math.max(0, Math.min(255, Math.round(g)));
+  b = Math.max(0, Math.min(255, Math.round(b)));
+  a = Math.max(0, Math.min(1, a));
   return { r, g, b, a };
 }
 function rgbToHsl(r, g, b) {
@@ -2383,10 +2423,11 @@ function renderColor(input) {
   const c = parseColor(input);
   if (!c) { ['cHex','cRgb','cHsl','cCmyk','cContrast'].forEach(id => $(id).textContent = '—'); $('colorPreview').style.background = 'transparent'; return; }
   const hsl = rgbToHsl(c.r, c.g, c.b);
-  const hex = '#' + [c.r, c.g, c.b].map(v => pad(v.toString(16))).join('').toUpperCase();
+  const hasA = c.a < 1;
+  const hex = '#' + [c.r, c.g, c.b].map(v => pad(v.toString(16))).join('').toUpperCase() + (hasA ? pad(Math.round(c.a * 255).toString(16)).toUpperCase() : '');
   $('cHex').textContent = hex;
-  $('cRgb').textContent = `rgb(${c.r}, ${c.g}, ${c.b})`;
-  $('cHsl').textContent = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+  $('cRgb').textContent = hasA ? `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a})` : `rgb(${c.r}, ${c.g}, ${c.b})`;
+  $('cHsl').textContent = hasA ? `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, ${c.a})` : `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
   // CMYK
   const rr = c.r/255, gg = c.g/255, bb = c.b/255;
   const k = 1 - Math.max(rr, gg, bb);
@@ -2418,6 +2459,12 @@ $('colorInput').addEventListener('input', () => {
 //  🔍 搜索
 // ═══════════════════════════════════════
 const srchTerms = [];
+const srchOpts = { regex: true, caseSensitive: false };
+function srchFlags() { return srchOpts.caseSensitive ? '' : 'i'; }
+function srchPattern(t) { return srchOpts.regex ? t : t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function srchRegEx(t, global) {
+  try { return new RegExp(srchPattern(t), (global ? 'g' : '') + srchFlags()); } catch { return null; }
+}
 const srchColors = ['#ffe066','#69db7c','#74c0fc','#ffa8a8','#da77f2','#ffc078','#66d9e8','#fcc2d7'];
 const srchEditor = $('srchEditor');
 const SRCH_CHUNK = 5000000;
@@ -2449,7 +2496,7 @@ function srchPushMatches(lines, baseLine) {
     if (_srchStreamMatches.length >= SRCH_DISPLAY_MAX) { _srchStreamAbort = true; break; }
     const lineNum = baseLine + i + 1;
     const line = lines[i];
-    const match = srchTerms.some(t => { try { return new RegExp(t, 'i').test(line); } catch { return line.includes(t); } });
+    const match = srchTerms.some(t => { const re = srchRegEx(t, false); return re ? re.test(line) : line.includes(t); });
     if (!match) continue;
     _srchStreamMatches.push({ lineNum, text: line });
     const div = document.createElement('div');
@@ -2561,7 +2608,8 @@ function applyHighlights() {
   const ranges = [];
   for (let i = 0; i < allTerms.length; i++) {
     try {
-      const re = new RegExp(allTerms[i], 'gi');
+      const re = srchRegEx(allTerms[i], true);
+      if (!re) continue;
       let m;
       while ((m = re.exec(text)) !== null) ranges.push({ s: m.index, e: m.index + m[0].length, c: srchColors[i % srchColors.length] });
     } catch {}
@@ -2691,7 +2739,7 @@ function updateSrchTags() {
   $('srchTags').innerHTML = srchTerms.map((t, i) => {
     let count = 0;
     if (text) {
-      try { const re = new RegExp(t, 'gi'); let m; while ((m = re.exec(text)) !== null) count++; } catch { count = (text.split(t).length - 1); }
+      try { const re = srchRegEx(t, true); if (re) { let m; while ((m = re.exec(text)) !== null) count++; } else count = (text.split(t).length - 1); } catch { count = (text.split(t).length - 1); }
     }
     return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:${srchColors[i % srchColors.length]};border-radius:4px;font-size:12px;">${escHtml(t)} <span style="font-size:10px;opacity:0.7;">${count}</span><span class="srch-del" data-idx="${i}" style="cursor:pointer;font-weight:bold;color:#888;margin-left:2px;">✕</span></span>`;
   }).join('');
@@ -2713,9 +2761,10 @@ function srchReplaceText(getAll) {
   const repl = $('srchReplace').value;
   let result = text;
   for (const term of srchTerms) {
+    const re = srchRegEx(term, true);
     try {
-      if (getAll) result = result.replace(new RegExp(term, 'gi'), repl);
-      else { result = result.replace(new RegExp(term, 'i'), repl); break; }
+      if (getAll) result = re ? result.replace(re, repl) : result.split(term).join(repl);
+      else { if (re) result = result.replace(re, repl); else result = result.replace(term, repl); break; }
     } catch { result = getAll ? result.split(term).join(repl) : result.replace(term, repl); break; }
   }
   if (result === text) { toast(_('no_match'), 1); return; }
@@ -2736,6 +2785,16 @@ $('srchAddBtn').addEventListener('click', () => {
 });
 $('srchReplaceBtn').addEventListener('click', () => srchReplaceText(false));
 $('srchReplaceAllBtn').addEventListener('click', () => srchReplaceText(true));
+$('srchRegexBtn').addEventListener('click', () => {
+  srchOpts.regex = !srchOpts.regex;
+  $('srchRegexBtn').textContent = srchOpts.regex ? _('srchRegexOn') : _('srchRegexOff');
+  applyHighlights(); updateSrchTags();
+});
+$('srchCaseBtn').addEventListener('click', () => {
+  srchOpts.caseSensitive = !srchOpts.caseSensitive;
+  $('srchCaseBtn').textContent = srchOpts.caseSensitive ? _('srchCaseOn') : _('srchCaseOff');
+  applyHighlights(); updateSrchTags();
+});
 $('srchTerm').addEventListener('keydown', e => {
   if (e.key === 'Enter') $('srchAddBtn').click();
 });
@@ -2966,6 +3025,23 @@ async function calcHash() {
   }
 }
 $('hashCalcBtn').addEventListener('click', calcHash);
+async function calcHashFromFile(file) {
+  if (!file) return;
+  if (file.size > 104857600) { toast(_('hashFileTooLarge'), 1); return; }
+  const buf = await file.arrayBuffer();
+  const algos = ['SHA-1','SHA-256','SHA-384','SHA-512'];
+  const ids = ['hSha1','hSha256','hSha384','hSha512'];
+  for (let i = 0; i < algos.length; i++) {
+    try { $(ids[i]).textContent = hex(await crypto.subtle.digest(algos[i], buf)); }
+    catch { $(ids[i]).textContent = '⚠ ' + _('hash_need_https'); }
+  }
+}
+$('hashFileBtn').addEventListener('click', () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.onchange = () => { const f = input.files[0]; if (f) calcHashFromFile(f); };
+  input.click();
+});
 $('hashClearBtn').addEventListener('click', () => {
   $('hashInput').value = '';
   ['hSha1','hSha256','hSha384','hSha512'].forEach(id => $(id).textContent = '—');
@@ -2983,10 +3059,12 @@ function genPassword() {
   if ($('passwdSym').checked) sets.push('!@#$%^&*()-_=+[]{};:,.<>?/');
   if (!sets.length) { toast(_('passwdNoSet'), 1); return null; }
   const all = sets.join('');
+  const rnd = new Uint32Array(1);
+  const idx = (max) => { const lim = Math.floor(0x100000000 / max) * max; do { crypto.getRandomValues(rnd); } while (rnd[0] >= lim); return rnd[0] % max; };
   const out = [];
-  for (let i = 0; i < sets.length; i++) out.push(sets[i][Math.floor(Math.random() * sets[i].length)]);
-  while (out.length < len) out.push(all[Math.floor(Math.random() * all.length)]);
-  for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
+  for (let i = 0; i < sets.length; i++) out.push(sets[i][idx(sets[i].length)]);
+  while (out.length < len) out.push(all[idx(all.length)]);
+  for (let i = out.length - 1; i > 0; i--) { const j = idx(i + 1); [out[i], out[j]] = [out[j], out[i]]; }
   return out.join('');
 }
 function passwordStrength(pw) {
@@ -3085,27 +3163,54 @@ function cronDescribe(fields) {
   }
   return parts.join('') || _('cronDescOther');
 }
+let _cronSec = new Set([0]);
 function cronNextRuns(fields, n) {
   const mins = cronFieldToSet(fields[0], 0, 59);
   const hrs = cronFieldToSet(fields[1], 0, 23);
   const days = cronFieldToSet(fields[2], 1, 31);
   const months = cronFieldToSet(fields[3], 1, 12);
   const wds = cronFieldToSet(fields[4], 0, 6);
+  const secSet = _cronSec || new Set([0]);
+  const hasD = days.size < 31, hasW = wds.size < 7;
   const now = new Date();
   const runs = [];
   let dt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes() + 1, 0, 0);
   while (runs.length < n && dt.getFullYear() < now.getFullYear() + 5) {
-    if (months.has(dt.getMonth() + 1) && days.has(dt.getDate()) && wds.has(dt.getDay()) && hrs.has(dt.getHours()) && mins.has(dt.getMinutes())) {
-      runs.push(dt.toString());
+    const dayOk = hasD || hasW
+      ? (hasD && !hasW) ? days.has(dt.getDate())
+        : (!hasD && hasW) ? wds.has(dt.getDay())
+        : (days.has(dt.getDate()) || wds.has(dt.getDay()))
+      : true;
+    if (months.has(dt.getMonth() + 1) && dayOk && hrs.has(dt.getHours()) && mins.has(dt.getMinutes())) {
+      let sec = 0;
+      while (sec < 60 && !secSet.has(sec)) sec++;
+      const t = new Date(dt); t.setSeconds(sec);
+      runs.push(t.toString());
     }
     dt = new Date(dt.getTime() + 60000);
   }
   return runs;
 }
+const CRON_MACROS = { '@yearly':'0 0 1 1 *', '@annually':'0 0 1 1 *', '@monthly':'0 0 1 * *', '@weekly':'0 0 * * 0', '@daily':'0 0 * * *', '@midnight':'0 0 * * *', '@hourly':'0 * * * *' };
 $('cronParseBtn').addEventListener('click', () => {
-  const raw = $('cronInput').value.trim();
-  const fields = raw.split(/\s+/);
-  if (fields.length !== 5) { toast(_('cronInvalid'), 1); return; }
+  let raw = $('cronInput').value.trim();
+  if (raw.startsWith('@')) {
+    if (raw === '@reboot') { $('cronDesc').textContent = _('cronReboot'); $('cronNext').textContent = _('cronNoFuture'); return; }
+    raw = CRON_MACROS[raw];
+    if (!raw) { toast(_('cronInvalid'), 1); return; }
+  }
+  const parts = raw.split(/\s+/);
+  let fields;
+  if (parts.length === 6) { _cronSec = cronFieldToSet(parts[0], 0, 59); fields = parts.slice(1); }
+  else if (parts.length === 5) { _cronSec = new Set([0]); fields = parts; }
+  else { toast(_('cronInvalid'), 1); return; }
+  const ranges = [[0,0,59],[1,0,23],[2,1,31],[3,1,12],[4,0,6]];
+  for (const [i, min, max] of ranges) {
+    for (const tok of fields[i].split(',')) {
+      const nums = tok.match(/\d+/g);
+      if (nums) for (const v of nums.map(Number)) if (v < min || v > max) { toast(_('cronRangeErr'), 1); return; }
+    }
+  }
   $('cronDesc').textContent = cronDescribe(fields);
   const runs = cronNextRuns(fields, 10);
   $('cronNext').textContent = runs.length ? runs.join('\n') : _('cronNoFuture');
@@ -3242,13 +3347,14 @@ let sqlOpts = { quote: true };
 function genSQL() {
   const raw = $('sqlInput').value;
   if (!raw.trim()) { toast(_('no_input'), 1); return; }
-  // Split by comma, newline, or both
-  let items = raw.split(/[,\n]+/).map(s => s.trim()).filter(s => s.length > 0);
+  // Split by comma, newline, whitespace
+  let items = raw.split(/[,\s]+/).map(s => s.trim()).filter(s => s.length > 0);
+  const total = items.length;
   // Deduplicate
   items = [...new Set(items)];
   const quoted = items.map(s => sqlOpts.quote ? `'${s.replace(/'/g, "''")}'` : s);
   $('sqlResult').textContent = `in (${quoted.join(',')});`;
-  $('sqlStatOld').textContent = _('sql_in_stat').replace('${n}', items.length).replace('${d}', items.length);
+  $('sqlStatOld').textContent = _('sql_in_stat').replace('${n}', total).replace('${d}', items.length);
 }
 
 $('sqlGenBtn').addEventListener('click', genSQL);
@@ -3385,7 +3491,10 @@ $('sqlFmtClearBtn').addEventListener('click', () => { $('sqlFmtInput').value = '
 // ═══════════════════════════════════════
 //  📑 Diff
 // ═══════════════════════════════════════
-function getText(el) {
+let _diffSrc = { left: '', right: '' };
+function getText(id) {
+  const el = typeof id === 'string' ? $(id) : id;
+  if (el.dataset.diffRendered === '1') return _diffSrc[id === 'diffLeft' ? 'left' : 'right'];
   const lines = [];
   for (const child of el.childNodes) {
     if (child.nodeType === 3) {
@@ -3485,23 +3594,46 @@ let syncing = false;
 });
 
 $('diffBtn').addEventListener('click', () => {
-  const left = getText($('diffLeft'));
-  const right = getText($('diffRight'));
+  const left = getText('diffLeft');
+  const right = getText('diffRight');
   if (!left && !right) { toast(_('diff_need_both'), 1); return; }
   const la = left.split('\n').length, lb = right.split('\n').length;
   if (la * lb > 16000000 && !confirm(_('diff_large').replace('${la}', la).replace('${lb}', lb))) return;
+  _diffSrc.left = left; _diffSrc.right = right;
   diffLines(left, right);
+  $('diffLeft').dataset.diffRendered = '1';
+  $('diffRight').dataset.diffRendered = '1';
 });
 $('diffSwapBtn').addEventListener('click', () => {
   const tmp = $('diffLeft').innerHTML;
   $('diffLeft').innerHTML = $('diffRight').innerHTML;
   $('diffRight').innerHTML = tmp;
+  const ts = _diffSrc.left; _diffSrc.left = _diffSrc.right; _diffSrc.right = ts;
+  const tl = $('diffLeft').dataset.diffRendered;
+  $('diffLeft').dataset.diffRendered = $('diffRight').dataset.diffRendered;
+  $('diffRight').dataset.diffRendered = tl;
   $('diffStat').textContent = '';
 });
 $('diffClearBtn').addEventListener('click', () => {
   $('diffLeft').innerHTML = '';
   $('diffRight').innerHTML = '';
+  _diffSrc = { left: '', right: '' };
+  $('diffLeft').dataset.diffRendered = '';
+  $('diffRight').dataset.diffRendered = '';
   $('diffStat').textContent = '';
+});
+// 渲染态下编辑：先用保存的纯净源还原，避免标记字符污染后续比较
+['diffLeft','diffRight'].forEach(id => {
+  $(id).addEventListener('input', () => {
+    if ($(id).dataset.diffRendered !== '1') return;
+    $(id).textContent = _diffSrc[id === 'diffLeft' ? 'left' : 'right'];
+    $(id).dataset.diffRendered = '';
+  });
+});
+$('diffCopyBtn').addEventListener('click', () => {
+  const l = getText('diffLeft'), r = getText('diffRight');
+  if (!l && !r) { toast(_('no_content'), 1); return; }
+  copy('--- left ---\n' + l + '\n\n--- right ---\n' + r);
 });
 
 // ═══════════════════════════════════════
@@ -3539,27 +3671,41 @@ $('caseClearBtn').addEventListener('click', () => { $('caseInput').value = ''; $
 // ═══════════════════════════════════════
 //  📋 CSV
 // ═══════════════════════════════════════
-function parseCSV(text, delim) {
-  const lines = text.trim().split('\n');
-  if (lines.length < 1) return { err: _('err_no_data') };
-  const rows = lines.map(l => {
-    const vals = [];
-    let cur = '', quoted = false;
-    for (let i = 0; i < l.length; i++) {
-      const ch = l[i];
-      if (quoted) { if (ch === '"') { if (l[i+1] === '"') { cur += '"'; i++; } else quoted = false; } else cur += ch; }
-      else if (ch === '"') quoted = true;
-      else if (ch === delim) { vals.push(cur); cur = ''; }
-      else cur += ch;
+function detectDelim(s) {
+  const firstLine = s.slice(0, s.indexOf('\n') < 0 ? s.length : s.indexOf('\n'));
+  let best = ',', bestScore = -1;
+  for (const d of [',', '\t', ';', '|']) {
+    let count = 0, inQ = false;
+    for (const ch of firstLine) {
+      if (ch === '"') inQ = !inQ;
+      else if (!inQ && ch === d) count++;
     }
-    vals.push(cur);
-    return vals;
-  });
+    if (count > bestScore) { bestScore = count; best = d; }
+  }
+  return best;
+}
+function parseCSV(text, delim) {
+  const s = text.replace(/\r\n?/g, '\n').trim();
+  if (!s) return { err: _('err_no_data') };
+  const rows = [];
+  let row = [], cur = '', quoted = false;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (quoted) {
+      if (ch === '"') { if (s[i + 1] === '"') { cur += '"'; i++; } else quoted = false; }
+      else cur += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === delim) { row.push(cur); cur = ''; }
+    else if (ch === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+    else cur += ch;
+  }
+  row.push(cur); rows.push(row);
   return { header: rows[0], rows: rows.slice(1), total: rows.length - 1 };
 }
 function renderCSV(text) {
   if (!text.trim()) { $('csvResult').innerHTML = ''; $('csvStat').textContent = ''; return; }
-  const delim = $('csvDelimBtn').dataset.delim;
+  let delim = $('csvDelimBtn').dataset.delim;
+  if (delim === 'auto') delim = detectDelim(text.replace(/\r\n?/g, '\n'));
   const r = parseCSV(text, delim);
   if (r.err) { $('csvResult').textContent = r.err; $('csvStat').textContent = ''; return; }
   const cols = r.header.length;
@@ -3578,8 +3724,10 @@ let csvTimer;
 $('csvInput').addEventListener('input', () => { clearTimeout(csvTimer); csvTimer = setTimeout(() => renderCSV($('csvInput').value), 200); });
 $('csvDelimBtn').addEventListener('click', () => {
   const btn = $('csvDelimBtn');
-  btn.dataset.delim = btn.dataset.delim === ',' ? '\t' : ',';
-  btn.textContent = _('csv_delimiter') + ': ' + (btn.dataset.delim === ',' ? ',' : '\\t');
+  const cycle = ['auto', ',', '\t', ';', '|'];
+  const next = cycle[(cycle.indexOf(btn.dataset.delim) + 1) % cycle.length];
+  btn.dataset.delim = next;
+  btn.textContent = _('csv_delimiter') + ': ' + (next === 'auto' ? _('csvDelimAuto') : next === '\t' ? '\\t' : next);
   renderCSV($('csvInput').value);
 });
 $('csvClearBtn').addEventListener('click', () => { $('csvInput').value = ''; $('csvResult').innerHTML = ''; $('csvStat').textContent = ''; });
