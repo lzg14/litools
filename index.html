@@ -449,7 +449,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <span id="jsonSearchCount" style="font-size:11px;color:var(--text-dim);white-space:nowrap;line-height:28px;">0/0</span>
         <button class="btn btn-sm" id="jsonSearchPrevBtn" data-lk="jsonSearchPrevBtn" data-lk-tl="tl_jsonSearchPrev" title="上一个 (Shift+Enter)">↑</button>
         <button class="btn btn-sm" id="jsonSearchNextBtn" data-lk="jsonSearchNextBtn" data-lk-tl="tl_jsonSearchNext" title="下一个 (Enter)">↓</button>
-        <input type="text" id="jsonPathInput" placeholder='JSONPath 查询，如 $.store.book[*].title' spellcheck="false" style="flex:1;font-size:12px;" data-lk-pl="jsonPathInput">
+        <input type="text" id="jsonPathInput" placeholder='JSONPath 如 $.store.book[?(@.price<10)].title' spellcheck="false" style="flex:1;font-size:12px;" data-lk-pl="jsonPathInput">
         <button class="btn btn-sm" id="jsonPathBtn" data-lk="jsonPathBtn">查询</button>
         <span id="jsonPathInfo" style="font-size:11px;color:var(--text-dim);line-height:28px;"></span>
       </div>
@@ -811,7 +811,7 @@ const _L = {
   sub_proc:{zh:'📝 处理',en:'📝 Process'},
   sub_case:{zh:'🔄 大小写',en:'🔄 Case'},
   tsNowBtn:{zh:'当前',en:'Now'}, tsClearBtn:{zh:'清空',en:'Clear'},
-  jsonPathBtn:{zh:'查询',en:'Query'}, jsonPathInput:{zh:'JSONPath 查询，如 $.store.book[*].title',en:'JSONPath e.g. $.store.book[*].title'},
+  jsonPathBtn:{zh:'查询',en:'Query'}, jsonPathInput:{zh:'JSONPath 如 $.store.book[?(@.price<10)].title',en:'JSONPath e.g. $.store.book[?(@.price<10)].title'},
   sqlResult:{zh:'结果',en:'Result'}, sqlGenBtn:{zh:'生成 IN',en:'Generate IN'}, sqlInsertParseBtn:{zh:'解析',en:'Parse'}, sql_insert_title:{zh:'INSERT 语句',en:'INSERT Statement'},
   sqlFmtResult:{zh:'结果',en:'Result'}, sqlFmtBtn:{zh:'格式化',en:'Format'}, sqlFmtClearBtn:{zh:'清空',en:'Clear'},
   sqlFmtStats:{zh:'共 ${lines} 行',en:'${lines} lines'},
@@ -2261,24 +2261,275 @@ $('jsonResult').addEventListener('click', e => {
 // XML → JSON
 // JSONPath query
 function fmtJsonPath(p) { return '$' + p.map(x => typeof x === 'number' ? `[${x}]` : `.${x}`).join(''); }
+
+// ── JSONPath 解析器：支持 .. 递归下降、[*]、[n]/[-n]、[a:b(:c)] 切片、[a,b] 多选、[?(过滤表达式)] ──
+function jpFindBracketEnd(expr, start) {
+  let depth = 1, i = start + 1, inStr = null;
+  for (; i < expr.length; i++) {
+    const c = expr[i];
+    if (inStr) { if (c === '\\') i++; else if (c === inStr) inStr = null; continue; }
+    if (c === '"' || c === "'") inStr = c;
+    else if (c === '[') depth++;
+    else if (c === ']') { depth--; if (depth === 0) return i; }
+  }
+  return expr.length;
+}
+function jpParseSelector(inner) {
+  const s = inner.trim();
+  if (!s) return { mode: 'self' };
+  if (s === '*') return { mode: 'wildcard' };
+  if (s[0] === '?') {
+    const m = s.match(/^\?\(\s*([\s\S]*?)\s*\)$/);
+    return { mode: 'filter', test: jpParseFilter(m ? m[1] : '') };
+  }
+  if (s.includes(':')) {
+    const parts = s.split(':').map(x => x.trim());
+    const num = x => { if (x === '') return null; const v = parseInt(x, 10); return isNaN(v) ? null : v; };
+    return { mode: 'slice', start: num(parts[0]), end: num(parts[1]), step: num(parts[2]) };
+  }
+  if (s[0] === '"' || s[0] === "'") return { type: 'key', key: s.slice(1, -1) };
+  if (s.includes(',')) return { mode: 'multi', indexes: s.split(',').map(x => parseInt(x.trim(), 10)).filter(x => !isNaN(x)) };
+  const idx = parseInt(s, 10);
+  if (!isNaN(idx)) return { mode: 'index', index: idx };
+  return { type: 'key', key: s };
+}
+function jpSplitPathSegments(expr) {
+  const segs = [];
+  let i = 0;
+  const isDelim = c => c === '.' || c === '[';
+  while (i < expr.length) {
+    const ch = expr[i];
+    if (ch === '[') {
+      const end = jpFindBracketEnd(expr, i);
+      const sel = jpParseSelector(expr.slice(i + 1, end));
+      segs.push(sel.type === 'key' ? sel : { type: 'array', ...sel });
+      i = end + 1;
+      continue;
+    }
+    if (ch === '.') {
+      i++;
+      const rec = expr[i] === '.';
+      if (rec) i++;
+      if (rec && expr[i] === '[') {
+        const end = jpFindBracketEnd(expr, i);
+        const sel = jpParseSelector(expr.slice(i + 1, end));
+        segs.push(sel.type === 'key' ? { type: 'recursive', key: sel.key } : { type: 'recursive', ...sel });
+        i = end + 1;
+        continue;
+      }
+      const start = i;
+      while (i < expr.length && !isDelim(expr[i])) i++;
+      const key = expr.slice(start, i).trim() || '*';
+      segs.push(rec ? { type: 'recursive', key } : { type: 'key', key });
+      continue;
+    }
+    const start = i;
+    while (i < expr.length && !isDelim(expr[i])) i++;
+    segs.push({ type: 'key', key: expr.slice(start, i).trim() || '*' });
+  }
+  return segs;
+}
+// 过滤表达式 tokenizer：@ . 键名 数字 字符串 true/false/null 比较/逻辑/括号
+function jpTokenize(s) {
+  const toks = [];
+  let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (/\s/.test(c)) { i++; continue; }
+    if (c === '(' || c === ')' || c === '@' || c === '.') { toks.push(c); i++; continue; }
+    if (c === '"' || c === "'") {
+      const q = c; let j = i + 1, str = '';
+      while (j < s.length && s[j] !== q) { if (s[j] === '\\' && j + 1 < s.length) { str += s[j+1]; j += 2; } else { str += s[j]; j++; } }
+      toks.push({ t: 'str', v: str }); i = j + 1; continue;
+    }
+    if (c === '-' && /[0-9]/.test(s[i+1] || '')) {
+      const m = s.slice(i).match(/^-?\d+(\.\d+)?/);
+      if (m) { toks.push({ t: 'num', v: parseFloat(m[0]) }); i += m[0].length; continue; }
+    }
+    if (/[0-9]/.test(c)) {
+      const m = s.slice(i).match(/^\d+(\.\d+)?/);
+      if (m) { toks.push({ t: 'num', v: parseFloat(m[0]) }); i += m[0].length; continue; }
+    }
+    if (s.startsWith('&&', i)) { toks.push('&&'); i += 2; continue; }
+    if (s.startsWith('||', i)) { toks.push('||'); i += 2; continue; }
+    if (s.startsWith('==', i)) { toks.push('=='); i += 2; continue; }
+    if (s.startsWith('!=', i)) { toks.push('!='); i += 2; continue; }
+    if (s.startsWith('<=', i)) { toks.push('<='); i += 2; continue; }
+    if (s.startsWith('>=', i)) { toks.push('>='); i += 2; continue; }
+    if (/[a-zA-Z_]/.test(c)) {
+      const m = s.slice(i).match(/^[a-zA-Z_][a-zA-Z0-9_]*/);
+      if (m) {
+        const w = m[0];
+        if (w === 'true') toks.push({ t: 'bool', v: true });
+        else if (w === 'false') toks.push({ t: 'bool', v: false });
+        else if (w === 'null') toks.push({ t: 'null' });
+        else toks.push({ t: 'ident', v: w });
+        i += w.length; continue;
+      }
+    }
+    if (c === '!' || c === '<' || c === '>') { toks.push(c); i++; continue; }
+    i++;
+  }
+  return toks;
+}
+function jpParseFilter(s) {
+  const toks = jpTokenize(s);
+  let pos = 0;
+  const peek = () => toks[pos];
+  const next = () => toks[pos++];
+  function parseOr() {
+    let left = parseAnd();
+    while (peek() === '||') { next(); left = { op: '||', l: left, r: parseAnd() }; }
+    return left;
+  }
+  function parseAnd() {
+    let left = parseCmp();
+    while (peek() === '&&') { next(); left = { op: '&&', l: left, r: parseCmp() }; }
+    return left;
+  }
+  function parseCmp() {
+    const left = parseUnary();
+    const op = peek();
+    if (op === '==' || op === '!=' || op === '<' || op === '<=' || op === '>' || op === '>=') { next(); return { op, l: left, r: parseUnary() }; }
+    return left;
+  }
+  function parseUnary() {
+    if (peek() === '!') { next(); return { op: '!', l: parseUnary() }; }
+    return parseAtom();
+  }
+  function parseAtom() {
+    const t = next();
+    if (t === '(') { const e = parseOr(); if (peek() === ')') next(); return e; }
+    if (t === '@') {
+      const path = [];
+      while (peek() === '.') { next(); const k = next(); if (k && k.t === 'ident') path.push(k.v); else break; }
+      return { t: 'cur', path };
+    }
+    if (t && (t.t === 'str' || t.t === 'num' || t.t === 'bool')) return { t: 'lit', v: t.v };
+    if (t && t.t === 'null') return { t: 'lit', v: null };
+    return { t: 'lit', v: undefined };
+  }
+  return parseOr();
+}
+function jpEq(a, b) {
+  if (a === null || a === undefined || b === null || b === undefined) return a == null && b == null;
+  if (typeof a === 'number' && typeof b === 'string') return a === parseFloat(b);
+  if (typeof b === 'number' && typeof a === 'string') return parseFloat(a) === b;
+  return a === b;
+}
+function jpEvalFilter(node, cur) {
+  if (node.t === 'lit') return node.v;
+  if (node.t === 'cur') {
+    let c = cur;
+    for (const k of node.path) { if (c == null) return undefined; c = c[k]; }
+    return c;
+  }
+  if (node.op === '!') return !jpEvalFilter(node.l, cur);
+  if (node.op === '&&') return !!jpEvalFilter(node.l, cur) && !!jpEvalFilter(node.r, cur);
+  if (node.op === '||') return !!jpEvalFilter(node.l, cur) || !!jpEvalFilter(node.r, cur);
+  const l = jpEvalFilter(node.l, cur), r = jpEvalFilter(node.r, cur);
+  switch (node.op) {
+    case '==': return jpEq(l, r);
+    case '!=': return !jpEq(l, r);
+    case '<': return l < r;
+    case '<=': return l <= r;
+    case '>': return l > r;
+    case '>=': return l >= r;
+  }
+  return false;
+}
+function jpApplyArray(cur, seg, rest, p, results) {
+  const n = cur.length;
+  const walkItem = i => { if (i >= 0 && i < n) jpWalk(cur[i], rest, 0, [...p, i], results); };
+  switch (seg.mode) {
+    case 'self': jpWalk(cur, rest, 0, p, results); break;
+    case 'wildcard': for (let i = 0; i < n; i++) walkItem(i); break;
+    case 'index': { let i = seg.index < 0 ? n + seg.index : seg.index; walkItem(i); break; }
+    case 'multi': for (const idx of seg.indexes) { let i = idx < 0 ? n + idx : idx; walkItem(i); } break;
+    case 'slice': {
+      const step = seg.step || 1;
+      let start = seg.start == null ? (step < 0 ? n - 1 : 0) : (seg.start < 0 ? n + seg.start : seg.start);
+      let end = seg.end == null ? (step < 0 ? -1 : n) : (seg.end < 0 ? n + seg.end : seg.end);
+      start = Math.max(-1, Math.min(start, n));
+      end = Math.max(-1, Math.min(end, n));
+      for (let i = start; step > 0 ? i < end : i > end; i += step) walkItem(i);
+      break;
+    }
+    case 'filter': for (let i = 0; i < n; i++) { try { if (jpEvalFilter(seg.test, cur[i])) walkItem(i); } catch {} } break;
+  }
+}
+function jpRecurseKey(cur, key, rest, p, results) {
+  if (cur && typeof cur === 'object' && key in cur) jpWalk(cur[key], rest, 0, [...p, key], results);
+  const stack = [];
+  if (cur && typeof cur === 'object') {
+    if (Array.isArray(cur)) for (let i = cur.length - 1; i >= 0; i--) stack.push([cur[i], [...p, i]]);
+    else { const ks = Object.keys(cur); for (let i = ks.length - 1; i >= 0; i--) stack.push([cur[ks[i]], [...p, ks[i]]]); }
+  }
+  while (stack.length) {
+    const [c, cp] = stack.pop();
+    if (c && typeof c === 'object' && key in c) jpWalk(c[key], rest, 0, [...cp, key], results);
+    if (c && typeof c === 'object') {
+      if (Array.isArray(c)) for (let i = c.length - 1; i >= 0; i--) stack.push([c[i], [...cp, i]]);
+      else { const ks = Object.keys(c); for (let i = ks.length - 1; i >= 0; i--) stack.push([c[ks[i]], [...cp, ks[i]]]); }
+    }
+  }
+}
+function jpRecurseAll(cur, rest, p, results) {
+  const stack = [];
+  if (cur && typeof cur === 'object') {
+    if (Array.isArray(cur)) for (let i = cur.length - 1; i >= 0; i--) stack.push([cur[i], [...p, i]]);
+    else { const ks = Object.keys(cur); for (let i = ks.length - 1; i >= 0; i--) stack.push([cur[ks[i]], [...p, ks[i]]]); }
+  }
+  while (stack.length) {
+    const [c, cp] = stack.pop();
+    jpWalk(c, rest, 0, cp, results);
+    if (c && typeof c === 'object') {
+      if (Array.isArray(c)) for (let i = c.length - 1; i >= 0; i--) stack.push([c[i], [...cp, i]]);
+      else { const ks = Object.keys(c); for (let i = ks.length - 1; i >= 0; i--) stack.push([c[ks[i]], [...cp, ks[i]]]); }
+    }
+  }
+}
+function jpApplyRecursiveArray(cur, seg, rest, p, results) {
+  if (Array.isArray(cur)) jpApplyArray(cur, seg, rest, p, results);
+  const stack = [];
+  if (cur && typeof cur === 'object') {
+    if (Array.isArray(cur)) for (let i = cur.length - 1; i >= 0; i--) stack.push([cur[i], [...p, i]]);
+    else { const ks = Object.keys(cur); for (let i = ks.length - 1; i >= 0; i--) stack.push([cur[ks[i]], [...p, ks[i]]]); }
+  }
+  while (stack.length) {
+    const [c, cp] = stack.pop();
+    if (Array.isArray(c)) jpApplyArray(c, seg, rest, cp, results);
+    if (c && typeof c === 'object') {
+      if (Array.isArray(c)) for (let i = c.length - 1; i >= 0; i--) stack.push([c[i], [...cp, i]]);
+      else { const ks = Object.keys(c); for (let i = ks.length - 1; i >= 0; i--) stack.push([c[ks[i]], [...cp, ks[i]]]); }
+    }
+  }
+}
+function jpWalk(cur, segs, si, p, results) {
+  if (cur === null || cur === undefined) return;
+  if (si >= segs.length) { results.push({ path: p, value: cur }); return; }
+  const seg = segs[si];
+  const rest = segs.slice(si + 1);
+  if (seg.type === 'recursive') {
+    if (seg.mode) jpApplyRecursiveArray(cur, seg, rest, p, results);
+    else if (seg.key === '*') jpRecurseAll(cur, rest, p, results);
+    else jpRecurseKey(cur, seg.key, rest, p, results);
+    return;
+  }
+  if (seg.type === 'key') {
+    if (cur && typeof cur === 'object' && seg.key in cur) jpWalk(cur[seg.key], rest, 0, [...p, seg.key], results);
+    return;
+  }
+  if (!Array.isArray(cur)) return;
+  jpApplyArray(cur, seg, rest, p, results);
+}
 function resolveJsonPath(obj, path) {
   if (!path || !obj) return [];
-  let expr = path.replace(/^[$]\.?/, '');
+  const expr = String(path).trim().replace(/^\$\s*/, '');
+  if (!expr) return [{ path: [], value: obj }];
+  const segs = jpSplitPathSegments(expr);
   const results = [];
-  function walk(cur, segs, p) {
-    if (!segs.length) { results.push({ path: p, value: cur }); return; }
-    const seg = segs[0];
-    const rest = segs.slice(1);
-    if (cur == null || typeof cur !== 'object') return;
-    if (seg === '*') {
-      if (Array.isArray(cur)) cur.forEach((v, i) => walk(v, rest, [...p, i]));
-      else Object.keys(cur).forEach(k => walk(cur[k], rest, [...p, k]));
-    } else if (Array.isArray(cur)) {
-      const idx = parseInt(seg); if (!isNaN(idx) && idx >= 0 && idx < cur.length) walk(cur[idx], rest, [...p, idx]);
-    } else if (seg in cur) { walk(cur[seg], rest, [...p, seg]); }
-  }
-  const segs = expr.match(/(\w+|'[^']*'|"[^"]*"|\*)/g);
-  if (segs) walk(obj, segs.map(s => s.replace(/['"]/g, '')), []);
+  jpWalk(obj, segs, 0, [], results);
   return results;
 }
 $('jsonPathBtn').addEventListener('click', () => {
