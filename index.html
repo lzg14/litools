@@ -222,6 +222,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 }
 .result-item:hover .copy-btn-sm { opacity: 1; }
 .copy-btn-sm:hover { color: var(--accent); background: var(--surface2); }
+.btn-group .copy-btn-sm { opacity: 1; background: var(--surface2); border: 1px solid var(--border); padding: 4px 8px; }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .diff-editor {
@@ -390,6 +391,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div class="btn-group" style="margin-top:6px;">
         <button class="btn btn-primary" id="sqlInsertParseBtn" data-lk="sqlInsertParseBtn">解析</button>
         <button class="btn" id="sqlInsertClearBtn" data-lk="sqlClearBtn">清空</button>
+        <button class="copy-btn-sm" data-target="sqlInsertResult" title="复制结果" data-lk-tl="tl_copyResult">📋</button>
         <input type="text" id="sqlInsertSearch" placeholder="🔍 搜索值定位列名..." style="flex:1;min-width:200px;font-size:12px;" data-lk-pl="pl_sqlInsertSearch">
       </div>
       <div id="sqlInsertResult" style="margin-top:6px;max-height:60vh;overflow:auto;"></div>
@@ -492,6 +494,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         </select>
         <button class="btn btn-primary" id="rexTestBtn" data-lk="rexTestBtn">测试</button>
         <button class="btn" id="rexClearBtn" data-lk="rexClearBtn">清空</button>
+        <button class="btn btn-sm" id="rexCopyBtn" data-lk="rexCopyBtn">📋 复制结果</button>
       </div>
       <div style="display:flex;gap:0;min-height:55vh;">
         <div id="rexLines" style="padding:9px 6px 9px 8px;background:var(--surface);border:1px solid var(--border);border-right:none;border-radius:var(--radius) 0 0 var(--radius);overflow:hidden;text-align:right;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.7;color:var(--text-dim);user-select:none;min-width:36px;"></div>
@@ -645,7 +648,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-primary btn-sm" id="cronParseBtn" data-lk="cronParseBtn">解析</button>
       </div>
       <div class="result-item"><span class="label" data-lk="cronDescLabel">描述</span><span class="value" id="cronDesc">—</span></div>
-      <div class="result-item"><span class="label" data-lk="cronNextLabel">未来 10 次执行</span><span class="value mono" id="cronNext" style="white-space:pre-wrap;font-size:12px;line-height:1.9;">—</span></div>
+      <div class="result-item"><span class="label" data-lk="cronNextLabel">未来 10 次执行</span><span class="value mono" id="cronNext" style="white-space:pre-wrap;font-size:12px;line-height:1.9;">—</span><button class="copy-btn-sm" data-target="cronNext">📋</button></div>
       <div style="font-size:12px;color:var(--text-dim);margin-top:8px;" data-lk="cronHint">格式: 分 时 日 月 周（支持 * / , -）</div>
     </div>
   </div>
@@ -703,6 +706,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
         <textarea id="csvInput" rows="10" placeholder="粘贴 CSV 文本，或拖入 .csv 文件&#10;自动检测分隔符（逗号/制表符）" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_csvInput"></textarea>
         <div class="result-box" id="csvResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.5;overflow:auto;">
+          <button class="copy-btn" data-lk="copy">复制</button>
           <div style="padding:20px;text-align:center;color:var(--text-dim);" data-lk="csv_empty">CSV 解析结果</div>
         </div>
       </div>
@@ -723,6 +727,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-primary btn-sm" id="diffBtn" data-lk="diffBtn">比较</button>
         <button class="btn btn-sm" id="diffSwapBtn" data-lk="diffSwapBtn">⇄ 交换</button>
         <button class="btn btn-sm" id="diffClearBtn" data-lk="diffClearBtn">清空</button>
+        <button class="btn btn-sm" id="diffCopyBtn" data-lk="diffCopyBtn">📋 复制结果</button>
         <span id="diffStat" style="font-size:12px;color:var(--text-dim);line-height:28px;margin-left:auto;"></span>
       </div>
     </div>
@@ -772,7 +777,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 </div>
 
 <script>
-const $ = id => document.getElementById(id);
+const $ = id => { const el = document.getElementById(id); if (!el) console.warn('[litools] Missing #' + id); return el; };
 
 let _lang = localStorage.getItem('lang') || 'zh';
 const _L = {
@@ -895,16 +900,16 @@ const _L = {
   pl_diffRight:{zh:'新文本',en:'New text'},
   pl_csvInput:{zh:'粘贴 CSV 文本，或拖入 .csv 文件\\n自动检测分隔符（逗号/制表符）',en:'Paste CSV text or drop .csv file'},
   // titles
-  tl_themeToggle:{zh:'切换主题',en:'Toggle theme'},
+  tl_themeToggle:{zh:'切换主题',en:'Toggle theme'}, tl_copyResult:{zh:'复制结果',en:'Copy result'},
   tl_langToggle:{zh:'切换语言',en:'Toggle language'},
 
   // result defaults (for static fallback)
   tsRevNowBtn:{zh:'当前',en:'Now'}, tsRevClearBtn:{zh:'清空',en:'Clear'},
   jsonClearBtn:{zh:'清空',en:'Clear'}, jsonFileBtn:{zh:'📂 打开文件',en:'📂 Open File'},
   jsonSearchPrevBtn:{zh:'上一个',en:'Prev'}, jsonSearchNextBtn:{zh:'下一个',en:'Next'},
-  rexTestBtn:{zh:'测试',en:'Test'}, rexClearBtn:{zh:'清空',en:'Clear'},
+  rexTestBtn:{zh:'测试',en:'Test'}, rexClearBtn:{zh:'清空',en:'Clear'}, rexCopyBtn:{zh:'📋 复制结果',en:'📋 Copy result'},
   bintextResult:{zh:'结果',en:'Result'},
-  diffBtn:{zh:'比较',en:'Compare'}, diffSwapBtn:{zh:'⇄ 交换',en:'⇄ Swap'}, diffClearBtn:{zh:'清空',en:'Clear'},
+  diffBtn:{zh:'比较',en:'Compare'}, diffSwapBtn:{zh:'⇄ 交换',en:'⇄ Swap'}, diffClearBtn:{zh:'清空',en:'Clear'}, diffCopyBtn:{zh:'📋 复制结果',en:'📋 Copy result'},
   res_json:{zh:'结果',en:'Result'},
   res_uuid:{zh:'结果',en:'Result'},
   // stat labels
@@ -2854,6 +2859,12 @@ rexEditor.addEventListener('input', rexDelayed);
 rexEditor.addEventListener('scroll', () => { $('rexLines').scrollTop = rexEditor.scrollTop; });
 $('rexTestBtn').addEventListener('click', rexHighlight);
 $('rexClearBtn').addEventListener('click', () => { rexEditor.innerHTML = ''; $('rexPattern').value = ''; $('rexInfo').textContent = ''; $('rexLines').innerHTML = ''; });
+$('rexCopyBtn').addEventListener('click', () => {
+  const t = rexEditor.textContent.trim();
+  const ph = _L.pl_rexEditor ? _L.pl_rexEditor[_lang] : '';
+  if (!t || t === ph) { toast(_('no_content'), 1); return; }
+  copy(t);
+});
 
 // 正则解释器
 function explainRegex(pattern) {
