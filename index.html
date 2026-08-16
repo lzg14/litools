@@ -130,6 +130,8 @@ textarea {
 .btn-primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); }
 .btn-primary:active { background: var(--accent-dim); }
 .btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-min-80 { min-width: 80px; }
+.btn-min-90 { min-width: 90px; }
 .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
 
 textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; }
@@ -162,6 +164,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
   max-height: calc(100vh - 200px);
   overflow: auto;
 }
+.result-box-code { font-size: 13px; }
 .jt-toggle { cursor: default; position: relative; display:inline-block; vertical-align:top; }
 .jt-fold-indicator { position:absolute; left:0; top:0; display:inline-flex; width:16px; height:14px; align-items:center; justify-content:center; font-size:12px; font-weight:bold; cursor:pointer; border-radius:3px; transition: all 0.15s; opacity:0; color:var(--text-dim); user-select:none; z-index:1; }
 .jt-close { padding-left:0; } /* 闭合括号和开括号对齐 */
@@ -293,8 +296,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 
   <!-- ⏱ 时间戳 -->
   <div class="tab-pane" id="p-ts">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
-        <div style="padding-right:12px;border-right:2px solid var(--border);">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
           <div class="input-row">
             <input type="text" id="tsInput" placeholder="粘贴时间戳，自动识别秒/毫秒/微秒" spellcheck="false" data-lk-pl="pl_tsInput">
             <button class="btn btn-primary" id="tsNowBtn" data-lk="tsNowBtn">当前</button>
@@ -313,7 +316,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
             <div class="result-item"><span class="label" data-lk="tsMs_label">毫秒</span><span class="value" id="tsMs">—</span><button class="copy-btn-sm" data-target="tsMs">📋</button></div>
           </div>
         </div>
-        <div style="padding-left:12px;">
+        <div>
           <div class="input-row">
             <input type="text" id="tsRevInput" placeholder="日期字符串，如 2026-07-25 16:30:00" spellcheck="false" data-lk-pl="pl_tsRevInput">
             <button class="btn" id="tsRevNowBtn" data-lk="tsRevNowBtn">当前</button>
@@ -330,9 +333,9 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <div style="text-align:center;padding:20px 0;">
       <div id="timerDisplay" style="font-size:48px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-weight:700;letter-spacing:2px;margin-bottom:20px;">00:00:00.0</div>
       <div class="btn-group" style="justify-content:center;">
-        <button class="btn btn-primary" id="timerStartBtn" style="min-width:80px;" data-lk="timerStartBtn">▶ 开始</button>
-        <button class="btn" id="timerLapBtn" style="min-width:80px;display:none;" data-lk="timerLapBtn">📍 计次</button>
-        <button class="btn" id="timerResetBtn" style="min-width:80px;" data-lk="timerResetBtn">↺ 重置</button>
+        <button class="btn btn-primary btn-min-80" id="timerStartBtn" data-lk="timerStartBtn">▶ 开始</button>
+        <button class="btn btn-min-80" id="timerLapBtn" style="display:none;" data-lk="timerLapBtn">📍 计次</button>
+        <button class="btn btn-min-80" id="timerResetBtn" data-lk="timerResetBtn">↺ 重置</button>
       </div>
       <div id="timerLaps" style="margin-top:16px;max-height:300px;overflow-y:auto;text-align:left;font-size:12px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;"></div>
     </div>
@@ -358,8 +361,8 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
       </div>
       <div id="cdDisplay" style="font-size:56px;font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-weight:700;letter-spacing:2px;margin-bottom:20px;">00:00:00</div>
       <div class="btn-group" style="justify-content:center;">
-        <button class="btn btn-primary" id="cdStartBtn" style="min-width:90px;" data-lk="cdStartBtn">▶ 开始</button>
-        <button class="btn" id="cdResetBtn" style="min-width:90px;" data-lk="cdResetBtn">↺ 重置</button>
+        <button class="btn btn-primary btn-min-90" id="cdStartBtn" data-lk="cdStartBtn">▶ 开始</button>
+        <button class="btn btn-min-90" id="cdResetBtn" data-lk="cdResetBtn">↺ 重置</button>
       </div>
     </div>
   </div>
@@ -370,7 +373,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <div class="sub-pane active" data-sub="sql-in">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <textarea id="sqlInput" rows="10" placeholder="粘贴值，可用逗号、换行、空格分隔&#10;例: abc, def, ghi&#10;或: abc(def(ghi" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_sqlInput"></textarea>
-        <div class="result-box" id="sqlResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;" data-lk="sqlResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+        <div class="result-box result-box-code" id="sqlResult" style="min-height:55vh;margin:0;" data-lk="sqlResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
       <div class="btn-group" style="margin-top:8px;">
         <button class="btn btn-primary" id="sqlGenBtn" data-lk="sqlGenBtn">生成 IN</button>
@@ -382,7 +385,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- INSERT 解析 -->
     <div class="sub-pane" data-sub="sql-insert">
-      <div class="collapsible-header" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('collapsed');">
+      <div class="collapsible-header">
         <span class="arrow">▼</span> <span data-lk="sql_insert_title">INSERT 语句</span>
       </div>
       <div class="collapsible-body" style="max-height:40vh;">
@@ -400,7 +403,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <div class="sub-pane" data-sub="sql-fmt">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <textarea id="sqlFmtInput" rows="10" placeholder="粘贴 SQL 语句，自动格式化&#10;支持 SELECT/INSERT/UPDATE/DELETE/WHERE/ORDER BY 等" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_sqlFmtInput"></textarea>
-        <div class="result-box" id="sqlFmtResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;" data-lk="sqlFmtResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+        <div class="result-box result-box-code" id="sqlFmtResult" style="min-height:55vh;margin:0;" data-lk="sqlFmtResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
       <div class="btn-group" style="margin-top:8px;">
         <button class="btn btn-primary" id="sqlFmtBtn" data-lk="sqlFmtBtn">格式化</button>
@@ -414,7 +417,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
   <div class="tab-pane active" id="p-json">
     <div id="jsonSplit" style="display:flex;gap:0;min-height:55vh;">
       <div id="jsonLeft" style="display:flex;flex:0 0 35%;min-width:200px;overflow:hidden;">
-        <div id="jsonLines" style="padding:9px 6px 9px 8px;background:var(--surface);border:1px solid var(--border);border-right:none;border-radius:var(--radius) 0 0 var(--radius);overflow:hidden;text-align:right;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.5;color:var(--text-dim);user-select:none;min-width:36px;"></div>
+        <div id="jsonLines" class="ln-gutter" style="line-height:1.5;min-width:36px;"></div>
         <textarea id="jsonInput" rows="16" placeholder="粘贴 JSON" spellcheck="false" style="flex:1;min-height:55vh;border-radius:0 var(--radius) var(--radius) 0;" data-lk-pl="pl_jsonInput"></textarea>
       </div>
       <div id="jsonDragBar" style="width:5px;cursor:col-resize;background:var(--border);transition:background 0.15s;flex-shrink:0;"></div>
@@ -497,7 +500,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-sm" id="rexCopyBtn" data-lk="rexCopyBtn">📋 复制结果</button>
       </div>
       <div style="display:flex;gap:0;min-height:55vh;">
-        <div id="rexLines" style="padding:9px 6px 9px 8px;background:var(--surface);border:1px solid var(--border);border-right:none;border-radius:var(--radius) 0 0 var(--radius);overflow:hidden;text-align:right;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.7;color:var(--text-dim);user-select:none;min-width:36px;"></div>
+        <div id="rexLines" class="ln-gutter" style="line-height:1.7;"></div>
         <div class="result-box" id="rexEditor" contenteditable="true" spellcheck="false" style="flex:1;min-height:55vh;padding:9px 12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;font-size:13px;overflow:auto;border-radius:0 var(--radius) var(--radius) 0;" data-lk-pl="pl_rexEditor"></div>
       </div>
       <div class="stat-line" id="rexStat" style="margin-top:4px;"></div>
@@ -549,7 +552,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-sm" id="htmlClearBtn" data-lk="htmlClearBtn">清空</button>
       </div>
       <div class="stat-line" id="htmlStat"></div>
-      <div class="result-box" id="htmlResult" style="font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;" data-lk="htmlResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+      <div class="result-box result-box-code" id="htmlResult" data-lk="htmlResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
     </div>
     <!-- 进制转换 -->
     <div class="sub-pane" data-sub="bc">
@@ -572,7 +575,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-sm" id="bintextDecodeBtn" data-lk="bintextDecodeBtn">← 解码</button>
         <button class="btn btn-sm" id="bintextClearBtn" data-lk="bintextClearBtn">清空</button>
       </div>
-      <div class="result-box" id="bintextResult" style="font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.8;white-space:pre-wrap;" data-lk="bintextResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+      <div class="result-box result-box-code" id="bintextResult" style="line-height:1.8;" data-lk="bintextResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
     </div>
   </div>
 
@@ -638,7 +641,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-primary btn-sm" id="passwdGenBtn" data-lk="passwdGenBtn">生成</button>
         <button class="btn btn-sm" id="passwdCopyBtn" data-lk="passwdCopyBtn">复制全部</button>
       </div>
-      <div class="result-box" id="passwdResult" style="font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;line-height:1.9;white-space:pre-wrap;" data-lk="res_json">结果</div>
+      <div class="result-box result-box-code" id="passwdResult" style="line-height:1.9;" data-lk="res_json">结果</div>
       <div class="stat-line" id="passwdStat"></div>
     </div>
     <!-- Cron 解析 -->
@@ -660,7 +663,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
           <div class="ln-gutter" id="tpGutter" aria-hidden="true">1</div>
           <textarea id="tpInput" placeholder="输入文本" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_tpInput"></textarea>
         </div>
-        <div class="result-box" id="tpResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="tpResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+        <div class="result-box result-box-code" id="tpResult" style="min-height:55vh;margin:0;line-height:1.7;" data-lk="tpResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
       <div class="btn-group" style="margin-top:8px;">
         <button class="btn btn-primary btn-sm" id="tpSortAsc" data-lk="tpSortAsc">排序 A→Z</button>
@@ -688,7 +691,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <div class="sub-pane" data-sub="case">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
         <textarea id="caseInput" rows="10" placeholder="输入文本，如 hello_world / HELLO WORLD / helloWorld" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_caseInput"></textarea>
-        <div class="result-box" id="caseResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;overflow:auto;" data-lk="caseResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
+        <div class="result-box result-box-code" id="caseResult" style="min-height:55vh;margin:0;line-height:1.7;" data-lk="caseResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
       <div class="btn-group" style="margin-top:8px;">
         <button class="btn btn-sm" id="caseUpperBtn" data-lk="caseUpperBtn">大写</button>
@@ -705,7 +708,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <div class="sub-pane" data-sub="csv">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
         <textarea id="csvInput" rows="10" placeholder="粘贴 CSV 文本，或拖入 .csv 文件&#10;自动检测分隔符（逗号/制表符）" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_csvInput"></textarea>
-        <div class="result-box" id="csvResult" style="min-height:55vh;margin:0;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre-wrap;line-height:1.5;overflow:auto;">
+        <div class="result-box result-box-code" id="csvResult" style="min-height:55vh;margin:0;line-height:1.5;">
           <button class="copy-btn" data-lk="copy">复制</button>
           <div style="padding:20px;text-align:center;color:var(--text-dim);" data-lk="csv_empty">CSV 解析结果</div>
         </div>
@@ -994,10 +997,6 @@ const _L = {
   search_restored:{zh:'已恢复',en:'Restored'}, search_stopped:{zh:'已停止',en:'Stopped'},
   // file
   file_too_large:{zh:'文件 ${mb}MB 超过 500MB，确定吗？',en:'File ${mb}MB exceeds 500MB, continue?'},
-  file_reading:{zh:'正在读取 ${name} (${mb}MB)...',en:'Reading ${name} (${mb}MB)...'},
-  file_read_done:{zh:'${name} (${mb}MB, ${chars} 字符)',en:'${name} (${mb}MB, ${chars} chars)'},
-  file_read_err:{zh:'读取失败',en:'Read failed'}, file_stream:{zh:'流式搜索 ${name}...',en:'Streaming ${name}...'},
-  file_stream_done:{zh:'完成: ${n} 条匹配',en:'Done: ${n} matches'}, file_stream_err:{zh:'流式搜索出错',en:'Stream error'},
   // HTTP
   // diff
   diff_large:{zh:'文本较大 (${la}×${lb} 行)，计算可能很慢，确定继续吗？',en:'Large text (${la}×${lb} lines), may be slow. Continue?'},
@@ -2608,12 +2607,16 @@ function applyHighlights() {
 
 // 🔍 命中行底色 + 滚动条定位标记：行底色层在内容坐标系中随内容滚动，右侧标记条反映全文命中分布与当前视口
 const SRCH_MARK_MAX = 500; // 标记条最大条数，超出均匀抽稀防 DOM 爆炸
-function renderSrchMarks() {
+let _srchMarkCache = ''; // 上次渲染时的内容快照，未变化则跳过全量重建
+function renderSrchMarks(force) {
   const bar = $('srchMarkBar');
   if (!bar) return;
   const hits = srchEditor.querySelectorAll('.srch-hit');
-  if (!hits.length) { bar.innerHTML = ''; bar.style.display = 'none'; return; }
+  if (!hits.length) { bar.innerHTML = ''; bar.style.display = 'none'; _srchMarkCache = ''; return; }
   bar.style.display = '';
+  const curHtml = srchEditor.innerHTML;
+  if (!force && curHtml === _srchMarkCache) return; // 内容未变，仅 scroll 监听刷新视口框
+  _srchMarkCache = curHtml;
   // 收集每个命中的行片段矩形 → 内容坐标 y（getClientRects 覆盖软换行跨行的命中）
   const cs = getComputedStyle(srchEditor);
   const baseTop = srchEditor.getBoundingClientRect().top + parseFloat(cs.borderTopWidth) - srchEditor.scrollTop;
@@ -3313,6 +3316,13 @@ function renderInsertResult(pairs, filter) {
   el.innerHTML = html;
 }
 let _insertPairs = null;
+document.addEventListener('click', (e) => {
+  const h = e.target.closest('.collapsible-header');
+  if (!h) return;
+  h.classList.toggle('collapsed');
+  const body = h.nextElementSibling;
+  if (body) body.classList.toggle('collapsed');
+});
 $('sqlInsertParseBtn').addEventListener('click', () => {
   const sql = $('sqlInsertInput').value;
   if (!sql.trim()) { toast(_('err_input_insert'), 1); return; }
