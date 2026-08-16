@@ -488,6 +488,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
           <span id="srchStreamFile" style="font-weight:bold;"></span>
           <span id="srchStreamProgress" style="color:var(--text-dim);"></span>
           <span id="srchStreamCount" style="color:var(--text-dim);"></span>
+          <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-dim);"><span data-lk="srchCtxLabel">上下文</span><input type="number" id="srchCtxN" value="0" min="0" max="10" style="width:46px;padding:2px 4px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px;"></span>
           <button class="btn btn-sm" id="srchStreamStopBtn" style="margin-left:auto;" data-lk="srchStreamStopBtn">停止</button>
         </div>
         <div style="margin-top:4px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;">
@@ -822,6 +823,8 @@ const _L = {
   srchFilterBtn:{zh:'只留命中行',en:'Matches Only'}, srchClearBtn:{zh:'清空',en:'Clear'},
   tl_srchRestore:{zh:'恢复原文',en:'Restore original'},
   srchStreamStopBtn:{zh:'停止',en:'Stop'},
+  err_regex_invalid:{zh:'正则表达式无效',en:'Invalid regular expression'},
+  srchCtxLabel:{zh:'上下文',en:'Ctx'}, search_worker_hint:{zh:'⏳ 大文件匹配计算中…',en:'⏳ Computing matches…'},
   searchEndBtn:{zh:'结束',en:'End'},
   tsTitle:{zh:'时间戳',en:'Timestamp'}, tsResult:{zh:'等待输入',en:'Waiting'}, tsCopySec:{zh:'复制秒',en:'Copy sec'},
   tsCopyMs:{zh:'复制毫秒',en:'Copy ms'},
@@ -2765,20 +2768,74 @@ async function srchReadChunk(file, offset) {
   });
 }
 
-function srchPushMatches(lines, baseLine) {
+function srchHighlightLine(line) {
+  const ranges = [];
+  for (let i = 0; i < srchTerms.length; i++) {
+    const re = srchRegEx(srchTerms[i], true);
+    if (!re) continue;
+    let m;
+    while ((m = re.exec(line)) !== null) {
+      ranges.push({ s: m.index, e: m.index + m[0].length, c: srchColors[i % srchColors.length] });
+      if (m[0] === '') re.lastIndex++; // 零宽匹配保护，防死循环
+    }
+  }
+  ranges.sort((a, b) => a.s - b.s);
+  const merged = [];
+  for (const r of ranges) {
+    if (merged.length && r.s <= merged[merged.length - 1].e) merged[merged.length - 1].e = Math.max(merged[merged.length - 1].e, r.e);
+    else merged.push({ ...r });
+  }
+  if (!merged.length) return escHtml(line);
+  let html = '', pos = 0;
+  for (const r of merged) {
+    if (pos < r.s) html += escHtml(line.slice(pos, r.s));
+    html += `<span class="srch-hit" style="background:${r.c};border-radius:2px;padding:0 1px;">${escHtml(line.slice(r.s, r.e))}</span>`;
+    pos = r.e;
+  }
+  if (pos < line.length) html += escHtml(line.slice(pos));
+  return html;
+}
+
+// >5MB 大文本在 Web Worker 中计算匹配区间（主线程渲染，避免卡顿）
+function srchHighlightInWorker(text, terms, cb) {
+  try {
+    const code = 'self.onmessage=function(e){var d=e.data,r=[],i,m,re,E="";for(i=0;i<d.terms.length;i++){try{re=new RegExp(d.terms[i].p,d.terms[i].f);while((m=re.exec(d.text))!==null){r.push({s:m.index,e:m.index+m[0].length,c:i});if(m[0]===E)re.lastIndex++;}}catch(x){}}self.postMessage({ranges:r});};';
+    const url = URL.createObjectURL(new Blob([code], { type: 'application/javascript' }));
+    const w = new Worker(url);
+    const timer = setTimeout(() => { w.terminate(); URL.revokeObjectURL(url); cb(null); }, 30000);
+    w.onmessage = e => { clearTimeout(timer); w.terminate(); URL.revokeObjectURL(url); cb(e.data.ranges); };
+    w.onerror = () => { clearTimeout(timer); w.terminate(); URL.revokeObjectURL(url); cb(null); };
+    w.postMessage({ text, terms: terms.map(t => { const re = srchRegEx(t, true); return { p: re ? re.source : srchPattern(t), f: re ? re.flags : srchFlags() }; }) });
+  } catch { cb(null); }
+}
+
+function srchPushMatches(lines, baseLine, ctx) {
   if (srchTerms.length === 0) return;
   const frag = document.createDocumentFragment();
+  const out = (lineNum, line) => {
+    if (lineNum <= ctx.lastOut || _srchStreamMatches.length >= SRCH_DISPLAY_MAX) return;
+    ctx.lastOut = lineNum;
+    _srchStreamMatches.push({ lineNum, text: line });
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;padding:0 6px;font-family:monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-all;';
+    div.innerHTML = `<span style="color:var(--text-dim);min-width:60px;text-align:right;user-select:none;padding-right:12px;">${lineNum}</span><span style="flex:1;">${srchHighlightLine(line)}</span>`;
+    frag.appendChild(div);
+  };
   for (let i = 0; i < lines.length; i++) {
     if (_srchStreamMatches.length >= SRCH_DISPLAY_MAX) { _srchStreamAbort = true; break; }
     const lineNum = baseLine + i + 1;
     const line = lines[i];
+    if (ctx.ctxNeed > 0) { out(lineNum, line); ctx.ctxNeed--; continue; } // 命中行后 N 行上下文
     const match = srchTerms.some(t => { const re = srchRegEx(t, false); return re ? re.test(line) : line.includes(t); });
-    if (!match) continue;
-    _srchStreamMatches.push({ lineNum, text: line });
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex;padding:0 6px;font-family:monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-all;';
-    div.innerHTML = `<span style="color:var(--text-dim);min-width:60px;text-align:right;user-select:none;padding-right:12px;">${lineNum}</span><span style="flex:1;">${escHtml(line)}</span>`;
-    frag.appendChild(div);
+    if (match) {
+      for (let j = 0; j < ctx.ctxBuf.length; j++) out(ctx.ctxBuf[j].num, ctx.ctxBuf[j].text); // 命中行前 N 行上下文
+      out(lineNum, line);
+      ctx.ctxNeed = ctx.n;
+      ctx.ctxBuf = [];
+    } else {
+      ctx.ctxBuf.push({ num: lineNum, text: line });
+      if (ctx.ctxBuf.length > ctx.n) ctx.ctxBuf.shift();
+    }
   }
   if (frag.childNodes.length) srchEditor.appendChild(frag);
 }
@@ -2790,6 +2847,7 @@ async function srchStreamScan(file) {
   _srchStreamLineOff = 0;
   let remainder = '';
   const total = file.size;
+  const ctx = { n: Math.max(0, Math.min(10, parseInt($('srchCtxN').value) || 0)), ctxNeed: 0, lastOut: -1, ctxBuf: [] };
   $('srchStreamBar').style.display = '';
   $('srchStreamFile').textContent = `📄 ${file.name} (${(total/1024/1024).toFixed(1)}MB)`;
   srchEditor.innerHTML = '';
@@ -2808,7 +2866,7 @@ async function srchStreamScan(file) {
     remainder = lines.pop() || '';
     const isLast = off + SRCH_STREAM_CHUNK >= total;
     if (isLast && remainder) lines.push(remainder);
-    srchPushMatches(lines, _srchStreamLineOff);
+    srchPushMatches(lines, _srchStreamLineOff, ctx);
     _srchStreamLineOff += lines.length;
     $('srchStreamCount').textContent = _('searchStreamStat').replace('${m}', _srchStreamMatches.length.toLocaleString()).replace('${l}', _srchStreamLineOff.toLocaleString());
     await new Promise(r => setTimeout(r, 0));
@@ -2876,8 +2934,13 @@ function applyHighlights() {
     _srchLastHtml = '';
     _srchHitIdx = -1;
     $('srchNavCount').textContent = '0/0';
-    $('srchStat').textContent = _('search_text_too_large');
+    $('srchStat').textContent = _('search_worker_hint');
     renderSrchMarks();
+    srchHighlightInWorker(text, allTerms, (ranges) => {
+      if (ranges === null) { $('srchStat').textContent = _('search_text_too_large'); return; }
+      if (getSrchText() !== text) return; // 文本已变化，丢弃过期结果
+      srchRenderRanges(ranges.map(r => ({ s: r.s, e: r.e, c: srchColors[r.c] })), text);
+    });
     return;
   }
   // 收集匹配区间
@@ -2887,9 +2950,17 @@ function applyHighlights() {
       const re = srchRegEx(allTerms[i], true);
       if (!re) continue;
       let m;
-      while ((m = re.exec(text)) !== null) ranges.push({ s: m.index, e: m.index + m[0].length, c: srchColors[i % srchColors.length] });
+      while ((m = re.exec(text)) !== null) {
+        ranges.push({ s: m.index, e: m.index + m[0].length, c: srchColors[i % srchColors.length] });
+        if (m[0] === '') re.lastIndex++; // 零宽匹配保护，防死循环
+      }
     } catch {}
   }
+  srchRenderRanges(ranges, text);
+}
+
+// 把匹配区间渲染进编辑区（排序→合并→HTML→导航/统计/标记）
+function srchRenderRanges(ranges, text) {
   if (ranges.length === 0) {
     srchEditor.textContent = text;
     _srchLastHtml = '';
@@ -3029,6 +3100,12 @@ function srchDelayed() {
   srchTimer = setTimeout(() => { applyHighlights(); updateSrchTags(); }, delay);
 }
 srchEditor.addEventListener('input', srchDelayed);
+srchEditor.addEventListener('paste', e => {
+  if (_srchStreamFile) return;
+  e.preventDefault(); // contenteditable 粘贴富文本会污染格式，统一转纯文本
+  const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+  if (text) document.execCommand('insertText', false, text);
+});
 function srchReplaceText(getAll) {
   if (_srchStreamFile) { toast(_('search_replace_stream'), 1); return; }
   const text = getSrchText();
@@ -3053,6 +3130,7 @@ function srchReplaceText(getAll) {
 $('srchAddBtn').addEventListener('click', () => {
   const term = $('srchTerm').value.trim();
   if (!term) { toast(_('search_enter_term'), 1); return; }
+  if (srchOpts.regex && !srchRegEx(term, false)) { toast(_('err_regex_invalid'), 1); return; }
   srchTerms.push(term);
   $('srchTerm').value = '';
   if (_srchStreamFile) { toast(_('search_reopen_file')); updateSrchTags(); return; }
@@ -3089,10 +3167,7 @@ $('srchFilterBtn').addEventListener('click', () => {
   const lines = text.split('\n');
   const keep = lines.filter(line => {
     if (!line.trim()) return false;
-    return srchTerms.some(t => {
-      try { return new RegExp(t, 'i').test(line); }
-      catch { return line.includes(t); }
-    });
+    return srchTerms.some(t => { const re = srchRegEx(t, false); return re ? re.test(line) : line.includes(t); });
   });
   if (keep.length === 0) { toast(_('err_no_rows'), 1); return; }
   srchEditor.textContent = keep.join('\n');
