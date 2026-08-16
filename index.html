@@ -3948,6 +3948,7 @@ function escHtmlMap(text) {
     off.push(html.length);
     html += map[c] || c;
   }
+  off.push(html.length);
   return { html, off };
 }
 
