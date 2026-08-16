@@ -17,6 +17,11 @@
   <img src="https://img.shields.io/badge/i18n-中英-blueviolet.svg" alt="i18n">
 </p>
 
+<p align="center">
+  <strong>🚀 在线体验</strong><br>
+  <a href="https://lzg14.github.io/litools">GitHub Pages</a> · <a href="https://litools.pages.dev">Cloudflare Pages</a>
+</p>
+
 ---
 
 ## 功能一览
