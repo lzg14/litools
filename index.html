@@ -929,7 +929,7 @@ const _L = {
   res_uuid:{zh:'结果',en:'Result'},
   // stat labels
   stat_file:{zh:'${n} 字符 · ${w} 词 · ${l} 行',en:'${n} chars · ${w} words · ${l} lines'},
-  copied:{zh:'已复制',en:'Copied'}, downloaded:{zh:'已下载',en:'Downloaded'}, no_content:{zh:'没有内容',en:'No content'}, done:{zh:'完成',en:'Done'},
+  copied:{zh:'已复制',en:'Copied'}, downloaded:{zh:'已下载',en:'Downloaded'}, download:{zh:'下载',en:'Download'}, no_content:{zh:'没有内容',en:'No content'}, done:{zh:'完成',en:'Done'},
   no_input:{zh:'请输入内容',en:'Enter content'}, no_match:{zh:'无匹配',en:'No match'},
   sent_search:{zh:'已发送到搜索',en:'Sent to Search'},
   sent_json:{zh:'已发送到 JSON',en:'Sent to JSON'},
@@ -1098,6 +1098,7 @@ const _L = {
   file_stream_done:{zh:'完成: ${n} 处匹配',en:'Done: ${n} matches'},
   file_stream_err:{zh:'流式搜索出错',en:'Stream error'},
   file_read_err2:{zh:'读取出错: ${msg}',en:'Read error: ${msg}'},
+  drop_multi:{zh:'一次仅支持一个文件',en:'Only one file at a time'},
   // drag & drop
   drag_not_supported:{zh:'当前标签不支持拖拽',en:'Current tab does not support drag'},
   // json path
@@ -1173,9 +1174,6 @@ function saveTabResult(tabId) {
   if (!boxId) return;
   const el = $(boxId);
   if (!el) return;
-  // 跳过默认占位文本
-  const txt = el.textContent.trim();
-  if (!txt || txt === _('res_json') || txt === 'Result' || txt === _('tpWaiting') || txt === 'Waiting') return;
   try { sessionStorage.setItem('litools_' + boxId, el.innerHTML); } catch {}
 }
 function restoreTabResult(tabId) {
@@ -1185,9 +1183,7 @@ function restoreTabResult(tabId) {
   if (!el) return;
   try {
     const saved = sessionStorage.getItem('litools_' + boxId);
-    if (saved && el.textContent.trim() === (el.dataset.lk ? _L[el.dataset.lk]?.[_lang] || _('res_json') : _('res_json'))) {
-      el.innerHTML = saved;
-    }
+    if (saved) el.innerHTML = saved;
   } catch {}
 }
 function switchTab(id) {
@@ -1196,11 +1192,6 @@ function switchTab(id) {
   const pane = $(`p-${id}`);
   if (pane) pane.classList.add('active');
   _activeTab = id;
-  document.querySelectorAll('[data-pin]').forEach(b => {
-    const on = b.dataset.pin === id;
-    b.style.background = on ? 'var(--accent)' : '';
-    b.style.color = on ? '#fff' : '';
-  });
   restoreTabResult(id);
 }
 
@@ -1247,12 +1238,12 @@ function parseTs(input, unit) {
   const raw = input.replace(/[_,\s]/g, '');
   const n = Number(raw);
   if (!isFinite(n)) return { err: _('ts_invalid') };
+  if (Math.abs(n) > 1e16) return { err: _('ts_too_large') };
   let ms, label;
   if (unit === 's') { ms = n * 1000; label = _('ts_second'); }
   else if (unit === 'ms') { ms = n; label = _('ts_milli'); }
   else if (unit === 'us') { ms = n / 1000; label = _('ts_micro'); }
   else {
-    if (Math.abs(n) > 1e16) return { err: _('ts_too_large') };
     if (Math.abs(n) > 1e13) { ms = n / 1000; label = _('ts_micro'); }
     else if (Math.abs(n) > 2000000000) { ms = n; label = _('ts_milli'); }
     else if (Math.abs(n) > 0) { ms = n * 1000; label = _('ts_second'); }
@@ -1562,9 +1553,10 @@ document.addEventListener('dragover', e => e.preventDefault());
 document.addEventListener('drop', e => {
   e.preventDefault();
   document.querySelectorAll('.tab-pane').forEach(p => { p.classList.remove('dragover'); p.dataset.dragCount = '0'; });
-  const file = e.dataTransfer.files[0];
-  if (!file) return;
-  handleFileDrop(file);
+  const files = e.dataTransfer.files;
+  if (!files.length) return;
+  if (files.length > 1) toast(_('drop_multi'));
+  handleFileDrop(files[0]);
 });
 
 // ═══════════════════════════════════════
@@ -2576,7 +2568,8 @@ $('b64ClearBtn').addEventListener('click', () => { $('b64Input').value = ''; $('
 $('urlEncodeBtn').addEventListener('click', () => {
   const v = $('urlInput').value;
   if (!v) { toast(_('no_input'), 1); return; }
-  $('urlResult').textContent = encodeURIComponent(v);
+  try { $('urlResult').textContent = encodeURIComponent(v); }
+  catch (e) { $('urlResult').textContent = '⚠ ' + _('err_invalid_url'); }
 });
 $('urlDecodeBtn').addEventListener('click', () => {
   const v = $('urlInput').value.trim();
@@ -2631,14 +2624,16 @@ function uuidV4(upper, noDash) {
 }
 // UUID count wheel support (focus on wheel so scrolling adjusts value)
 $('uuidCount').addEventListener('wheel', () => { $('uuidCount').focus(); }, { passive: true });
+let _lastUuids = [];
 
 $('uuidGenBtn').addEventListener('click', () => {
   const count = Math.min(Math.max(parseInt($('uuidCount').value) || 1, 1), 100);
   const uuids = Array.from({ length: count }, () => uuidV4($('uuidUpper').checked, $('uuidNoDash').checked));
+  _lastUuids = uuids;
   $('uuidResult').innerHTML = uuids.join('<br>');
 });
 $('uuidCopyAllBtn').addEventListener('click', () => {
-  const text = $('uuidResult').textContent;
+  const text = _lastUuids.length ? _lastUuids.join('\n') : $('uuidResult').textContent;
   if (text && text !== _('res_json')) copy(text);
   else toast(_('no_content'), 1);
 });
@@ -2649,7 +2644,7 @@ $('uuidCopyAllBtn').addEventListener('click', () => {
 function parseColor(input) {
   input = input.trim();
   let r, g, b, a = 1;
-  let m = input.match(/^#?([0-9a-f]{3,8})$/i);
+  let m = input.match(/^#?([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i);
   if (m) {
     let h = m[1];
     if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
@@ -2657,11 +2652,11 @@ function parseColor(input) {
     if (h.length === 6) { r = parseInt(h.slice(0,2),16); g = parseInt(h.slice(2,4),16); b = parseInt(h.slice(4,6),16); }
     else if (h.length === 8) { r = parseInt(h.slice(0,2),16); g = parseInt(h.slice(2,4),16); b = parseInt(h.slice(4,6),16); a = parseInt(h.slice(6,8),16)/255; }
   }
-  m = input.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)/i);
-  if (m) { r = +m[1]; g = +m[2]; b = +m[3]; if (m[4] !== undefined) a = +m[4]; }
-  m = input.match(/hsla?\(\s*([\d.]+)\s*,\s*([\d.]+)%?\s*,\s*([\d.]+)%?\s*(?:,\s*([\d.]+)\s*)?\)/i);
+  m = input.match(/rgba?\(\s*([\d.]+)(%?)\s*,\s*([\d.]+)(%?)\s*,\s*([\d.]+)(%?)\s*(?:,\s*([\d.]+)\s*)?\)/i);
+  if (m) { r = m[2] ? Math.round(+m[1] * 2.55) : +m[1]; g = m[4] ? Math.round(+m[3] * 2.55) : +m[3]; b = m[6] ? Math.round(+m[5] * 2.55) : +m[5]; if (m[7] !== undefined) a = +m[7]; }
+  m = input.match(/hsla?\(\s*(-?[\d.]+)\s*,\s*([\d.]+)%?\s*,\s*([\d.]+)%?\s*(?:,\s*([\d.]+)\s*)?\)/i);
   if (m) {
-    const h = +m[1] / 360, s = +m[2] / 100, l = +m[3] / 100;
+    const h = (((+m[1] % 360) + 360) % 360) / 360, s = +m[2] / 100, l = +m[3] / 100;
     if (m[4] !== undefined) a = +m[4];
     const c = (1 - Math.abs(2 * l - 1)) * s;
     const x = c * (1 - Math.abs((h * 6) % 2 - 1));
@@ -2705,8 +2700,8 @@ function renderColor(input) {
   const hasA = c.a < 1;
   const hex = '#' + [c.r, c.g, c.b].map(v => pad(v.toString(16))).join('').toUpperCase() + (hasA ? pad(Math.round(c.a * 255).toString(16)).toUpperCase() : '');
   $('cHex').textContent = hex;
-  $('cRgb').textContent = hasA ? `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a})` : `rgb(${c.r}, ${c.g}, ${c.b})`;
-  $('cHsl').textContent = hasA ? `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, ${c.a})` : `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+  $('cRgb').textContent = hasA ? `rgba(${c.r}, ${c.g}, ${c.b}, ${Math.round(c.a * 1000) / 1000})` : `rgb(${c.r}, ${c.g}, ${c.b})`;
+  $('cHsl').textContent = hasA ? `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, ${Math.round(c.a * 1000) / 1000})` : `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
   // CMYK
   const rr = c.r/255, gg = c.g/255, bb = c.b/255;
   const k = 1 - Math.max(rr, gg, bb);
@@ -2855,7 +2850,7 @@ async function srchStreamScan(file) {
   renderSrchMarks(); // 流式模式无 srch-hit，清掉行底色与定位标记
   let scannedBytes = 0;
   for (let off = 0; off < total; off += SRCH_STREAM_CHUNK) {
-    if (_srchStreamAbort) { srchExitStream(true); return; }
+    if (_srchStreamAbort) break;
     let text;
     try { text = await srchReadChunk(file, off); } catch (e) { srchExitStream(true); toast(_('file_read_err2').replace('${msg}', e.message), 1); return; }
     scannedBytes = Math.min(off + text.length, total);
@@ -3248,18 +3243,30 @@ function rexHighlight() {
   if (!pattern) { rexEditor.textContent = text; rexUpdateLines(); $('rexInfo').textContent = ''; return; }
   let re;
   try { re = new RegExp(pattern, flags); } catch { rexEditor.textContent = text; rexUpdateLines(); $('rexInfo').textContent = _('rex_invalid'); return; }
-  let count = 0;
   if (text.length > REX_CHUNK_SIZE) {
     rexEditor.textContent = text;
     rexUpdateLines();
     $('rexInfo').textContent = _('rex_text_len').replace('${n}', text.length);
     return;
   }
-  let html = escHtml(text);
-  html = html.replace(re, m => { count++; return `<span style="background:#fff3cd;border-radius:2px;padding:0 1px;">${m}</span>`; });
-  rexEditor.innerHTML = html;
+  const ranges = [];
+  const re2 = re.global ? re : new RegExp(re.source, re.flags + 'g');
+  let m;
+  while ((m = re2.exec(text)) !== null) {
+    ranges.push([m.index, m.index + m[0].length]);
+    if (m[0] === '') re2.lastIndex++;
+    if (ranges.length > 50000) break;
+  }
+  const { html, off } = escHtmlMap(text);
+  let out = '', prev = 0;
+  for (const [s, e] of ranges) {
+    out += html.slice(prev, off[s]) + `<span style="background:#fff3cd;border-radius:2px;padding:0 1px;">${html.slice(off[s], off[e])}</span>`;
+    prev = off[e];
+  }
+  out += html.slice(prev);
+  rexEditor.innerHTML = out;
   rexUpdateLines();
-  $('rexInfo').textContent = _('rex_match_count').replace('${n}', count);
+  $('rexInfo').textContent = _('rex_match_count').replace('${n}', ranges.length);
 }
 let rexTimer;
 function rexDelayed() { clearTimeout(rexTimer); rexTimer = setTimeout(rexHighlight, 200); }
@@ -3444,34 +3451,35 @@ $('passwdCopyBtn').addEventListener('click', () => {
 //  ◎ 正则速查
 // ═══════════════════════════════════════
 const _REX_CHEAT = [
-  { cat: _('rexCatValidate'), items: [
+  { cat: 'rexCatValidate', items: [
     ['Email', '^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$'],
-    [_('rexItem_phone_cn'), '^1[3-9]\\d{9}$'],
+    ['rexItem_phone_cn', '^1[3-9]\\d{9}$'],
     ['URL', '^https?://[\\w.-]+(?:\\/[^\\s]*)?$'],
     ['IPv4', '^(?:\\d{1,3}\\.){3}\\d{1,3}$'],
-    [_('rexItem_date'), '^\\d{4}-\\d{2}-\\d{2}$'],
-    [_('rexItem_time'), '^\\d{2}:\\d{2}:\\d{2}$']
+    ['rexItem_date', '^\\d{4}-\\d{2}-\\d{2}$'],
+    ['rexItem_time', '^\\d{2}:\\d{2}:\\d{2}$']
   ]},
-  { cat: _('rexCatExtract'), items: [
-    [_('rexItem_allNums'), '\\d+'],
-    [_('rexItem_allWords'), '\\b[a-zA-Z]+\\b'],
-    [_('rexItem_allEmails'), '[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+'],
-    [_('rexItem_urls'), 'https?://[\\w.-]+(?:\\/[^\\s]*)?'],
-    [_('rexItem_quoted'), '"[^"]*"']
+  { cat: 'rexCatExtract', items: [
+    ['rexItem_allNums', '\\d+'],
+    ['rexItem_allWords', '\\b[a-zA-Z]+\\b'],
+    ['rexItem_allEmails', '[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+'],
+    ['rexItem_urls', 'https?://[\\w.-]+(?:\\/[^\\s]*)?'],
+    ['rexItem_quoted', '"[^"]*"']
   ]},
-  { cat: _('rexCatReplace'), items: [
-    [_('rexItem_trim'), '\\s+'],
-    [_('rexItem_htmlTags'), '<[^>]*>'],
-    [_('rexItem_collapseBlank'), '\\s{2,}']
+  { cat: 'rexCatReplace', items: [
+    ['rexItem_trim', '\\s+'],
+    ['rexItem_htmlTags', '<[^>]*>'],
+    ['rexItem_collapseBlank', '\\s{2,}']
   ]}
 ];
+function rexName(key) { return _L[key]?.[_lang] || key; }
 function renderRexCheat() {
   const wrap = $('rexCheatContainer');
   if (!wrap) return;
   wrap.innerHTML = _REX_CHEAT.map(g => `
     <div style="flex:1;min-width:220px;">
-      <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:4px;">${g.cat}</div>
-      ${g.items.map(([name, pat]) => `<button class="btn btn-sm" style="margin:2px 4px 2px 0;" data-rex-pattern="${pat}">${name}</button>`).join('')}
+      <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:4px;">${rexName(g.cat)}</div>
+      ${g.items.map(([name, pat]) => `<button class="btn btn-sm" style="margin:2px 4px 2px 0;" data-rex-pattern="${escHtmlEnt(pat)}">${rexName(name)}</button>`).join('')}
     </div>`).join('');
   wrap.querySelectorAll('[data-rex-pattern]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -3492,14 +3500,18 @@ function cronFieldToSet(field, min, max, step) {
   for (const p of parts) {
     if (p === '*') { for (let v = min; v <= max; v += (step || 1)) set.add(v); }
     else if (/^\*\/(\d+)$/.test(p)) {
-      const s = +RegExp.$1;
+      const s = +RegExp.$1 || 1;
       for (let v = min; v <= max; v += s) set.add(v);
     } else if (/^(\d+)-(\d+)$/.test(p)) {
       const [a, b] = [+RegExp.$1, +RegExp.$2];
       for (let v = a; v <= b; v++) set.add(v);
     } else if (/^(\d+)-(\d+)\/(\d+)$/.test(p)) {
       const [a, b, s] = [+RegExp.$1, +RegExp.$2, +RegExp.$3];
+      if (s <= 0) continue;
       for (let v = a; v <= b; v += s) set.add(v);
+    } else if (/^(\d+)\/(\d+)$/.test(p)) {
+      const [st, s] = [+RegExp.$1, +RegExp.$2 || 1];
+      for (let v = st; v <= max; v += s) set.add(v);
     } else if (/^\d+$/.test(p)) set.add(+p);
   }
   return set;
@@ -3521,7 +3533,7 @@ function cronNextRuns(fields, n) {
   const days = cronFieldToSet(fields[2], 1, 31);
   const months = cronFieldToSet(fields[3], 1, 12);
   const wds = cronFieldToSet(fields[4], 0, 6);
-  const secSet = _cronSec || new Set([0]);
+  const secSet = (_cronSec && _cronSec.size) ? _cronSec : new Set([0]);
   const hasD = days.size < 31, hasW = wds.size < 7;
   const now = new Date();
   const runs = [];
@@ -3558,6 +3570,7 @@ $('cronParseBtn').addEventListener('click', () => {
   const ranges = [[0,0,59],[1,0,23],[2,1,31],[3,1,12],[4,0,6]];
   for (const [i, min, max] of ranges) {
     for (const tok of fields[i].split(',')) {
+      if (!/^(?:\*|\*\/\d+|\d+|\d+-\d+|\d+-\d+\/\d+|\d+\/\d+)$/.test(tok)) { toast(_('cronInvalid'), 1); return; }
       const nums = tok.match(/\d+/g);
       if (nums) for (const v of nums.map(Number)) if (v < min || v > max) { toast(_('cronRangeErr'), 1); return; }
     }
@@ -3626,11 +3639,8 @@ function convertBase(input) {
   input = input.trim();
   if (!input) { ['bcDec','bcHex','bcBin','bcOct'].forEach(id => $(id).textContent = '—'); return; }
   let num;
-  if (/^0x/i.test(input)) num = parseInt(input.slice(2), 16);
-  else if (/^0b/i.test(input)) num = parseInt(input.slice(2), 2);
-  else if (/^0o/i.test(input)) num = parseInt(input.slice(2), 8);
-  else num = parseInt(input, 10);
-  if (isNaN(num)) { ['bcDec','bcHex','bcBin','bcOct'].forEach(id => $(id).textContent = _('bc_invalid')); return; }
+  try { num = /^0[xob]/i.test(input) ? BigInt(input) : BigInt(input); }
+  catch { ['bcDec','bcHex','bcBin','bcOct'].forEach(id => $(id).textContent = _('bc_invalid')); return; }
   $('bcDec').textContent = num.toString(10);
   $('bcHex').textContent = '0x' + num.toString(16).toUpperCase();
   $('bcBin').textContent = '0b' + num.toString(2);
@@ -3638,7 +3648,7 @@ function convertBase(input) {
 }
 $('bcInput').addEventListener('input', () => convertBase($('bcInput').value));
 $('bcClearBtn').addEventListener('click', () => { $('bcInput').value = ''; convertBase(''); });
-convertBase('FF');
+convertBase('0xFF');
 
 // ═══════════════════════════════════════
 //  💾 二进制文本
@@ -3649,6 +3659,7 @@ function bintextEncode(text) {
 }
 function bintextDecode(bin) {
   const bits = bin.replace(/\s+/g, '');
+  if (!/^[01]+$/.test(bits)) throw new Error(_('bintext_invalid'));
   if (bits.length % 8 !== 0) throw new Error(_('bintext_invalid') + ': ' + (bits.length % 8) + ' bit');
   const bytes = [];
   for (let i = 0; i < bits.length; i += 8) bytes.push(parseInt(bits.slice(i, i + 8), 2));
@@ -3674,9 +3685,8 @@ function escHtmlEnt(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function unescHtmlEnt(s) {
-  const ta = document.createElement('textarea');
-  ta.innerHTML = s;
-  return ta.value;
+  const doc = new DOMParser().parseFromString(s, 'text/html');
+  return doc.documentElement.textContent;
 }
 $('htmlEncodeBtn').addEventListener('click', () => {
   const v = $('htmlInput').value;
@@ -3798,6 +3808,8 @@ function sqlFormat(sql) {
   let s = sql.replace(/;?\s*$/,'').replace(/\s+/g,' ').trim();
   s = s.replace(/\s*,\s*/g, ', ');
   s = s.replace(/\bORDER\s+BY\b/gi, 'ORDER BY').replace(/\bGROUP\s+BY\b/gi, 'GROUP BY');
+  const sqlStrs = [];
+  s = s.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"/g, m => { sqlStrs.push(m); return '__SQLS' + (sqlStrs.length - 1) + '__'; });
   SQL_KEYWORDS.forEach(kw => { s = s.replace(new RegExp('\\b'+kw+'\\b','gi'), kw); });
   const re = /(\b(?:SELECT|FROM|WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|FULL|ON|GROUP\s+BY|HAVING|ORDER\s+BY|LIMIT|OFFSET|SET|VALUES|AND|OR|UNION|ALL|INSERT|UPDATE|DELETE|INTO|WITH|RETURNING)\b|\(|\))/gi;
   let depth = 0, out = [], pushFrom = 0;
@@ -3824,7 +3836,7 @@ function sqlFormat(sql) {
     }
   }
   flushText(s.length);
-  return out.join('\n');
+  return out.join('\n').replace(/__SQLS(\d+)__/g, (_, i) => sqlStrs[+i]);
 }
 $('sqlFmtBtn').addEventListener('click', () => {
   const input = $('sqlFmtInput').value.trim();
@@ -3913,7 +3925,7 @@ function diffLines(a, b) {
     let si = 0;
     return sideOps.map(t => {
       if (t === 'gap') return '<div class="dp">&nbsp;</div>';
-      const text = escHtml(sourceLines[si++]);
+      const text = escHtml(sourceLines[si++] || '');
       const cls = t === 'del' ? 'dl' : t === 'add' ? 'da' : '';
       const mark = t === 'del' ? '<span style="color:var(--red,#d32f2f);min-width:20px;display:inline-block;user-select:none;">−</span>'
         : t === 'add' ? '<span style="color:var(--jt-str,#2e7d32);min-width:20px;display:inline-block;user-select:none;">+</span>'
@@ -3928,6 +3940,16 @@ function diffLines(a, b) {
 }
 
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escHtmlMap(text) {
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
+  let html = '', off = [];
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    off.push(html.length);
+    html += map[c] || c;
+  }
+  return { html, off };
+}
 
 // Sync scroll
 let syncing = false;
@@ -4134,14 +4156,14 @@ document.addEventListener('click', e => {
 document.querySelectorAll('.copy-btn-sm').forEach(btn => {
   const dl = document.createElement('button');
   dl.className = 'copy-btn-sm'; dl.textContent = '⬇';
-  dl.title = _L.download ? _L.download[_lang] : 'Download';
+  dl.title = _L.download[_lang]; dl.dataset.lkTl = 'download';
   dl.dataset.dlTarget = btn.dataset.target;
   btn.after(dl);
 });
 document.querySelectorAll('.result-box .copy-btn:not(.download-btn)').forEach(btn => {
   const dl = document.createElement('button');
   dl.className = 'copy-btn download-btn'; dl.textContent = '⬇';
-  dl.title = _L.download ? _L.download[_lang] : 'Download';
+  dl.title = _L.download[_lang]; dl.dataset.lkTl = 'download';
   btn.after(dl);
 });
 
@@ -4153,7 +4175,7 @@ const HISTORY_MAX = 50;
 function getHistory() { try { return JSON.parse(sessionStorage.getItem(HISTORY_KEY)) || []; } catch { return []; } }
 function addHistory(tab, desc, data) {
   const list = getHistory();
-  list.unshift({ tab, desc, data: data?.slice(0, 500), ts: Date.now() });
+  list.unshift({ tab, desc, data: data?.slice(0, 200000), ts: Date.now() });
   if (list.length > HISTORY_MAX) list.length = HISTORY_MAX;
   try { sessionStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch {}
 }
@@ -4184,17 +4206,19 @@ function renderHistory() {
   });
 }
 function restoreHistory(h) {
+  _lastRestoreTs = Date.now();
   switchTab(h.tab);
   const m = ALL_MODULES.find(x => x.pane === h.tab);
   if (m) { _activeModule = m.id; renderPinnedToolbar(); }
   if (h.tab === 'json') { $('jsonInput').value = h.data; renderJSONResult(h.data); }
-  else if (h.tab === 'search') { const se = $('srchEditor'); se.textContent = h.data; se.dataset.lkPl = ''; se.contentEditable = 'true'; applyHighlights(); }
+  else if (h.tab === 'search') { const se = $('srchEditor'); se.textContent = h.data; se.dataset.lkPl = ''; se.contentEditable = 'true'; applyHighlights(); updateSrchLines(); }
   else if (h.tab === 'sql') { $('sqlInput').value = h.data; }
   else if (h.tab === 'encode') { $('b64Input').value = h.data; }
   else if (h.tab === 'text') { $('tpInput').value = h.data; }
   else if (h.tab === 'ts') { $('tsInput').value = h.data; renderTs(parseTs(h.data)); }
 }
-$('historyToggle').addEventListener('click', () => {
+$('historyToggle').addEventListener('click', (e) => {
+  e.stopPropagation();
   const p = $('historyPanel');
   p.style.display = p.style.display === 'none' ? '' : 'none';
   if (p.style.display !== 'none') renderHistory();
@@ -4208,12 +4232,13 @@ const _origJsonRender = renderJSONResult;
 // JSON 格式化后记录
 const _origJsonFormat = $('jsonFormatBtn')?.addEventListener;
 // 用 MutationObserver 监听结果变化来记录历史（简单方案）
+let _lastRestoreTs = 0;
 function autoRecordHistory() {
   const observers = [
-    { box: 'jsonResult', tab: 'json', getInput: () => $('jsonInput').value?.slice(0, 100) },
-    { box: 'sqlResult', tab: 'sql', getInput: () => $('sqlInput').value?.slice(0, 100) },
-    { box: 'b64Result', tab: 'encode', getInput: () => $('b64Input').value?.slice(0, 100) },
-    { box: 'tpResult', tab: 'text', getInput: () => $('tpInput').value?.slice(0, 100) },
+    { box: 'jsonResult', tab: 'json', getInput: () => $('jsonInput').value },
+    { box: 'sqlResult', tab: 'sql', getInput: () => $('sqlInput').value },
+    { box: 'b64Result', tab: 'encode', getInput: () => $('b64Input').value },
+    { box: 'tpResult', tab: 'text', getInput: () => $('tpInput').value },
   ];
   const emptyTexts = new Set([_('jsonEmpty'), _('sqlEmpty'), _('b64Empty'), _('tpEmpty')]);
   observers.forEach(({ box, tab, getInput }) => {
@@ -4225,7 +4250,7 @@ function autoRecordHistory() {
       debounce = setTimeout(() => {
         debounce = null;
         const content = el.textContent?.trim();
-        if (content && content !== lastContent && !emptyTexts.has(content)) {
+        if (content && content !== lastContent && !emptyTexts.has(content) && Date.now() - _lastRestoreTs > 1500) {
           lastContent = content;
           addHistory(tab, getInput() || content.slice(0, 60), getInput());
         }
@@ -4266,7 +4291,7 @@ try {
   if (raw) {
     const d = JSON.parse(raw);
     KEYS.forEach(id => { const el = $(id); if (el && d[id]) el.value = d[id]; });
-    if (d.srchEditor) { $('srchEditor').textContent = d.srchEditor; $('srchEditor').dataset.lkPl = ''; }
+    if (d.srchEditor) { $('srchEditor').textContent = d.srchEditor; $('srchEditor').dataset.lkPl = ''; applyHighlights(); updateSrchLines(); }
     if (d.rexEditor) { $('rexEditor').textContent = d.rexEditor; }
     if (d.rexPattern) { $('rexPattern').value = d.rexPattern; }
     if (d.activeTab) {
@@ -4274,7 +4299,7 @@ try {
       switchTab(paneId);
       const m = ALL_MODULES.find(x => x.pane === paneId && (!x.sub || d['sub_' + paneId] === x.sub)) ||
                 ALL_MODULES.find(x => x.pane === paneId);
-      if (m) { _activeModule = m.id; if (m.sub) activateSub(paneId, m.sub); }
+      if (m) { _activeModule = m.id; if (m.sub) activateSub(paneId, m.sub); else renderPinnedToolbar(); }
     }
   }
 } catch {}
@@ -4310,9 +4335,10 @@ function applyLang(lang) {
     el.title = t[lang];
   });
   // update lang toggle text
-  document.getElementById('langToggle').textContent = lang === 'zh' ? '🌐' : '🌐';
+  document.getElementById('langToggle').textContent = '🌐';
   document.getElementById('langToggle').title = _L.tl_langToggle[lang];
   renderPinnedToolbar();
+  renderRexCheat();
   // 刷新统计栏
   document.querySelectorAll('.stat-line').forEach(el => {
     const src = el.previousElementSibling?.querySelector('textarea') || el.parentElement?.querySelector('textarea');
@@ -4397,7 +4423,7 @@ function getPinned() {
     const v = JSON.parse(raw);
     if (Array.isArray(v)) {
       const valid = v.filter(id => ALL_MODULES.some(m => m.id === id));
-      return valid.length ? valid : [...DEFAULT_PINNED];
+      return valid;
     }
   } catch {}
   return [...DEFAULT_PINNED];
@@ -4439,7 +4465,7 @@ function renderSettings() {
       const chk = pinned.includes(m.id) ? 'checked' : '';
       return `<label class="mod-cb" data-mod-name="${m.id} ${navLabel(m).toLowerCase()}" style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;cursor:pointer;"><input type="checkbox" data-pin-mod="${m.id}" ${chk}> ${navLabel(m)}</label>`;
     }).join('');
-    return `<div style="margin-bottom:8px;"><div style="font-size:11px;font-weight:600;color:var(--text-dim);margin-bottom:4px;">${g.zh}</div><div style="display:flex;flex-wrap:wrap;gap:2px 0;">${boxes}</div></div>`;
+    return `<div style="margin-bottom:8px;"><div style="font-size:11px;font-weight:600;color:var(--text-dim);margin-bottom:4px;">${_lang === 'zh' ? g.zh : g.en}</div><div style="display:flex;flex-wrap:wrap;gap:2px 0;">${boxes}</div></div>`;
   }).join('');
   pinList.querySelectorAll('[data-pin-mod]').forEach(cb => {
     cb.addEventListener('change', () => {
@@ -4477,7 +4503,7 @@ $('settingsExportBtn').addEventListener('click', () => {
   a.href = URL.createObjectURL(blob);
   a.download = 'litools-settings.json';
   a.click();
-  URL.revokeObjectURL(a.href);
+  setTimeout(() => URL.revokeObjectURL(a.href), 100);
   toast(_('settingsExported'));
 });
 $('settingsImportBtn').addEventListener('click', () => $('settingsImportFile').click());
