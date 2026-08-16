@@ -196,6 +196,9 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 /* { } JSON 智能修复提示条 */
 .json-repair-note { display:flex; align-items:center; flex-wrap:wrap; gap:6px; background:var(--surface2); border:1px solid var(--accent-dim); border-radius:var(--radius); padding:5px 10px; margin-bottom:8px; font-size:12px; color:var(--text); }
 .json-stats { font-size:11px; color:var(--text-dim); margin-bottom:6px; }
+.json-match-head { display:flex; align-items:center; gap:6px; padding:3px 0; cursor:default; }
+.json-match-idx { font-size:11px; color:var(--text-dim); background:var(--surface2); border:1px solid var(--border); border-radius:3px; padding:0 5px; line-height:16px; }
+.json-match-path { font-size:12px; color:var(--accent); word-break:break-all; }
 .result-box .copy-btn {
   position: sticky; top: 0; float: right;
   background: var(--surface2); border: 1px solid var(--border);
@@ -1564,7 +1567,7 @@ document.addEventListener('drop', e => {
 // ═══════════════════════════════════════
 //  { } JSON
 // ═══════════════════════════════════════
-const JSON_TREE_LIMIT = 10485760; // 10MB: beyond this, skip tree view, use plain text (tree render would be too many DOM nodes)
+const JSON_TREE_LIMIT = 10485760; // 10MB: 超过则跳过智能修复与完整统计，直接解析并以折叠树逐层加载（递归懒加载）
 const jsonInput = $('jsonInput');
 const jsonLines = $('jsonLines');
 let _jsonLinesCount = 0;
@@ -1872,6 +1875,12 @@ function getByPath(obj, path) { let c = obj; for (const s of path) { if (c == nu
 function encPath(p) { return encodeURIComponent(JSON.stringify(p)); }
 function decPath(s) { return JSON.parse(decodeURIComponent(s)); }
 
+let _jsonRenderBudget = Infinity; // 渲染预算：容器节点计数，耗尽后剩余容器折叠（展开时再分配预算）
+const JSON_LAZY_SUBTREE_LIMIT = 500; // 单次展开一层渲染的容器节点预算
+function jsonCollapsed(val, path, isArr) {
+  const badge = `<span class="jt-badge">${isArr ? val.length + _('json_items') : Object.keys(val).length + _('json_keys')}</span>`;
+  return `<div class="jt-toggle collapsed" data-jpath="${encPath(path)}" data-jpath-children="${encPath(path)}" data-jpath-type="${isArr?'array':'object'}"><span class="jt-fold-indicator">+</span><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="color:#888;">…</span><div class="jt-body" style="display:none;"></div><span class="jt-brace jt-close">${isArr?']':'}'}</span></div>`;
+}
 function jsonTree(val, path, lazy) {
   if (val === null) return `<span data-jpath="${encPath(path)}" style="color:var(--jt-null,#9c27b0);">null</span>`;
   if (typeof val === 'boolean') return `<span data-jpath="${encPath(path)}" style="color:var(--jt-bool,#d32f2f);">${val}</span>`;
@@ -1884,18 +1893,17 @@ function jsonTree(val, path, lazy) {
   const isArr = Array.isArray(val);
   const keys = Object.keys(val);
   if (keys.length === 0) return isArr ? '<span style="color:#888;">[]</span>' : '<span style="color:#888;">{}</span>';
+  // 懒加载 / 预算耗尽：折叠此容器，展开时再按需加载
+  if (lazy || _jsonRenderBudget <= 0) return jsonCollapsed(val, path, isArr);
+  _jsonRenderBudget--;
   const badge = `<span class="jt-badge">${isArr ? val.length + _('json_items') : keys.length + _('json_keys')}</span>`;
-  // 懒加载：折叠状态不渲染子节点，只保存数据路径
-  if (lazy) {
-    return `<div class="jt-toggle collapsed" data-jpath="${encPath(path)}" data-jpath-children="${encPath(path)}" data-jpath-type="${isArr?'array':'object'}"><span class="jt-fold-indicator">+</span><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="color:#888;">…</span><div class="jt-body" style="display:none;"></div><span class="jt-brace jt-close">${isArr?']':'}'}</span></div>`;
-  }
   return `<div class="jt-toggle" data-jpath="${encPath(path)}"><span class="jt-fold-indicator">-</span><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="display:none;color:#888;">…</span><div class="jt-body">${isArr
     ? val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('')
     : keys.map((k,i) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<keys.length-1?',':''}</div>`).join('')
   }</div><span class="jt-brace jt-close">${isArr?']':'}'}</span></div>`;
 }
 
-const JSON_EXPAND_LIMIT = 2000; // 节点数低于该值时默认全展开渲染，超过则懒加载折叠（右键可全部展开）
+const JSON_EXPAND_LIMIT = 2000; // 整树节点数低于该值时默认全展开渲染；超过则根折叠，展开时递归预算渲染（右键可全部展开）
 let _jsonRepairedText = null; // 最近一次自动修复得到的可解析文本（供"写回输入框"）
 const RP_LABELS = { unwrap:'rp_unwrap', unescape:'rp_unescape', comment:'rp_comment', trailing:'rp_trailing', java:'rp_java', single:'rp_single', key:'rp_key', value:'rp_value', extract:'rp_extract' };
 function repairStepsText(steps) {
@@ -1923,10 +1931,13 @@ const JSON_NODE_TEXT_MAX = 100000; // 单文本节点超此长度跳过高亮（
 function renderJSONResult(v) {
   try { // finally 统一重放搜索：任何路径重建结果区后，搜索框有关键词即自动重新高亮
   if (!v || !v.trim()) { $('jsonResult').innerHTML = _('jsonResult'); _jsonData = null; _jsonRepairedText = null; return; }
-  if (v.length > JSON_TREE_LIMIT) { // >10MB：纯文本展示，不做修复（性能保护）
-    try { const d = JSON.parse(v); $('jsonResult').textContent = JSON.stringify(d, null, 2); }
-    catch (e) { $('jsonResult').textContent = `⚠ ${e.message}`; }
-    _jsonData = null; _jsonRepairedText = null;
+  if (v.length > JSON_TREE_LIMIT) { // >10MB：解析后以折叠树展示（递归懒加载，逐层展开），跳过修复与完整统计
+    try {
+      const d = JSON.parse(v);
+      _jsonData = d; _jsonRepairedText = null;
+      _jsonRenderBudget = Infinity;
+      $('jsonResult').innerHTML = `<div class="json-stats">ⓘ ${_('json_large_hint')}</div><div class="jt-root">${jsonTree(d, [], true)}</div>`;
+    } catch (e) { $('jsonResult').textContent = `⚠ ${e.message}`; _jsonData = null; _jsonRepairedText = null; }
     return;
   }
   // ⚡ 智能修复：标准 JSON 零成本直接通过，脏 JSON 自动级联修复
@@ -1940,6 +1951,7 @@ function renderJSONResult(v) {
   // 🧮 统计行 + 小文档全展开渲染；大文档懒加载折叠 + 提示
   const st = jsonStats(r.value);
   const statsLine = `<div class="json-stats">ⓘ ${st.nodes} ${_('stat_nodes')} · ${_('stat_depth')} ${st.depth} · ${_('stat_arrays')} ${st.arrays} · ${_('stat_keys')} ${st.keys}</div>`;
+  _jsonRenderBudget = Infinity;
   const tree = st.nodes <= JSON_EXPAND_LIMIT
     ? `<div class="jt-root">${jsonTree(r.value, [], false)}</div>`
     : `<div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">${_('json_large_hint')}</div><div class="jt-root">${jsonTree(r.value, [], true)}</div>`;
@@ -1955,11 +1967,12 @@ document.addEventListener('click', e => {
   if (!t) return;
   const b = t.querySelector('.jt-body'), el = t.querySelector('.jt-ellipsis');
   const hide = b.style.display !== 'none';
-  // 懒加载：展开时如果子节点为空，动态加载
+  // 懒加载：展开时如果子节点为空，动态加载（预算渲染：超出预算的子树折叠）
   if (!hide && b.innerHTML === '' && t.dataset.jpathChildren && _jsonData) {
     try {
       const path = decPath(t.dataset.jpathChildren);
       const val = getByPath(_jsonData, path);
+      _jsonRenderBudget = JSON_LAZY_SUBTREE_LIMIT;
       const isArr = t.dataset.jpathType === 'array';
       const keys = isArr ? val : Object.keys(val);
       if (isArr) {
@@ -2020,31 +2033,36 @@ ctxMenu.addEventListener('click', e => {
       copy(action === 'copy-val' ? (typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val)) : path.map(p => typeof p === 'number' ? `[${p}]` : `.${p}`).join('').replace(/^\./, ''));
     } catch(e2) { console.error('ctxmenu error:', e2); toast(_('clipboard_err'), 1); }
   } else if (action === 'expand-all') {
-    // 先加载所有懒加载节点
-    document.querySelectorAll('#jsonResult .jt-toggle[data-jpath-children]').forEach(t => {
-      const b = t.querySelector('.jt-body');
-      if (b && b.innerHTML === '' && t.dataset.jpathChildren && _jsonData) {
-        try {
-          const path = decPath(t.dataset.jpathChildren);
-          const val = getByPath(_jsonData, path);
-          const isArr = t.dataset.jpathType === 'array';
-          if (isArr) {
-            b.innerHTML = val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('');
-          } else {
-            b.innerHTML = Object.keys(val).map((k,i,a) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<a.length-1?',':''}</div>`).join('');
-          }
-        } catch(err) {}
-      }
-    });
+    if (!_jsonData) return;
+    _jsonRenderBudget = Number.MAX_SAFE_INTEGER;
+    let again = true, guard = 0;
+    while (again && guard++ < 100) { // 逐层加载所有折叠节点（query 结果多根也正确）
+      again = false;
+      document.querySelectorAll('#jsonResult .jt-toggle[data-jpath-children]').forEach(t => {
+        const b = t.querySelector('.jt-body');
+        if (b && b.innerHTML === '' && t.dataset.jpathChildren) {
+          try {
+            const path = decPath(t.dataset.jpathChildren);
+            const val = getByPath(_jsonData, path);
+            const isArr = t.dataset.jpathType === 'array';
+            if (isArr) b.innerHTML = val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('');
+            else b.innerHTML = Object.keys(val).map((k,i,a) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<a.length-1?',':''}</div>`).join('');
+            again = true;
+          } catch(err) {}
+        }
+      });
+    }
     document.querySelectorAll('#jsonResult .jt-body').forEach(b => b.style.display = '');
     document.querySelectorAll('#jsonResult .jt-ellipsis').forEach(e => e.style.display = 'none');
     document.querySelectorAll('#jsonResult .jt-fold-indicator').forEach(i => i.textContent = '-');
     document.querySelectorAll('#jsonResult .jt-toggle').forEach(t => t.classList.remove('collapsed'));
+    if ($('jsonResultSearch').value.trim()) applyJsonSearch();
   } else if (action === 'collapse-all') {
     document.querySelectorAll('#jsonResult .jt-body').forEach(b => b.style.display = 'none');
     document.querySelectorAll('#jsonResult .jt-ellipsis').forEach(e => e.style.display = '');
     document.querySelectorAll('#jsonResult .jt-fold-indicator').forEach(i => i.textContent = '+');
     document.querySelectorAll('#jsonResult .jt-toggle').forEach(t => t.classList.add('collapsed'));
+    if ($('jsonResultSearch').value.trim()) applyJsonSearch();
   } else if (action === 'json-sort-asc') { doJsonSort(false); }
   else if (action === 'json-sort-desc') { doJsonSort(true); }
   ctxMenu.style.display = 'none';
@@ -2242,24 +2260,25 @@ $('jsonResult').addEventListener('click', e => {
 
 // XML → JSON
 // JSONPath query
+function fmtJsonPath(p) { return '$' + p.map(x => typeof x === 'number' ? `[${x}]` : `.${x}`).join(''); }
 function resolveJsonPath(obj, path) {
   if (!path || !obj) return [];
   let expr = path.replace(/^[$]\.?/, '');
   const results = [];
-  function walk(cur, segs) {
-    if (!segs.length) { results.push(cur); return; }
+  function walk(cur, segs, p) {
+    if (!segs.length) { results.push({ path: p, value: cur }); return; }
     const seg = segs[0];
     const rest = segs.slice(1);
     if (cur == null || typeof cur !== 'object') return;
     if (seg === '*') {
-      if (Array.isArray(cur)) cur.forEach(v => walk(v, rest));
-      else Object.values(cur).forEach(v => walk(v, rest));
+      if (Array.isArray(cur)) cur.forEach((v, i) => walk(v, rest, [...p, i]));
+      else Object.keys(cur).forEach(k => walk(cur[k], rest, [...p, k]));
     } else if (Array.isArray(cur)) {
-      const idx = parseInt(seg); if (!isNaN(idx) && idx >= 0 && idx < cur.length) walk(cur[idx], rest);
-    } else if (seg in cur) { walk(cur[seg], rest); }
+      const idx = parseInt(seg); if (!isNaN(idx) && idx >= 0 && idx < cur.length) walk(cur[idx], rest, [...p, idx]);
+    } else if (seg in cur) { walk(cur[seg], rest, [...p, seg]); }
   }
   const segs = expr.match(/(\w+|'[^']*'|"[^"]*"|\*)/g);
-  if (segs) walk(obj, segs.map(s => s.replace(/['"]/g, '')));
+  if (segs) walk(obj, segs.map(s => s.replace(/['"]/g, '')), []);
   return results;
 }
 $('jsonPathBtn').addEventListener('click', () => {
@@ -2268,9 +2287,15 @@ $('jsonPathBtn').addEventListener('click', () => {
   if (!path) { toast(_('json_enter_path'), 1); return; }
   const r = resolveJsonPath(_jsonData, path);
   if (!r.length) { toast(_('no_match'), 1); $('jsonPathInfo').textContent = _('no_match'); return; }
-  const txt = r.map(v => typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v)).join('\n---\n');
-  $('jsonResult').textContent = txt;
+  // 树形展示，命中项保留真实路径（右键可复制值/路径，子树懒加载）
+  const info = `<div class="json-stats">${_('json_path_match').replace('${n}', r.length)}</div>`;
+  const items = r.map((m, i) => {
+    _jsonRenderBudget = JSON_LAZY_SUBTREE_LIMIT;
+    return `<div class="jt-root" style="margin:6px 0 0;"><div class="json-match-head" data-jpath="${encPath(m.path)}" title="${escHtml(fmtJsonPath(m.path))}"><span class="json-match-idx">${i + 1}</span><span class="mono json-match-path">${fmtJsonPath(m.path)}</span></div><div style="padding-left:20px;">${jsonTree(m.value, m.path, false)}</div></div>`;
+  }).join('');
+  $('jsonResult').innerHTML = info + items;
   $('jsonPathInfo').textContent = _('json_path_match').replace('${n}', r.length);
+  if ($('jsonResultSearch').value.trim()) applyJsonSearch();
 });
 $('jsonPathInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('jsonPathBtn').click(); });
 
