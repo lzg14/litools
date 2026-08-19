@@ -1364,7 +1364,7 @@ $('timerLapBtn').addEventListener('click', () => {
   const elapsed = timerElapsed + (Date.now() - timerStart);
   const lapTime = timerLaps.length ? elapsed - timerLaps[timerLaps.length - 1].total : elapsed;
   timerLaps.push({ total: elapsed, lap: lapTime });
-  if (timerLaps.length > 200) timerLaps.length = 200;
+  if (timerLaps.length > 200) timerLaps.shift(); // 删除最旧项，保留最新 200 条
   const div = document.createElement('div');
   div.style.cssText = 'padding:4px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;';
   div.innerHTML = `<span>#${timerLaps.length}</span><span>${formatTimer(lapTime)}</span><span style="color:var(--text-dim);">${formatTimer(elapsed)}</span>`;
@@ -1895,7 +1895,7 @@ function looseParse(text) {
     const start = P.i;
     while (P.i < P.s.length) {
       const c = P.s[P.i];
-      if (c === ',' || c === '}' || c === ']' || c === ':' || c === '\n') break;
+      if (c === ',' || c === '}' || c === ']' || c === '{' || c === '[' || c === ':' || c === '\n') break;
       P.i++;
     }
     return P.s.slice(start, P.i).trim();
