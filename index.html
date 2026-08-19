@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="litools - 单文件开发者工具箱。23个模块：JSON格式化、搜索、正则、编解码、生成、文本处理等，零依赖，双击即用。">
+<meta name="description" content="litools - 单文件开发者工具箱。24个模块：JSON格式化、搜索、正则、编解码、生成、文本处理等，零依赖，双击即用。">
 <meta name="keywords" content="JSON格式化,开发者工具,在线工具,编解码,正则测试,时间戳转换,Base64,URL编码,文本对比,单文件工具">
 <meta property="og:title" content="litools - 单文件开发者工具箱">
-<meta property="og:description" content="一个HTML文件，零依赖，23个功能模块覆盖日常开发高频场景。">
+<meta property="og:description" content="一个HTML文件，零依赖，24个功能模块覆盖日常开发高频场景。">
 <meta property="og:type" content="website">
 <title>litools</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
@@ -32,6 +32,14 @@
   --jt-num: #1565c0;
   --jt-bool: #d32f2f;
   --jt-null: #9c27b0;
+  --on-accent: #fff;
+  --hl-bg: #fff3cd;
+  --err-bg: #fff5f5;
+  --err-border: #ffc0c0;
+  --diff-del-bg: #ffeef0;
+  --diff-add-bg: #e6ffed;
+  --diff-plain-bg: #f6f8fa;
+  --diff-plain-fg: #aaa;
 }
 [data-theme="dark"] {
   --bg: #1a1a2e;
@@ -48,6 +56,14 @@
   --jt-num: #64b5f6;
   --jt-bool: #ef5350;
   --jt-null: #ce93d8;
+  --on-accent: #062033;
+  --hl-bg: #5c4a00;
+  --err-bg: #3a1f22;
+  --err-border: #7a4046;
+  --diff-del-bg: #4a2026;
+  --diff-add-bg: #1e3a28;
+  --diff-plain-bg: #23283a;
+  --diff-plain-fg: #6a7090;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -126,7 +142,7 @@ textarea {
 }
 .btn:hover { background: var(--surface2); border-color: var(--accent-dim); }
 .btn:active { transform: scale(0.97); }
-.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 500; }
+.btn-primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 500; }
 .btn-primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); }
 .btn-primary:active { background: var(--accent-dim); }
 .btn-sm { padding: 5px 12px; font-size: 12px; }
@@ -173,7 +189,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 .jt-brace { cursor: text; }
 .jt-badge { font-size:11px; color:var(--text-dim); margin-left:4px; font-weight:400; }
 .jt-highlight { background:var(--accent-dim); border-radius:2px; }
-.jt-cur { background:var(--orange); color:#fff; border-radius:2px; } /* 搜索导航当前项 */
+.jt-cur { background:var(--orange); color:var(--on-accent); border-radius:2px; } /* 搜索导航当前项 */
 .srch-cur { outline:2px solid var(--accent); outline-offset:1px; border-radius:2px; } /* 搜索模块当前命中项 */
 #srchEditor { position:relative; } /* 行底色层的定位基准 */
 .srch-line-bg { position:absolute; left:0; right:0; border-radius:2px; background:rgba(0,120,212,0.08); } /* 搜索命中行底色 */
@@ -252,15 +268,15 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
   padding: 0 10px;
   pointer-events: none;
 }
-.diff-editor .dl { background: #ffeef0; }
-.diff-editor .da { background: #e6ffed; }
-.diff-editor .dp { background: #f6f8fa; color: #ccc; }
+.diff-editor .dl { background: var(--diff-del-bg); }
+.diff-editor .da { background: var(--diff-add-bg); }
+.diff-editor .dp { background: var(--diff-plain-bg); color: var(--diff-plain-fg); }
 
 
 /* Toast */
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(8px);
-  background: var(--accent); color: #fff; padding: 10px 22px;
+  background: var(--accent); color: var(--on-accent); padding: 10px 22px;
   border-radius: 8px; font-size: 13px; font-weight: 500;
   opacity: 0; transition: opacity 0.2s, transform 0.2s;
   pointer-events: none; z-index: 200;
@@ -282,6 +298,23 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 .collapsible-header.collapsed .arrow { transform: rotate(-90deg); }
 .collapsible-body { overflow: hidden; transition: max-height 0.2s ease; }
 .collapsible-body.collapsed { max-height: 0 !important; padding: 0; margin: 0; }
+
+/* 双栏布局（窄屏降单列） */
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 760px) {
+  .duo, .grid-2 { grid-template-columns: 1fr; }
+  .container { padding: 0 10px; }
+}
+
+/* 顶部模块导航按钮 */
+.nav-btn {
+  padding: 7px 14px; font-size: 13px; cursor: pointer; white-space: nowrap;
+  border: 1px solid transparent; border-radius: var(--radius);
+  color: var(--text-dim); background: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-btn:hover { color: var(--text); background: var(--surface2); }
+.nav-btn.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -299,7 +332,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
 
   <!-- ⏱ 时间戳 -->
   <div class="tab-pane" id="p-ts">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="duo">
         <div>
           <div class="input-row">
             <input type="text" id="tsInput" placeholder="粘贴时间戳，自动识别秒/毫秒/微秒" spellcheck="false" data-lk-pl="pl_tsInput">
@@ -377,7 +410,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
   <div class="tab-pane" id="p-sql">
     <!-- IN 生成 -->
     <div class="sub-pane active" data-sub="sql-in">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="duo">
         <textarea id="sqlInput" rows="10" placeholder="粘贴值，可用逗号、换行、空格分隔&#10;例: abc, def, ghi&#10;或: abc(def(ghi" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_sqlInput"></textarea>
         <div class="result-box result-box-code" id="sqlResult" style="min-height:55vh;margin:0;" data-lk="sqlResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
@@ -385,7 +418,6 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-primary" id="sqlGenBtn" data-lk="sqlGenBtn">生成 IN</button>
         <button class="btn" id="sqlQuoteBtn" data-lk="sqlQuoteBtn">切换引号</button>
         <button class="btn" id="sqlClearBtn" data-lk="sqlClearBtn">清空</button>
-        <span id="sqlStatOld" style="font-size:12px;color:var(--text-dim);line-height:28px;"></span>
       </div>
       <div class="stat-line" id="sqlStat"></div>
     </div>
@@ -407,7 +439,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- SQL 格式化 -->
     <div class="sub-pane" data-sub="sql-fmt">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="duo">
         <textarea id="sqlFmtInput" rows="10" placeholder="粘贴 SQL 语句，自动格式化&#10;支持 SELECT/INSERT/UPDATE/DELETE/WHERE/ORDER BY 等" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_sqlFmtInput"></textarea>
         <div class="result-box result-box-code" id="sqlFmtResult" style="min-height:55vh;margin:0;" data-lk="sqlFmtResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
@@ -435,6 +467,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap;">
       <div class="btn-group" style="margin-bottom:0;">
         <button class="btn btn-primary" id="jsonFormatBtn" data-lk="jsonFormatBtn">格式化 (Ctrl+Enter)</button>
+        <button class="btn" id="jsonLooseBtn" data-lk="jsonLooseBtn" title="尽力格式化伪 JSON" data-lk-tl="tl_jsonLoose">🌊 宽松格式化</button>
         <button class="btn" id="jsonCompressBtn" data-lk="jsonCompressBtn">压缩</button>
         <button class="btn" id="jsonUnescapeBtn" data-lk="jsonUnescapeBtn">去除转义</button>
         <button class="btn" id="jsonEscapeBtn" data-lk="jsonEscapeBtn">转义</button>
@@ -480,7 +513,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
         <button class="btn btn-sm btn-orange" id="srchFilterBtn" data-lk="srchFilterBtn">只留命中行</button>
         <button class="btn btn-sm" id="srchRestoreBtn" data-lk-tl="tl_srchRestore" title="恢复原文" style="display:none;">↩ 恢复</button>
         <button class="btn btn-sm" id="srchClearBtn" data-lk="srchClearBtn">清空</button>
-        <button class="btn btn-sm" id="srchFileBtn">📂</button>
+        <button class="btn btn-sm" id="srchFileBtn" title="打开文件" data-lk-tl="tl_srchFile">📂</button>
       </div>
       <div id="srchTags" style="display:flex;gap:6px;flex-wrap:wrap;min-height:28px;margin-top:4px;"></div>
       <div id="srchStreamBar" style="display:none;margin-top:6px;padding:8px 12px;background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);font-size:12px;line-height:1.6;">
@@ -668,7 +701,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
   <div class="tab-pane" id="p-text">
     <!-- 文本处理 -->
     <div class="sub-pane active" data-sub="proc">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
+      <div class="duo" style="min-height:55vh;">
         <div class="ln-editor" style="min-height:55vh;">
           <div class="ln-gutter" id="tpGutter" aria-hidden="true">1</div>
           <textarea id="tpInput" placeholder="输入文本" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_tpInput"></textarea>
@@ -699,7 +732,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- 大小写/命名转换 -->
     <div class="sub-pane" data-sub="case">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
+      <div class="duo" style="min-height:55vh;">
         <textarea id="caseInput" rows="10" placeholder="输入文本，如 hello_world / HELLO WORLD / helloWorld" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_caseInput"></textarea>
         <div class="result-box result-box-code" id="caseResult" style="min-height:55vh;margin:0;line-height:1.7;" data-lk="caseResult">结果<button class="copy-btn" data-lk="copy">复制</button></div>
       </div>
@@ -716,7 +749,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- CSV -->
     <div class="sub-pane" data-sub="csv">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:55vh;">
+      <div class="duo" style="min-height:55vh;">
         <textarea id="csvInput" rows="10" placeholder="粘贴 CSV 文本，或拖入 .csv 文件&#10;自动检测分隔符（逗号/制表符）" spellcheck="false" style="min-height:55vh;" data-lk-pl="pl_csvInput"></textarea>
         <div class="result-box result-box-code" id="csvResult" style="min-height:55vh;margin:0;line-height:1.5;">
           <button class="copy-btn" data-lk="copy">复制</button>
@@ -732,7 +765,7 @@ textarea, .result-box, .diff-editor, #srchEditor, #rexEditor { font-size: 14px; 
     </div>
     <!-- Diff -->
     <div class="sub-pane" data-sub="diff">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div class="duo" style="gap:8px;margin-bottom:8px;">
         <div id="diffLeft" class="diff-editor" contenteditable="true" spellcheck="false" data-lk-pl="pl_diffLeft"></div>
         <div id="diffRight" class="diff-editor" contenteditable="true" spellcheck="false" data-lk-pl="pl_diffRight"></div>
       </div>
@@ -821,7 +854,7 @@ const _L = {
   srchAddBtn:{zh:'添加',en:'Add'}, srchReplaceBtn:{zh:'替换',en:'Replace'}, srchRegexOn:{zh:'.* 正则',en:'.* Regex'}, srchRegexOff:{zh:'Ab 字面量',en:'Ab Literal'}, srchCaseOn:{zh:'Aa 敏感',en:'Aa Sensitive'}, srchCaseOff:{zh:'Aa 忽略',en:'Aa Ignore'},
   srchReplaceAllBtn:{zh:'全部替换',en:'Replace All'}, srchClearHighBtn:{zh:'清除',en:'Clear'},
   srchFilterBtn:{zh:'只留命中行',en:'Matches Only'}, srchClearBtn:{zh:'清空',en:'Clear'},
-  tl_srchRestore:{zh:'恢复原文',en:'Restore original'},
+  tl_srchRestore:{zh:'恢复原文',en:'Restore original'}, tl_srchFile:{zh:'打开文件',en:'Open File'},
   srchStreamStopBtn:{zh:'停止',en:'Stop'},
   err_regex_invalid:{zh:'正则表达式无效',en:'Invalid regular expression'},
   srchCtxLabel:{zh:'上下文',en:'Ctx'}, search_worker_hint:{zh:'⏳ 大文件匹配计算中…',en:'⏳ Computing matches…'},
@@ -830,6 +863,9 @@ const _L = {
   tsCopyMs:{zh:'复制毫秒',en:'Copy ms'},
   tsRevSec:{zh:'秒',en:'Sec'}, tsRevMs:{zh:'毫秒',en:'ms'},
   jsonResult:{zh:'结果',en:'Result'}, jsonFormatBtn:{zh:'格式化 (Ctrl+Enter)',en:'Format (Ctrl+Enter)'},
+  jsonLooseBtn:{zh:'🌊 宽松格式化',en:'🌊 Loose Format'}, tl_jsonLoose:{zh:'尽力格式化伪 JSON（JS 对象/Python dict/带注释/无引号 key/裸值等）',en:'Best-effort format for non-JSON (JS object / Python dict / comments / unquoted keys / bare values)'},
+  loose_note:{zh:'⚠ 非标准 JSON — 已尽力解析（仅供参考，可复制）',en:'⚠ Not standard JSON — best-effort parse (reference only)'},
+  loose_plain:{zh:'未能识别 JSON 结构，以下为原文',en:'No JSON structure detected, showing raw text'},
   jsonWorkerHint:{zh:'⏳ 正在后台 Worker 中处理大数据…',en:'⏳ Processing in background worker…'},
   jsonCompressBtn:{zh:'压缩',en:'Compact'},
   jsonUnescapeBtn:{zh:'去除转义',en:'Unescape'},
@@ -963,7 +999,7 @@ const _L = {
   cronNoFuture:{zh:'5 年内无匹配时间',en:'No matches in 5 years'},
   cronDescOther:{zh:'自定义调度',en:'Custom schedule'},
   err_input_insert:{zh:'请输入 INSERT 语句',en:'Enter INSERT statement'},
-  err_no_result:{zh:'没有结果',en:'No result'}, err_no_match:{zh:'无匹配',en:'No match'},
+  err_no_result:{zh:'没有结果',en:'No result'},
   err_no_rows:{zh:'没有匹配的行',en:'No matching rows'},
   err_invalid_json:{zh:'JSON 格式无效',en:'Invalid JSON'},
   err_timeout:{zh:'请求超时',en:'Request timeout'}, err_timeout_30:{zh:'请求超时（30秒）',en:'Timeout (30s)'},
@@ -980,7 +1016,6 @@ const _L = {
   sent_to_search:{zh:'已发送到搜索',en:'Sent to Search'}, sent_to_json:{zh:'已发送到 JSON',en:'Sent to JSON'},
   parsed:{zh:'已解析',en:'Parsed'}, formatted:{zh:'已格式化',en:'Formatted'},
   compacted:{zh:'已压缩',en:'Compacted'}, copied_toast:{zh:'已复制',en:'Copied'},
-  restore:{zh:'已恢复',en:'Restored'}, stopped_toast:{zh:'已停止',en:'Stopped'},
   // timestamp
   ts_ago:{zh:'前',en:'ago'}, ts_later:{zh:'后',en:'later'}, ts_just:{zh:'刚刚',en:'just now'},
   ts_year:{zh:'年',en:'y'}, ts_month:{zh:'个月',en:'mo'}, ts_week:{zh:'周',en:'w'},
@@ -997,7 +1032,7 @@ const _L = {
   hash_need_https:{zh:'需要 HTTPS',en:'Requires HTTPS'},
   // search
   search_too_large:{zh:'文本过大，跳过高亮',en:'Text too large, skipping highlight'},
-  search_matches:{zh:'匹配 ${n} 处',en:'Matched ${n}'}, search_match:{zh:'匹配 ${n} 处',en:'Matched ${n}'},
+  search_match:{zh:'匹配 ${n} 处',en:'Matched ${n}'},
   search_added:{zh:'已添加搜索词',en:'Added search term'}, search_added_tag:{zh:'已添加',en:'Added'},
   search_replace_stream:{zh:'流式模式下不可替换',en:'Cannot replace in stream mode'},
   search_no_replace:{zh:'无匹配可替换',en:'No match to replace'}, search_replaced:{zh:'已替换',en:'Replaced'},
@@ -1017,7 +1052,6 @@ const _L = {
   csv_rows_cols:{zh:'${rows} 行 × ${cols} 列',en:'${rows} rows × ${cols} cols'},   csv_empty:{zh:'CSV 解析结果',en:'CSV Result'},   jsonErrorLine:{zh:'第 ${li} 行第 ${col} 列',en:'Line ${li}, Col ${col}'},   searchStreamStat:{zh:'匹配: ${m} 行 / 扫描: ${l} 行',en:'Matched: ${m} / Scanned: ${l} lines'}, sql_in_stat:{zh:'共 ${n} 项，去重后 ${d} 项',en:'${n} items, ${d} unique'},
   // SQL
   sql_toggle_quote:{zh:'切换引号 (当前: ',en:'Toggle quote (current: '},
-  sql_parsed_cols:{zh:'已解析 ${n} 列',en:'Parsed ${n} columns'},
   // misc
   clipboard_err:{zh:'复制出错',en:'Copy error'}, session_full:{zh:'会话保存失败（存储空间不足）',en:'Session save failed (storage full)'},
   copy_err:{zh:'复制出错',en:'Copy error'},
@@ -1330,10 +1364,12 @@ $('timerLapBtn').addEventListener('click', () => {
   const elapsed = timerElapsed + (Date.now() - timerStart);
   const lapTime = timerLaps.length ? elapsed - timerLaps[timerLaps.length - 1].total : elapsed;
   timerLaps.push({ total: elapsed, lap: lapTime });
+  if (timerLaps.length > 200) timerLaps.length = 200;
   const div = document.createElement('div');
   div.style.cssText = 'padding:4px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;';
   div.innerHTML = `<span>#${timerLaps.length}</span><span>${formatTimer(lapTime)}</span><span style="color:var(--text-dim);">${formatTimer(elapsed)}</span>`;
   $('timerLaps').prepend(div);
+  while ($('timerLaps').children.length > 200) $('timerLaps').lastChild.remove();
 });
 $('timerResetBtn').addEventListener('click', () => {
   timerRunning = false;
@@ -1479,6 +1515,7 @@ function setupFileInput(opts) {
 function bindStats(src, statId) {
   const stat = $(statId);
   if (!stat) return;
+  let t = null;
   const update = () => {
     const text = src.value !== undefined ? src.value : src.textContent;
     if (!text) { stat.textContent = ''; return; }
@@ -1489,7 +1526,7 @@ function bindStats(src, statId) {
     const tmpl = _('stat_file');
     stat.textContent = tmpl.replace('${n}', text.length.toLocaleString()).replace('${w}', words.toLocaleString()).replace('${l}', lines.toLocaleString()) + ` · ${paras} ${_('statsParas')} · ${bytes.toLocaleString()} B`;
   };
-  src.addEventListener('input', update);
+  src.addEventListener('input', () => { clearTimeout(t); t = setTimeout(update, 150); });
   setTimeout(update, 0);
 }
 
@@ -1840,6 +1877,178 @@ function _srpExtract(t) {
   return res;
 }
 // SMART-REPAIR-END
+
+// ═══════════════════════════════════════
+//  🌊 宽松解析：对"伪 JSON"尽力解析（JS 对象 / Python dict / 带注释 / 无引号 key / 裸值 / 尾逗号）
+//  解析不了的部分降级为字符串，尽量输出可读结构；完全无结构返回 null（调用方走原文视图）
+// ═══════════════════════════════════════
+const LOOSE_MAX_DEPTH = 64;    // 防栈溢出
+const LOOSE_MAX_ITEMS = 20000; // 单容器成员上限
+function looseParse(text) {
+  const src = _srpStripComments(String(text == null ? '' : text));
+  const P = { s: src, i: 0, depth: 0 };
+  const LOOSE_SKIP = {}; // 解析失败哨兵（与字面量 null 区分）
+  function skipWs() { while (P.i < P.s.length && /\s/.test(P.s[P.i])) P.i++; }
+  function skipLine() { while (P.i < P.s.length && P.s[P.i] !== '\n') P.i++; }
+  // 读裸 token 到分隔符，trim 后返回
+  function rawToken() {
+    const start = P.i;
+    while (P.i < P.s.length) {
+      const c = P.s[P.i];
+      if (c === ',' || c === '}' || c === ']' || c === ':' || c === '\n') break;
+      P.i++;
+    }
+    return P.s.slice(start, P.i).trim();
+  }
+  function parseString() {
+    const q = P.s[P.i]; P.i++;
+    let out = '';
+    const esc = { '"':'"', "'":"'", '\\':'\\', 'n':'\n', 't':'\t', 'r':'\r', 'b':'\b', 'f':'\f' };
+    while (P.i < P.s.length) {
+      const c = P.s[P.i];
+      if (c === '\\' && P.i + 1 < P.s.length) { out += esc[P.s[P.i + 1]] !== undefined ? esc[P.s[P.i + 1]] : P.s[P.i + 1]; P.i += 2; continue; }
+      if (c === q) { P.i++; return out; }
+      out += c; P.i++;
+    }
+    return out; // 未闭合：容错返回
+  }
+  function parseValue() {
+    skipWs();
+    if (P.i >= P.s.length) return LOOSE_SKIP;
+    const c = P.s[P.i];
+    if (c === '{' || c === '[') return parseContainer(c);
+    if (c === '"' || c === "'") return parseString();
+    if (c === '#') { skipLine(); return LOOSE_SKIP; }
+    const numM = P.s.slice(P.i).match(/^-?\d+(\.\d+)?([eE][+-]?\d+)?/);
+    if (numM && /[\d-]/.test(c)) { P.i += numM[0].length; return parseFloat(numM[0]); }
+    const wordM = P.s.slice(P.i).match(/^[A-Za-z_$][\w$]*/);
+    if (wordM) {
+      const w = wordM[0]; P.i += w.length;
+      if (w === 'true' || w === 'True') return true;
+      if (w === 'false' || w === 'False') return false;
+      if (w === 'null' || w === 'None' || w === 'undefined' || w === 'nil') return null;
+      const rest = rawToken();
+      const v = (w + (rest ? ' ' + rest : '')).trim();
+      return v === '' ? LOOSE_SKIP : v;
+    }
+    const t = rawToken();
+    return t === '' ? LOOSE_SKIP : t;
+  }
+  function parseKey() {
+    skipWs();
+    if (P.i >= P.s.length) return null;
+    const c = P.s[P.i];
+    if (c === '"' || c === "'") return parseString();
+    const start = P.i;
+    while (P.i < P.s.length) {
+      const ch = P.s[P.i];
+      if (ch === ':' || ch === '=' || ch === ',' || ch === '{' || ch === '[' || ch === '}' || ch === ']' || ch === '\n') break;
+      P.i++;
+    }
+    return P.s.slice(start, P.i).trim();
+  }
+  function parseContainer(open) {
+    if (P.depth >= LOOSE_MAX_DEPTH) return open === '{' ? {} : [];
+    P.depth++;
+    P.i++;
+    const isArr = open === '[';
+    const arr = [], obj = {};
+    let count = 0;
+    for (;;) {
+      const startI = P.i;
+      skipWs();
+      if (P.i >= P.s.length) break;
+      const c = P.s[P.i];
+      if (c === (isArr ? ']' : '}')) { P.i++; break; }
+      if (c === '#') { skipLine(); continue; }
+      if (count >= LOOSE_MAX_ITEMS) {
+        while (P.i < P.s.length && P.s[P.i] !== (isArr ? ']' : '}')) P.i++;
+        if (P.i < P.s.length) P.i++;
+        break;
+      }
+      if (isArr) {
+        const v = parseValue();
+        arr.push(v === LOOSE_SKIP ? '' : v);
+        count++;
+      } else {
+        const key = parseKey();
+        skipWs();
+        if ((P.s[P.i] === ':' || P.s[P.i] === '=') && key !== null && key !== '') {
+          P.i++;
+          const v = parseValue();
+          obj[key] = v === LOOSE_SKIP ? '' : v;
+        } else if (key !== null && key !== '') {
+          obj[key] = key; // key 后无冒号：保守视为自引用字符串
+        } else {
+          rawToken(); // 空 key：跳过一个 token
+        }
+        count++;
+      }
+      skipWs();
+      if (P.s[P.i] === ',') { P.i++; continue; }
+      if (P.s[P.i] === (isArr ? ']' : '}')) { P.i++; break; }
+      if (P.s[P.i] === '\n') { P.i++; continue; }
+      if (P.i === startI) P.i++; // 防死循环：本轮未推进则强制前进
+    }
+    P.depth--;
+    return isArr ? arr : obj;
+  }
+  // 顶层不是 { [ 开头：先处理前导注释/空白，再尝试解析成"键值对流"（a:1 / a=1，逗号/换行/分号分隔）
+  function parseTopLevelKV() {
+    const obj = {};
+    let count = 0;
+    for (;;) {
+      skipWs();
+      if (P.i >= P.s.length) break;
+      if (P.s[P.i] === '#') { skipLine(); continue; }
+      if (P.s[P.i] === '{' || P.s[P.i] === '[') return parseContainer(P.s[P.i]); // 注释后跟容器
+      const key = parseKey();
+      skipWs();
+      if (key === null || key === '' || (P.s[P.i] !== ':' && P.s[P.i] !== '=')) return null; // 非键值对 → 纯文本
+      P.i++;
+      const v = parseValue();
+      obj[key] = v === LOOSE_SKIP ? '' : v;
+      count++;
+      skipWs();
+      if (P.i >= P.s.length) break;
+      if (P.s[P.i] === ',' || P.s[P.i] === '\n' || P.s[P.i] === ';') { P.i++; continue; }
+      // 无分隔符：剩余内容像"key: value"则继续（容忍空格分隔），否则视为纯文本
+      const look = P.s.slice(P.i).match(/^[^,;{}\[\]]{0,40}[:=]/);
+      if (look) continue;
+      return null;
+    }
+    return count ? obj : null;
+  }
+  skipWs();
+  if (P.i >= P.s.length) return null;
+  const c0 = P.s[P.i];
+  if (c0 === '{' || c0 === '[') return parseContainer(c0);
+  return parseTopLevelKV();
+}
+
+// 宽松视图 HTML：能解析出结构 → 树形展示；纯文本 → 原文视图
+function looseViewHTML(text) {
+  let parsed = null;
+  try { parsed = looseParse(text); } catch (e) { parsed = null; }
+  if (parsed === null) {
+    return `<div class="json-repair-note">${_('loose_plain')}</div><div class="jt-root" style="white-space:pre-wrap;font-family:monospace;font-size:13px;line-height:1.7;">${escHtml(text)}</div>`;
+  }
+  _jsonRenderBudget = Infinity;
+  const st = jsonStats(parsed);
+  const tree = st.nodes <= JSON_EXPAND_LIMIT
+    ? `<div class="jt-root">${jsonTree(parsed, [], false)}</div>`
+    : `<div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">${_('json_large_hint')}</div><div class="jt-root">${jsonTree(parsed, [], true)}</div>`;
+  return `<div class="json-repair-note">${_('loose_note')}</div>` + tree;
+}
+function renderLooseFromText(text) {
+  if (!text || !text.trim()) { toast(_('err_input_json'), 1); return; }
+  _jsonData = null; _jsonRepairedText = null;
+  $('jsonResult').innerHTML = looseViewHTML(text);
+  applyJsonSearch();
+}
+// 🌊 宽松格式化按钮
+$('jsonLooseBtn').addEventListener('click', () => renderLooseFromText($('jsonInput').value));
+
 function fmtJSONError(text, e) {
   if (!e) return '<div style="font-size:12px;color:var(--text-dim);">' + _('json_cancelled') + '</div>';
   if (text.length > JSON_TREE_LIMIT) return `<div style="font-size:12px;color:var(--red);">⚠ ${escHtml(e.message)}</div>`;
@@ -1855,7 +2064,7 @@ function fmtJSONError(text, e) {
       const col = pos - charIdx;
       updateJsonLines(li + 1);
       return `<div style="font-size:12px;color:var(--red);margin-bottom:6px;">⚠ ${_('jsonErrorLine').replace('${li}', li+1).replace('${col}', col+1)}</div>
-<div style="background:#fff5f5;border:1px solid #ffc0c0;border-radius:4px;padding:8px 10px;font-size:13px;line-height:1.5;font-family:monospace;white-space:pre-wrap;word-break:break-all;">${escHtml(lines[li])}</div>
+<div style="background:var(--err-bg);border:1px solid var(--err-border);border-radius:4px;padding:8px 10px;font-size:13px;line-height:1.5;font-family:monospace;white-space:pre-wrap;word-break:break-all;">${escHtml(lines[li])}</div>
 <div style="font-family:monospace;font-size:13px;line-height:1;white-space:pre;padding:0 10px;color:var(--red);font-weight:bold;">${' '.repeat(col)}↑</div>`;
     }
     charIdx = lineEnd + 1;
@@ -1874,7 +2083,7 @@ let _jsonRenderBudget = Infinity; // 渲染预算：容器节点计数，耗尽�
 const JSON_LAZY_SUBTREE_LIMIT = 500; // 单次展开一层渲染的容器节点预算
 function jsonCollapsed(val, path, isArr) {
   const badge = `<span class="jt-badge">${isArr ? val.length + _('json_items') : Object.keys(val).length + _('json_keys')}</span>`;
-  return `<div class="jt-toggle collapsed" data-jpath="${encPath(path)}" data-jpath-children="${encPath(path)}" data-jpath-type="${isArr?'array':'object'}"><span class="jt-fold-indicator">+</span><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="color:#888;">…</span><div class="jt-body" style="display:none;"></div><span class="jt-brace jt-close">${isArr?']':'}'}</span></div>`;
+  return `<div class="jt-toggle collapsed" data-jpath="${encPath(path)}" data-jpath-children="${encPath(path)}" data-jpath-type="${isArr?'array':'object'}"><span class="jt-fold-indicator">+</span><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="color:var(--text-dim);">…</span><div class="jt-body" style="display:none;"></div><span class="jt-brace jt-close">${isArr?']':'}'}</span></div>`;
 }
 function jsonTree(val, path, lazy) {
   if (val === null) return `<span data-jpath="${encPath(path)}" style="color:var(--jt-null,#9c27b0);">null</span>`;
@@ -1887,12 +2096,12 @@ function jsonTree(val, path, lazy) {
   if (!val || typeof val !== 'object') return escHtml(String(val));
   const isArr = Array.isArray(val);
   const keys = Object.keys(val);
-  if (keys.length === 0) return isArr ? '<span style="color:#888;">[]</span>' : '<span style="color:#888;">{}</span>';
+  if (keys.length === 0) return isArr ? '<span style="color:var(--text-dim);">[]</span>' : '<span style="color:var(--text-dim);">{}</span>';
   // 懒加载 / 预算耗尽：折叠此容器，展开时再按需加载
   if (lazy || _jsonRenderBudget <= 0) return jsonCollapsed(val, path, isArr);
   _jsonRenderBudget--;
   const badge = `<span class="jt-badge">${isArr ? val.length + _('json_items') : keys.length + _('json_keys')}</span>`;
-  return `<div class="jt-toggle" data-jpath="${encPath(path)}"><span class="jt-fold-indicator">-</span><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="display:none;color:#888;">…</span><div class="jt-body">${isArr
+  return `<div class="jt-toggle" data-jpath="${encPath(path)}"><span class="jt-fold-indicator">-</span><span class="jt-brace">${isArr?'[':'{'}</span>${badge}<span class="jt-ellipsis" style="display:none;color:var(--text-dim);">…</span><div class="jt-body">${isArr
     ? val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('')
     : keys.map((k,i) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<keys.length-1?',':''}</div>`).join('')
   }</div><span class="jt-brace jt-close">${isArr?']':'}'}</span></div>`;
@@ -1937,7 +2146,12 @@ function renderJSONResult(v) {
   }
   // ⚡ 智能修复：标准 JSON 零成本直接通过，脏 JSON 自动级联修复
   const r = smartRepairJSON(v);
-  if (!r.ok) { $('jsonResult').innerHTML = fmtJSONError(v, r.error); _jsonData = null; _jsonRepairedText = null; return; }
+  if (!r.ok) {
+    // 修复失败：保留错误定位，下方自动附加宽松解析结果（尽力而为，方便阅读）
+    _jsonData = null; _jsonRepairedText = null;
+    $('jsonResult').innerHTML = fmtJSONError(v, r.error) + looseViewHTML(v);
+    return;
+  }
   _jsonData = r.value;
   _jsonRepairedText = r.steps.length ? r.text : null;
   const note = r.steps.length
@@ -2010,7 +2224,7 @@ $('jsonResult').addEventListener('contextmenu', e => {
   const t = e.target.closest('[data-jpath]');
   if (t) ctxMenu.dataset.path = JSON.stringify(decPath(t.dataset.jpath));
   else delete ctxMenu.dataset.path;
-  ctxMenu.innerHTML = `${t ? `<div class="ctx-item" data-action="copy-val">📋 ${_L.copy_val?.[_lang] || 'Copy value'}</div><div class="ctx-item" data-action="copy-path">📋 ${_L.copy_path?.[_lang] || 'Copy path'}</div>` : ''}<div class="ctx-item" data-action="expand-all">⊞ ${_L.tl_expandAll?.[_lang] || 'Expand All'}</div><div class="ctx-item" data-action="collapse-all">⊟ ${_L.tl_collapseAll?.[_lang] || 'Collapse All'}</div>`;
+  ctxMenu.innerHTML = `${t ? `<div class="ctx-item" data-action="copy-val">📋 ${_('copy_val')}</div><div class="ctx-item" data-action="copy-path">📋 ${_('copy_path')}</div>` : ''}<div class="ctx-item" data-action="expand-all">⊞ ${_('tl_expandAll')}</div><div class="ctx-item" data-action="collapse-all">⊟ ${_('tl_collapseAll')}</div>`;
   ctxMenu.style.left = Math.min(e.clientX, innerWidth - 180) + 'px';
   ctxMenu.style.top = Math.min(e.clientY, innerHeight - 100) + 'px';
   ctxMenu.style.display = 'block';
@@ -2140,8 +2354,7 @@ $('jsonKeepEscBtn').addEventListener('click', () => {
   if ($('jsonInput').value.trim()) renderJSONResult($('jsonInput').value);
 });
 
-$('jsonClearBtn').addEventListener('click', () => { $('jsonInput').value = ''; $('jsonResult').innerHTML = (_L.res_json ? _L.res_json[_lang] : 'Result') + '<button class=\"copy-btn\" data-lk=\"copy\">' + (_L.copy?_L.copy[_lang]:'Copy') + '</button>'; _jsonData = null; updateJsonLines(); });
-$('jsonInput').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) renderJSONResult($('jsonInput').value); });
+$('jsonClearBtn').addEventListener('click', () => { $('jsonInput').value = ''; $('jsonResult').innerHTML = _('res_json') + '<button class=\"copy-btn\" data-lk=\"copy\">' + _('copy') + '</button>'; _jsonData = null; updateJsonLines(); });
 // 粘贴后自动格式化（paste 事件触发时 value 尚未更新，延迟一拍）
 jsonInput.addEventListener('paste', () => setTimeout(() => renderJSONResult(jsonInput.value), 60));
 // 修复提示条"写回输入框"：把修复后的标准 JSON 写回左侧编辑区
@@ -2548,17 +2761,29 @@ $('jsonPathInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('
 // ═══════════════════════════════════════
 //  🔐 Base64
 // ═══════════════════════════════════════
+function utf8ToB64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+function b64ToUtf8(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
 $('b64EncodeBtn').addEventListener('click', () => {
   const v = $('b64Input').value;
   if (!v) { toast(_('no_input'), 1); return; }
-  try { $('b64Result').textContent = btoa(unescape(encodeURIComponent(v))); }
+  try { $('b64Result').textContent = utf8ToB64(v); }
   catch (e) { $('b64Result').textContent = '⚠ ' + _('b64_encode_err').replace('${msg}', e.message); }
 });
 $('b64DecodeBtn').addEventListener('click', () => {
   const v = $('b64Input').value.trim();
   if (!v) { toast(_('no_input'), 1); return; }
-  try { $('b64Result').textContent = decodeURIComponent(escape(atob(v))); }
-  catch (e) { $('b64Result').textContent = '⚠ ' + _('err_decode_fail') + ': ' + _('err_invalid_b64'); }
+  try { $('b64Result').textContent = b64ToUtf8(v); }
+  catch (e) { $('b64Result').textContent = '⚠ ' + _('err_decode_fail') + ': ' + e.message; }
 });
 $('b64ClearBtn').addEventListener('click', () => { $('b64Input').value = ''; $('b64Result').textContent = _('res_json'); });
 
@@ -3059,7 +3284,8 @@ srchEditor.addEventListener('scroll', () => {
   if (!vp) return;
   vp.style.top = (srchEditor.scrollTop / srchEditor.scrollHeight * bar.clientHeight) + 'px';
 }, { passive: true });
-window.addEventListener('resize', () => renderSrchMarks());
+let _srchResizeT;
+window.addEventListener('resize', () => { clearTimeout(_srchResizeT); _srchResizeT = setTimeout(() => renderSrchMarks(), 150); });
 
 // 🔍 命中导航：上一个/下一个/计数（srch-hit 按文档顺序即命中顺序）
 let _srchHitIdx = -1;
@@ -3083,7 +3309,7 @@ function updateSrchTags() {
     if (text) {
       try { const re = srchRegEx(t, true); if (re) { let m; while ((m = re.exec(text)) !== null) count++; } else count = (text.split(t).length - 1); } catch { count = (text.split(t).length - 1); }
     }
-    return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:${srchColors[i % srchColors.length]};border-radius:4px;font-size:12px;">${escHtml(t)} <span style="font-size:10px;opacity:0.7;">${count}</span><span class="srch-del" data-idx="${i}" style="cursor:pointer;font-weight:bold;color:#888;margin-left:2px;">✕</span></span>`;
+    return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:${srchColors[i % srchColors.length]};border-radius:4px;font-size:12px;">${escHtml(t)} <span style="font-size:10px;opacity:0.7;">${count}</span><span class="srch-del" data-idx="${i}" style="cursor:pointer;font-weight:bold;color:var(--text-dim);margin-left:2px;">✕</span></span>`;
   }).join('');
 }
 
@@ -3260,7 +3486,7 @@ function rexHighlight() {
   const { html, off } = escHtmlMap(text);
   let out = '', prev = 0;
   for (const [s, e] of ranges) {
-    out += html.slice(prev, off[s]) + `<span style="background:#fff3cd;border-radius:2px;padding:0 1px;">${html.slice(off[s], off[e])}</span>`;
+    out += html.slice(prev, off[s]) + `<span style="background:var(--hl-bg);border-radius:2px;padding:0 1px;">${html.slice(off[s], off[e])}</span>`;
     prev = off[e];
   }
   out += html.slice(prev);
@@ -3444,7 +3670,7 @@ $('passwdGenBtn').addEventListener('click', () => {
 $('passwdCopyBtn').addEventListener('click', () => {
   const v = $('passwdResult').textContent;
   if (!v || v === _('res_json')) { toast(_('err_empty'), 1); return; }
-  copy(v); toast(_('copied'));
+  copy(v);
 });
 
 // ═══════════════════════════════════════
@@ -3715,7 +3941,7 @@ function genSQL() {
   items = [...new Set(items)];
   const quoted = items.map(s => sqlOpts.quote ? `'${s.replace(/'/g, "''")}'` : s);
   $('sqlResult').textContent = `in (${quoted.join(',')});`;
-  $('sqlStatOld').textContent = _('sql_in_stat').replace('${n}', total).replace('${d}', items.length);
+  $('sqlStat').textContent = _('sql_in_stat').replace('${n}', total).replace('${d}', items.length);
 }
 
 $('sqlGenBtn').addEventListener('click', genSQL);
@@ -3724,7 +3950,7 @@ $('sqlQuoteBtn').addEventListener('click', () => {
   $('sqlQuoteBtn').textContent = sqlOpts.quote ? _('sql_toggle_quote') + '✓)' : _('sql_toggle_quote') + '✗)';
   if ($('sqlResult').textContent !== _('res_json')) genSQL();
 });
-$('sqlClearBtn').addEventListener('click', () => { $('sqlInput').value = ''; $('sqlResult').textContent = _('res_json'); $('sqlStatOld').textContent = ''; });
+$('sqlClearBtn').addEventListener('click', () => { $('sqlInput').value = ''; $('sqlResult').textContent = _('res_json'); $('sqlStat').textContent = ''; });
 
 // INSERT 解析
 // 扫描 VALUES 后第一组平衡括号并分割值；bsEscape=true 按 MySQL 转义（\' 与 ''），false 按字面量（\ 无特殊含义）
@@ -3840,7 +4066,7 @@ function sqlFormat(sql) {
 }
 $('sqlFmtBtn').addEventListener('click', () => {
   const input = $('sqlFmtInput').value.trim();
-  if (!input) { $('sqlFmtResult').innerHTML = (_L.sqlEmpty ? _L.sqlEmpty[_lang] : 'Result'); return; }
+  if (!input) { $('sqlFmtResult').innerHTML = _('sqlEmpty'); return; }
   try {
     const formatted = sqlFormat(input);
     $('sqlFmtResult').textContent = formatted;
@@ -3849,7 +4075,7 @@ $('sqlFmtBtn').addEventListener('click', () => {
     $('sqlFmtResult').textContent = 'Error: ' + e.message;
   }
 });
-$('sqlFmtClearBtn').addEventListener('click', () => { $('sqlFmtInput').value = ''; $('sqlFmtResult').innerHTML = (_L.sqlEmpty ? _L.sqlEmpty[_lang] : 'Result'); $('sqlFmtStat').textContent = ''; });
+$('sqlFmtClearBtn').addEventListener('click', () => { $('sqlFmtInput').value = ''; $('sqlFmtResult').innerHTML = _('sqlEmpty'); $('sqlFmtStat').textContent = ''; });
 
 // ═══════════════════════════════════════
 //  📑 Diff
@@ -3939,7 +4165,9 @@ function diffLines(a, b) {
   $('diffStat').textContent = _('diff_del').replace('${n}', dels) + '  ' + _('diff_add').replace('${n}', adds);
 }
 
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
 function escHtmlMap(text) {
   const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
   let html = '', off = [];
@@ -4228,10 +4456,6 @@ $('historyClose').addEventListener('click', () => $('historyPanel').style.displa
 $('historyClearAll').addEventListener('click', () => { try { sessionStorage.removeItem(HISTORY_KEY); } catch {} renderHistory(); });
 document.addEventListener('click', e => { if (!e.target.closest('#historyPanel') && !e.target.closest('#historyToggle')) $('historyPanel').style.display = 'none'; });
 
-// 在关键操作后记录历史
-const _origJsonRender = renderJSONResult;
-// JSON 格式化后记录
-const _origJsonFormat = $('jsonFormatBtn')?.addEventListener;
 // 用 MutationObserver 监听结果变化来记录历史（简单方案）
 let _lastRestoreTs = 0;
 function autoRecordHistory() {
@@ -4311,10 +4535,10 @@ bindStats($('jsonInput'), 'jsonStat');
 bindStats($('rexEditor'), 'rexStat');
 bindStats($('tpInput'), 'tpStat');
 bindStats($('htmlInput'), 'htmlStat');
-bindStats($('sqlInput'), 'sqlStat');
 autoRecordHistory();
 function applyLang(lang) {
   _lang = lang; localStorage.setItem('lang', lang);
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
   document.querySelectorAll('[data-lk]').forEach(el => {
     const t = _L[el.dataset.lk]; if (!t) return;
     let textNode = null;
@@ -4451,7 +4675,7 @@ function renderPinnedToolbar() {
     const m = ALL_MODULES.find(x => x.id === id);
     if (!m) return '';
     const on = id === _activeModule;
-    return `<button class="nav-btn" data-pin="${id}" style="padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap;border:1px solid transparent;border-radius:var(--radius);color:var(--text-dim);background:transparent;${on ? 'background:var(--accent);color:#fff;border-color:var(--accent);' : ''}">${navLabel(m)}</button>`;
+    return `<button class="nav-btn${on ? ' active' : ''}" data-pin="${id}">${navLabel(m)}</button>`;
   }).join('');
   bar.querySelectorAll('[data-pin]').forEach(btn => {
     btn.addEventListener('click', () => switchToModule(btn.dataset.pin));
@@ -4532,7 +4756,7 @@ applyLang(_lang);
 // ═══════════════════════════════════════
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=' + VERSION).catch(() => {});
   });
   navigator.serviceWorker.addEventListener('message', (e) => {
     if (e.data?.type === 'SW_UPDATED') {

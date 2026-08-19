@@ -33,22 +33,26 @@ LICENSE       ← MIT 协议
 </div>
 ```
 
-### Tab 注册
+### 模块注册
 
-在 HTML 顶部 tab 栏添加：
+顶部导航栏（`#pinnedToolbar`）由 `ALL_MODULES` 数组自动渲染，设置面板中按分类勾选控制显示。新模块注册：
 
-```html
-<div class="tab" data-tab="{tabId}" data-lk="tab_{tabId}">🎯 模块名</div>
+```javascript
+// ALL_MODULES 数组（index.html 的 JS 末尾附近）：
+// {id:'{模块id}', pane:'{tabId}', sub:'{子tabId?}', grp:'{分组id}'}
+{id:'my-mod', pane:'my-pane', sub:'my-sub', grp:'core'},
+// grp 取值：core / sql / encode / gen / text（对应 MODULE_GROUPS 分类）
 ```
+
+`sub` 为空表示该 pane 无子 tab；导航标签文本由 `tab_{id}` / `sub_{id}` 翻译 key 提供（`navLabel()` 自动拼 key）。
 
 ### 子 Tab（如需要）
 
 ```html
-<div class="sub-tabs">
-  <div class="sub-tab active" data-sub="{tabId}-{subId}" data-lk="sub_{tabId}_{subId}">子页签</div>
-</div>
 <div class="sub-pane active" data-sub="{tabId}-{subId}">内容</div>
 ```
+
+（子 tab 切换通过顶部导航按钮 `switchToModule()` → `activateSub()` 完成，无需额外 tab 栏元素。）
 
 ## CSS 约定
 
@@ -195,12 +199,11 @@ el.textContent = L('my_label') + ': ' + value;
 ## 新模块开发清单
 
 1. **HTML**：在 `</div><!-- p-{上一个tab} -->` 后添加 tab-pane
-2. **Tab 栏**：在 tab 栏添加 `.tab` 元素
-3. **_L 翻译**：添加所有按钮、标签、提示的中英文
+2. **模块注册**：在 `ALL_MODULES` 数组添加条目（pane / sub / grp），顶部导航与设置面板勾选自动生效
+3. **_L 翻译**：添加所有按钮、标签、提示的中英文（导航标签 key：`tab_{id}` 或 `sub_{id}`）
 4. **JS**：在 `// ═══` 分隔线之间写模块代码
 5. **事件绑定**：所有按钮绑定 `addEventListener`
-6. **tabMeta**：如果希望 Ctrl+K 能搜到，在 `tabMeta` 数组中添加
-7. **刷新数据**：切换到该 tab 时应自动加载/刷新数据
+6. **刷新数据**：切换到该 tab 时应自动加载/刷新数据（`switchTab` / `activateSub` 中挂接）
 
 ## 主题适配
 
@@ -225,6 +228,6 @@ el.textContent = L('my_label') + ': ' + value;
 
 - [ ] 所有用户可见文字都有 `data-lk` 或在 `_L` 中有翻译
 - [ ] 亮色/暗色主题都正常显示
-- [ ] Ctrl+K 搜索能搜到新模块（如需要）
+- [ ] Ctrl+K 设置面板的模块筛选能搜到新模块（如需要）
 - [ ] 切换中英文后新模块文字正确
 - [ ] 无控制台报错
