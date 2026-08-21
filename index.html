@@ -1083,7 +1083,8 @@ const _L = {
   tsMs_label:{zh:'毫秒',en:'Millisecond'},
   tsRevSec_label:{zh:'秒',en:'Second'},
   tsRevMs_label:{zh:'毫秒',en:'Millisecond'},
-  tl_expandAll:{zh:'全部展开',en:'Expand All'}, tl_collapseAll:{zh:'全部折叠',en:'Collapse All'},
+  tl_expandAll:{zh:'全部展开',en:'Expand All'}, tl_collapseAll:{zh:'全部折叠',en:'Collapse All'}, tl_copyPath:{zh:'点击复制路径',en:'Click to copy path'},
+  srch_history_label:{zh:'历史',en:'History'},
   // history
   historyPanel_title:{zh:'📋 操作历史',en:'📋 History'},
   historyClearAll:{zh:'清空',en:'Clear All'},
@@ -2188,26 +2189,74 @@ document.addEventListener('click', e => {
   const b = t.querySelector('.jt-body'), el = t.querySelector('.jt-ellipsis');
   const hide = b.style.display !== 'none';
   // 懒加载：展开时如果子节点为空，动态加载（预算渲染：超出预算的子树折叠）
-  if (!hide && b.innerHTML === '' && t.dataset.jpathChildren && _jsonData) {
-    try {
-      const path = decPath(t.dataset.jpathChildren);
-      const val = getByPath(_jsonData, path);
-      _jsonRenderBudget = JSON_LAZY_SUBTREE_LIMIT;
-      const isArr = t.dataset.jpathType === 'array';
-      const keys = isArr ? val : Object.keys(val);
-      if (isArr) {
-        b.innerHTML = val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('');
-      } else {
-        b.innerHTML = keys.map((k,i) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<keys.length-1?',':''}</div>`).join('');
-      }
-    } catch(err) { console.error('lazy load error:', err); }
-    if ($('jsonResultSearch').value.trim()) applyJsonSearch(); // 展开的子节点也参与搜索高亮
+  if (!hide) {
+    _jsonRenderBudget = JSON_LAZY_SUBTREE_LIMIT;
+    if (loadJsonToggle(t) && $('jsonResultSearch').value.trim()) applyJsonSearch(); // 展开的子节点也参与搜索高亮
   }
   b.style.display = hide ? 'none' : '';
   el.style.display = hide ? '' : 'none';
   indicator.textContent = hide ? '+' : '-';
   t.classList.toggle('collapsed', hide); // 折叠态 { … } 连贯显示
 });
+
+// 懒加载一个折叠容器（使用当前 _jsonRenderBudget 预算渲染子树）；已加载/预算耗尽返回状态
+function loadJsonToggle(t) {
+  const b = t.querySelector('.jt-body');
+  if (!b || b.innerHTML !== '' || !t.dataset.jpathChildren || !_jsonData) return !!b;
+  try {
+    const path = decPath(t.dataset.jpathChildren);
+    const val = getByPath(_jsonData, path);
+    if (!val || typeof val !== 'object') return false;
+    const isArr = t.dataset.jpathType === 'array';
+    if (isArr) {
+      b.innerHTML = val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('');
+    } else {
+      b.innerHTML = Object.keys(val).map((k,i,a) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<a.length-1?',':''}</div>`).join('');
+    }
+    return true;
+  } catch(err) { console.error('lazy load error:', err); return false; }
+}
+
+// 数据层搜索：在 _jsonData 中找含关键词的 key / 字符串值的路径（非 g 正则，避免 lastIndex 状态）
+function jsonFindPaths(obj, regex, limit) {
+  const hits = [];
+  const stack = [[obj, []]];
+  while (stack.length && hits.length < limit) {
+    const pair = stack.pop(), cur = pair[0], path = pair[1];
+    if (cur === null || cur === undefined) continue;
+    if (Array.isArray(cur)) {
+      for (let i = cur.length - 1; i >= 0; i--) stack.push([cur[i], [...path, i]]);
+    } else if (typeof cur === 'object') {
+      const ks = Object.keys(cur);
+      for (let i = 0; i < ks.length && hits.length < limit; i++) {
+        if (regex.test(ks[i])) hits.push([...path, ks[i]]);
+        stack.push([cur[ks[i]], [...path, ks[i]]]);
+      }
+    } else if (typeof cur === 'string') {
+      if (regex.test(cur)) hits.push(path);
+    } else if (typeof cur === 'number') {
+      if (regex.test(String(cur))) hits.push(path);
+    }
+  }
+  return hits;
+}
+// 自动展开命中路径的祖先链：折叠/未加载子树里的命中也能定位（共享展开预算，防大文档 DOM 爆炸）
+function expandJsonHitPaths(hits) {
+  _jsonRenderBudget = Math.max(_jsonRenderBudget, 5000); // 批量展开总预算
+  for (const p of hits) {
+    for (let len = 1; len < p.length; len++) {
+      const t = document.querySelector('#jsonResult .jt-toggle[data-jpath="' + encPath(p.slice(0, len)) + '"]');
+      if (!t) break; // 该层未渲染（上层预算内未包含），放弃此路径剩余层
+      if (!loadJsonToggle(t)) break;
+      const b = t.querySelector('.jt-body'), el = t.querySelector('.jt-ellipsis'), ind = t.querySelector('.jt-fold-indicator');
+      if (b) b.style.display = '';
+      if (el) el.style.display = 'none';
+      if (ind) ind.textContent = '-';
+      t.classList.remove('collapsed');
+    }
+    if (_jsonRenderBudget <= 0) break; // 总预算耗尽，其余命中保持折叠
+  }
+}
 
 const ctxMenu = document.createElement('div');
 ctxMenu.id='ctxMenu'; ctxMenu.style.cssText='display:none;position:fixed;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 0;box-shadow:0 4px 12px rgba(0,0,0,0.15);min-width:160px;';
@@ -2261,14 +2310,7 @@ ctxMenu.addEventListener('click', e => {
       document.querySelectorAll('#jsonResult .jt-toggle[data-jpath-children]').forEach(t => {
         const b = t.querySelector('.jt-body');
         if (b && b.innerHTML === '' && t.dataset.jpathChildren) {
-          try {
-            const path = decPath(t.dataset.jpathChildren);
-            const val = getByPath(_jsonData, path);
-            const isArr = t.dataset.jpathType === 'array';
-            if (isArr) b.innerHTML = val.map((v,i) => `<div style="padding-left:18px;">${jsonTree(v,[...path,i])}${i<val.length-1?',':''}</div>`).join('');
-            else b.innerHTML = Object.keys(val).map((k,i,a) => `<div style="padding-left:18px;">"${escHtml(k)}": ${jsonTree(val[k],[...path,k])}${i<a.length-1?',':''}</div>`).join('');
-            again = true;
-          } catch(err) {}
+          if (loadJsonToggle(t)) again = true;
         }
       });
     }
@@ -2403,6 +2445,12 @@ $('jsonUnescapeBtn').addEventListener('click', () => {
   }
 });
 
+// 点击底部路径文本直接复制（字符统计不以 $ 开头，不会误触发）
+$('jsonStat').addEventListener('click', () => {
+  const v = $('jsonStat').textContent;
+  if (v && v.startsWith('$')) copy(v);
+});
+
 // 结果区搜索 + 点击高亮路径
 let _jsonSearchTimer;
 function unwrapInJsonResult(sel) {
@@ -2424,6 +2472,19 @@ function applyJsonSearch() {
   _jsonSearchIdx = -1;
   const keyword = $('jsonResultSearch').value.trim();
   if (!keyword) { $('jsonSearchCount').textContent = '0/0'; return; }
+  // 深度搜索：折叠/未加载子树中的命中先自动展开路径，保证大文档搜索无盲区
+  if (_jsonData) {
+    let hasCollapsed = false;
+    document.querySelectorAll('#jsonResult .jt-toggle[data-jpath-children]').forEach(t => {
+      const b = t.querySelector('.jt-body');
+      if (b && b.innerHTML === '') hasCollapsed = true;
+    });
+    if (hasCollapsed) {
+      const kwRe = new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const hits = jsonFindPaths(_jsonData, kwRe, 100);
+      if (hits.length) expandJsonHitPaths(hits);
+    }
+  }
   const regex = new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
   const walker = document.createTreeWalker($('jsonResult'), NodeFilter.SHOW_TEXT);
   let count = 0;
@@ -2474,6 +2535,8 @@ $('jsonResult').addEventListener('click', e => {
     const path = decPath(t.dataset.jpath);
     const pathStr = path.map(p => typeof p === 'number' ? `[${p}]` : `.${p}`).join('').replace(/^\./, '$');
     $('jsonStat').textContent = pathStr;
+    $('jsonStat').title = _('tl_copyPath');
+    $('jsonStat').style.cursor = 'pointer';
   } catch(e2) {}
 });
 
@@ -3315,13 +3378,32 @@ $('srchNextBtn').addEventListener('click', () => focusSrchHit(1));
 
 function updateSrchTags() {
   const text = getSrchText();
-  $('srchTags').innerHTML = srchTerms.map((t, i) => {
+  const tagsHtml = srchTerms.map((t, i) => {
     let count = 0;
     if (text) {
       try { const re = srchRegEx(t, true); if (re) { let m; while ((m = re.exec(text)) !== null) count++; } else count = (text.split(t).length - 1); } catch { count = (text.split(t).length - 1); }
     }
     return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:${srchColors[i % srchColors.length]};border-radius:4px;font-size:12px;">${escHtml(t)} <span style="font-size:10px;opacity:0.7;">${count}</span><span class="srch-del" data-idx="${i}" style="cursor:pointer;font-weight:bold;color:var(--text-dim);margin-left:2px;">✕</span></span>`;
   }).join('');
+  // 无激活搜索词时显示历史词（点击快速重填）
+  $('srchTags').innerHTML = tagsHtml || srchHistoryHTML();
+}
+
+// 搜索词历史：最近 10 个，localStorage 持久化
+const SRCH_HISTORY_KEY = 'litools_srch_history';
+function getSrchHistory() { try { const v = JSON.parse(localStorage.getItem(SRCH_HISTORY_KEY)); return Array.isArray(v) ? v : []; } catch { return []; } }
+function addSrchHistory(term) {
+  if (!term) return;
+  const h = getSrchHistory().filter(x => x !== term);
+  h.unshift(term);
+  if (h.length > 10) h.length = 10;
+  try { localStorage.setItem(SRCH_HISTORY_KEY, JSON.stringify(h)); } catch {}
+}
+function srchHistoryHTML() {
+  const h = getSrchHistory();
+  if (!h.length) return '';
+  return `<span style="font-size:11px;color:var(--text-dim);align-self:center;user-select:none;">${_('srch_history_label')}:</span>` + h.map(t =>
+    `<span class="srch-hist" data-hist="${escHtmlEnt(t)}" style="padding:2px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;font-size:12px;cursor:pointer;">${escHtml(t)}</span>`).join('');
 }
 
 let srchTimer;
@@ -3364,6 +3446,7 @@ $('srchAddBtn').addEventListener('click', () => {
   if (!term) { toast(_('search_enter_term'), 1); return; }
   if (srchOpts.regex && !srchRegEx(term, false)) { toast(_('err_regex_invalid'), 1); return; }
   srchTerms.push(term);
+  addSrchHistory(term);
   $('srchTerm').value = '';
   if (_srchStreamFile) { toast(_('search_reopen_file')); updateSrchTags(); return; }
   applyHighlights();
@@ -3428,7 +3511,11 @@ $('srchClearBtn').addEventListener('click', () => {
 });
 $('srchTags').addEventListener('click', e => {
   const del = e.target.closest('.srch-del');
-  if (!del) return;
+  if (!del) {
+    const hist = e.target.closest('.srch-hist');
+    if (hist) { $('srchTerm').value = hist.dataset.hist; $('srchTerm').focus(); } // 点击历史词快速重填
+    return;
+  }
   srchTerms.splice(parseInt(del.dataset.idx), 1);
   applyHighlights();
   updateSrchTags();
