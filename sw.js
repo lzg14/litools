@@ -4,8 +4,7 @@ const ASSETS = [
   'index.html',
   'manifest.json',
   'static/icon-192.png',
-  'static/icon-512.png',
-  'static/pic.png'
+  'static/icon-512.png'
 ];
 
 self.addEventListener('install', (e) => {
@@ -29,8 +28,10 @@ self.addEventListener('fetch', (e) => {
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req).then(resp => {
-        const copy = resp.clone();
-        caches.open(CACHE).then(c => c.put(req, copy));
+        if (resp && resp.ok) { // 只缓存成功响应，避免把 404/500 错误页缓存成离线版本
+          const copy = resp.clone();
+          caches.open(CACHE).then(c => c.put(req, copy));
+        }
         return resp;
       }).catch(() => caches.match(req))
     );

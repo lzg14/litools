@@ -1331,7 +1331,7 @@ $('tsCopySec').addEventListener('click', () => { const r = parseTs($('tsInput').
 $('tsCopyMs').addEventListener('click', () => { const r = parseTs($('tsInput').value); if (r && !r.err) copy(String(r.ms)); else toast(_('err_no_result'), 1); });
 
 // 计时器
-let timerRunning = false, timerStart = 0, timerElapsed = 0, timerLaps = [], timerRAF = null;
+let timerRunning = false, timerStart = 0, timerElapsed = 0, timerLaps = [], timerRAF = null, _timerLapNo = 0;
 function formatTimer(ms) {
   const h = Math.floor(ms / 3600000);
   const m = Math.floor((ms % 3600000) / 60000);
@@ -1365,9 +1365,10 @@ $('timerLapBtn').addEventListener('click', () => {
   const lapTime = timerLaps.length ? elapsed - timerLaps[timerLaps.length - 1].total : elapsed;
   timerLaps.push({ total: elapsed, lap: lapTime });
   if (timerLaps.length > 200) timerLaps.shift(); // 删除最旧项，保留最新 200 条
+  _timerLapNo++;
   const div = document.createElement('div');
   div.style.cssText = 'padding:4px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;';
-  div.innerHTML = `<span>#${timerLaps.length}</span><span>${formatTimer(lapTime)}</span><span style="color:var(--text-dim);">${formatTimer(elapsed)}</span>`;
+  div.innerHTML = `<span>#${_timerLapNo}</span><span>${formatTimer(lapTime)}</span><span style="color:var(--text-dim);">${formatTimer(elapsed)}</span>`;
   $('timerLaps').prepend(div);
   while ($('timerLaps').children.length > 200) $('timerLaps').lastChild.remove();
 });
@@ -1375,6 +1376,7 @@ $('timerResetBtn').addEventListener('click', () => {
   timerRunning = false;
   timerElapsed = 0;
   timerLaps = [];
+  _timerLapNo = 0;
   if (timerRAF) cancelAnimationFrame(timerRAF);
   $('timerDisplay').textContent = '00:00:00.0';
   $('timerStartBtn').textContent = _('timerStartBtn');
@@ -2041,6 +2043,7 @@ function looseViewHTML(text) {
   if (parsed === null) {
     return `<div class="json-repair-note">${_('loose_plain')}</div><div class="jt-root" style="white-space:pre-wrap;font-family:monospace;font-size:13px;line-height:1.7;">${escHtml(text)}</div>`;
   }
+  _jsonData = parsed; // 宽松结果同样支持 JSONPath 查询 / 右键复制值·路径 / 点击显示路径
   _jsonRenderBudget = Infinity;
   const st = jsonStats(parsed);
   const tree = st.nodes <= JSON_EXPAND_LIMIT
@@ -3086,7 +3089,7 @@ async function srchStreamScan(file) {
     if (_srchStreamAbort) break;
     let text;
     try { text = await srchReadChunk(file, off); } catch (e) { srchExitStream(true); toast(_('file_read_err2').replace('${msg}', e.message), 1); return; }
-    scannedBytes = Math.min(off + text.length, total);
+    scannedBytes = Math.min(off + SRCH_STREAM_CHUNK, total); // 按字节切分范围计算（readAsText 返回字符数，多字节会偏小）
     const pct = Math.min(100, (scannedBytes / total * 100) | 0);
     $('srchStreamBarFill').style.width = pct + '%';
     $('srchStreamProgress').textContent = `${pct}%`;
