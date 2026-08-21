@@ -1884,6 +1884,10 @@ function _srpExtract(t) {
 // ═══════════════════════════════════════
 const LOOSE_MAX_DEPTH = 64;    // 防栈溢出
 const LOOSE_MAX_ITEMS = 20000; // 单容器成员上限
+// 粘性正则（y 标志）：配合 lastIndex 在 P.i 处原地匹配，避免 slice 剩余全文造成的 O(N²) 拷贝
+const LOOSE_NUM_RE = /-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/y;
+const LOOSE_WORD_RE = /[A-Za-z_$][\w$]*/y;
+const LOOSE_KV_LOOK_RE = /[^,;{}\[\]]{0,40}[:=]/y;
 function looseParse(text) {
   const src = _srpStripComments(String(text == null ? '' : text));
   const P = { s: src, i: 0, depth: 0 };
@@ -1919,9 +1923,13 @@ function looseParse(text) {
     if (c === '{' || c === '[') return parseContainer(c);
     if (c === '"' || c === "'") return parseString();
     if (c === '#') { skipLine(); return LOOSE_SKIP; }
-    const numM = P.s.slice(P.i).match(/^-?\d+(\.\d+)?([eE][+-]?\d+)?/);
-    if (numM && /[\d-]/.test(c)) { P.i += numM[0].length; return parseFloat(numM[0]); }
-    const wordM = P.s.slice(P.i).match(/^[A-Za-z_$][\w$]*/);
+    if (/[\d-]/.test(c)) {
+      LOOSE_NUM_RE.lastIndex = P.i;
+      const numM = LOOSE_NUM_RE.exec(P.s);
+      if (numM) { P.i += numM[0].length; return parseFloat(numM[0]); }
+    }
+    LOOSE_WORD_RE.lastIndex = P.i;
+    const wordM = LOOSE_WORD_RE.exec(P.s);
     if (wordM) {
       const w = wordM[0]; P.i += w.length;
       if (w === 'true' || w === 'True') return true;
@@ -1952,7 +1960,7 @@ function looseParse(text) {
     P.depth++;
     P.i++;
     const isArr = open === '[';
-    const arr = [], obj = {};
+    const arr = [], obj = Object.create(null); // null 原型：防 __proto__ 键触发原型 setter 丢数据
     let count = 0;
     for (;;) {
       const startI = P.i;
@@ -1995,7 +2003,7 @@ function looseParse(text) {
   }
   // 顶层不是 { [ 开头：先处理前导注释/空白，再尝试解析成"键值对流"（a:1 / a=1，逗号/换行/分号分隔）
   function parseTopLevelKV() {
-    const obj = {};
+    const obj = Object.create(null); // null 原型：防 __proto__ 键触发原型 setter 丢数据
     let count = 0;
     for (;;) {
       skipWs();
@@ -2013,8 +2021,8 @@ function looseParse(text) {
       if (P.i >= P.s.length) break;
       if (P.s[P.i] === ',' || P.s[P.i] === '\n' || P.s[P.i] === ';') { P.i++; continue; }
       // 无分隔符：剩余内容像"key: value"则继续（容忍空格分隔），否则视为纯文本
-      const look = P.s.slice(P.i).match(/^[^,;{}\[\]]{0,40}[:=]/);
-      if (look) continue;
+      LOOSE_KV_LOOK_RE.lastIndex = P.i;
+      if (LOOSE_KV_LOOK_RE.exec(P.s)) continue;
       return null;
     }
     return count ? obj : null;
