@@ -4090,6 +4090,31 @@ function parseInsertSQL(sql) {
   const vals = g.vals;
   return cols.map((col, i) => ({ col, val: i < vals.length ? (vals[i] === '' ? _('sql_ins_empty') : vals[i]) : '—', idx: i }));
 }
+// SQL 值反转义：剥首尾引号，'' → '，\' → '，\" → "，\\ → \（按序替换防误伤）
+function sqlUnescapeVal(v) {
+  const m = v.match(/^('((?:[^']|'')*)'|"(?:[^"\\]|\\.)*")$/s);
+  if (!m) return v; // 非字符串字面量（数字/NULL 等）原样
+  // MySQL 转义不区分字符串引号类型：'' → '，\" → "，\' → '，\\ → \（\\ 最后处理防误伤）
+  const body = v[0] === "'" ? m[2].replace(/''/g, "'") : v.slice(1, -1);
+  return body.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\\\/g, '\\');
+}
+// 值单元格渲染：JSON 值渲染为可折叠小树（复用 jt-toggle；data-jpath 在 #sqlInsertResult 内不触发 JSON 模块监听），长文本折叠
+const SQL_INS_TEXT_FOLD = 200; // 超过此长度的纯文本值折叠显示
+function renderInsertValCell(val) {
+  const un = sqlUnescapeVal(val);
+  const trimmed = un.trim();
+  if ((trimmed.startsWith('{') || trimmed.startsWith('[')) && trimmed.length > 1) {
+    const r = smartRepairJSON(un);
+    if (r.ok) {
+      _jsonRenderBudget = 200; // 单值树渲染预算，防超大 JSON 撑爆表格
+      return `<div class="jt-root" style="margin:0;">${jsonTree(r.value, ['__sql_ins__'], false)}</div>`;
+    }
+  }
+  if (un.length > SQL_INS_TEXT_FOLD) {
+    return `<span class="sql-val-fold" data-open="0" style="cursor:pointer;">${escHtml(un.slice(0, SQL_INS_TEXT_FOLD))}<span style="color:var(--text-dim);"> … (${un.length.toLocaleString()} ch) ▾</span></span><span class="sql-val-full" style="display:none;">${escHtml(un)}</span>`;
+  }
+  return escHtml(un);
+}
 function renderInsertResult(pairs, filter) {
   const el = $('sqlInsertResult');
   if (!pairs || !pairs.length) { el.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:8px;">Cannot parse, check SQL format</div>'; return; }
@@ -4097,15 +4122,26 @@ function renderInsertResult(pairs, filter) {
   let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;font-family:\'Cascadia Code\',\'Fira Code\',Consolas,monospace;">';
   html += `<tr style="border-bottom:2px solid var(--border);text-align:left;"><th style="padding:6px 10px;color:var(--text-dim);font-weight:500;width:40px;">#</th><th style="padding:6px 10px;color:var(--accent);">${_('sql_ins_col')}</th><th style="padding:6px 10px;color:var(--text-dim);">${_('sql_ins_val')}</th></tr>`;
   for (const p of pairs) {
-    const match = fl && (p.col.toLowerCase().includes(fl) || p.val.toLowerCase().includes(fl));
+    const match = fl && (p.col.toLowerCase().includes(fl) || String(p.val).toLowerCase().includes(fl));
     const bg = match ? 'background:rgba(0,120,212,0.12);' : (p.idx % 2 === 0 ? '' : 'background:var(--surface2);');
     const colHL = match ? `color:var(--accent);font-weight:600;` : '';
     const valHL = match ? `color:var(--accent);font-weight:600;` : '';
-    html += `<tr style="border-bottom:1px solid var(--border);${bg}"><td style="padding:5px 10px;color:var(--text-dim);">${p.idx + 1}</td><td style="padding:5px 10px;${colHL}">${escHtml(p.col)}</td><td style="padding:5px 10px;${valHL}white-space:pre-wrap;word-break:break-all;max-width:0;">${escHtml(p.val)}</td></tr>`;
+    html += `<tr style="border-bottom:1px solid var(--border);${bg}"><td style="padding:5px 10px;color:var(--text-dim);">${p.idx + 1}</td><td style="padding:5px 10px;${colHL}">${escHtml(p.col)}</td><td style="padding:5px 10px;${valHL}white-space:pre-wrap;word-break:break-all;max-width:0;">${renderInsertValCell(p.val)}</td></tr>`;
   }
   html += '</table>';
   el.innerHTML = html;
 }
+// 长文本值折叠/展开切换
+$('sqlInsertResult').addEventListener('click', e => {
+  const fold = e.target.closest('.sql-val-fold');
+  if (!fold) return;
+  const full = fold.nextElementSibling;
+  if (!full || !full.classList.contains('sql-val-full')) return;
+  const open = fold.dataset.open === '1';
+  fold.dataset.open = open ? '0' : '1';
+  fold.style.display = open ? '' : 'none';
+  full.style.display = open ? 'none' : '';
+});
 let _insertPairs = null;
 document.addEventListener('click', (e) => {
   const h = e.target.closest('.collapsible-header');
